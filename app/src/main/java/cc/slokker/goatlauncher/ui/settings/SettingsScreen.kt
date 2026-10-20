@@ -61,7 +61,6 @@ import cc.slokker.goatlauncher.ui.common.Toggle
 import cc.slokker.goatlauncher.ui.common.TvTextField
 import cc.slokker.goatlauncher.ui.common.ImageBrowser
 import cc.slokker.goatlauncher.ui.common.focusSoon
-import cc.slokker.goatlauncher.ui.common.parentFolder
 import cc.slokker.goatlauncher.ui.common.glass
 import cc.slokker.goatlauncher.ui.common.onBackKey
 import cc.slokker.goatlauncher.ui.common.requestFocusSafely
@@ -98,12 +97,9 @@ fun SettingsScreen(
         Modifier
             .fillMaxSize()
             .then(if (embedded) Modifier else Modifier.background(Color.Black.copy(alpha = 0.35f)).padding(TvSafePadding))
+            // Voltar sai sempre das Definições para o Início, de qualquer página.
             .onBackKey {
-                when (page) {
-                    Page.Main -> onExit()
-                    Page.WallpaperFiles -> dir?.let { dir = parentFolder(it) } ?: run { page = Page.Wallpaper }
-                    else -> page = Page.Main
-                }
+                onExit()
                 true
             },
     ) {

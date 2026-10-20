@@ -78,6 +78,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -121,6 +122,12 @@ private const val AppsColumns = 5
 
 /** Quanto tempo o foco tem de ficar num favorito para o "Continuar a ver" mudar para ele. */
 private const val SECTION_SETTLE_MS = 150L
+
+/** Quanto tempo fica a ajuda "Mantém OK para reordenar" no Início. */
+private const val HINT_MS = 5_000L
+
+/** Duração da troca de separador (o fade do conteúdo), com folga. */
+private const val TAB_FADE_MS = 320L
 
 /** Quantos cartões, no máximo, na fila do estilo "Down Under". */
 private const val DOWN_UNDER_MAX = 20
@@ -201,10 +208,15 @@ fun HomeScreen(vm: LauncherViewModel) {
             val idx = gridIndex(pkg)
             if (gridState.layoutInfo.visibleItemsInfo.none { it.index == idx }) gridState.scrollToItem(idx)
         }
-        // O banner só tem o FocusRequester depois de recompor: tenta durante alguns frames.
-        repeat(5) {
+        // O banner só tem o FocusRequester depois de recompor (e de a troca de separador acabar): tenta uns frames.
+        repeat(30) {
             withFrameNanos { }
-            if (target.requestFocusSafely()) return@LaunchedEffect
+            if (target.requestFocusSafely()) {
+                // A troca de separador (fade) pode tirar-lhe o foco quando acaba: volta a pedi-lo depois dela.
+                delay(TAB_FADE_MS)
+                target.requestFocusSafely()
+                return@LaunchedEffect
+            }
         }
     }
 
@@ -220,6 +232,14 @@ fun HomeScreen(vm: LauncherViewModel) {
             moving = null
             vm.finishMove()
         }
+    }
+
+    // Ao voltar ao Início vindo das Apps ou das Definições (por Voltar ou pelos separadores), o foco vai para o
+    // último favorito, se não estiver nos separadores (senão perdia-se com o conteúdo que saiu).
+    var previousScreen by remember { mutableStateOf(screen) }
+    LaunchedEffect(screen) {
+        if (screen == Screen.Home && previousScreen != Screen.Home && !tabBarFocused) focusApp(lastFavorite())
+        previousScreen = screen
     }
 
     // Botão Home com o launcher já aberto: volta ao Início, no primeiro favorito.
@@ -270,7 +290,20 @@ fun HomeScreen(vm: LauncherViewModel) {
     @Composable
     fun FavoritesBlock() {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            SectionHeader(s.favorites, hint = true, modifier = Modifier.width(TilesRowWidth))
+            // Sem título: só a ajuda "Mantém OK para reordenar", que desaparece uns segundos depois (e volta a mover).
+            var showHint by remember { mutableStateOf(true) }
+            LaunchedEffect(Unit) {
+                delay(HINT_MS)
+                showHint = false
+            }
+            val hintAlpha by animateFloatAsState(if (showHint || moving != null) 1f else 0f, tween(600), label = "hint")
+            Text(
+                if (moving != null) s.moveHint else s.holdToRearrange,
+                Modifier.width(TilesRowWidth).graphicsLayer { alpha = hintAlpha },
+                style = MaterialTheme.typography.labelSmall,
+                color = GoatColors.TextFaint,
+                textAlign = TextAlign.End,
+            )
             Spacer(Modifier.height(12.dp))
             when {
                 apps == null -> Spacer(Modifier.height(TileWidth * 9 / 16 + 30.dp))
