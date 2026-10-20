@@ -80,7 +80,11 @@ class WatchNextSource(private val context: Context) {
                 // Entradas repetidas (ex.: a app perdeu o id da que publicou e criou outra): fica a mais recente.
                 .distinctBy { it.packageName + "\u0000" + (it.intentUri ?: it.title) }
                 .groupBy { it.packageName }
-                .also { Log.d(TAG, "${it.values.sumOf { l -> l.size }} entradas de ${it.keys}") }
+                .also { all ->
+                    Log.d(TAG, "${all.values.sumOf { l -> l.size }} entradas de ${all.keys}")
+                    // Que imagens publica cada app (para perceber de onde vem a qualidade dos cartões).
+                    all.forEach { (pkg, items) -> items.firstOrNull()?.let { Log.d(TAG, "$pkg: ${it.imageUri}") } }
+                }
         }.getOrElse {
             Log.w(TAG, "Ler o Watch Next", it)
             emptyMap()
@@ -116,7 +120,7 @@ class WatchNextSource(private val context: Context) {
             episodeTitle = c.str(COL_EPISODE_TITLE),
             season = c.str(COL_SEASON),
             episode = c.str(COL_EPISODE),
-            imageUri = poster ?: thumb,
+            imageUri = sharper(poster ?: thumb),
             aspectRatio = ratio(if (poster != null) c.int(COL_POSTER_RATIO) else c.int(COL_THUMB_RATIO)),
             positionMs = c.long(COL_POSITION) ?: 0,
             durationMs = c.long(COL_DURATION) ?: 0,
@@ -125,6 +129,12 @@ class WatchNextSource(private val context: Context) {
             intentUri = c.str(COL_INTENT),
         )
     }
+
+    /**
+     * Muitas apps (ex.: Nuvio) publicam imagens do TMDB num tamanho pequeno (`/t/p/w300/…`), que no cartão
+     * e sobretudo no destaque de ecrã inteiro ficam esborratadas. Pede-se a versão grande da mesma imagem.
+     */
+    private fun sharper(uri: String?): String? = uri?.replace(TMDB_SIZE, "image.tmdb.org/t/p/w1280/")
 
     /** Constantes ASPECT_RATIO_* do TvContract. Por defeito 16:9, o formato do ecrã. */
     private fun ratio(constant: Int?): Float = when (constant) {
@@ -142,6 +152,7 @@ class WatchNextSource(private val context: Context) {
 
     private companion object {
         const val TAG = "WatchNext"
+        private val TMDB_SIZE = Regex("""image\.tmdb\.org/t/p/(?:w\d{2,3}|h\d{2,3})/""")
 
         // Nomes das colunas do TvContract (estáveis desde o Android 8).
         val PROJECTION = arrayOf(

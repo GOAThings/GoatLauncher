@@ -7,9 +7,11 @@ import cc.slokker.goatlauncher.data.InstalledApps
 import cc.slokker.goatlauncher.data.RedditWallpapers
 import cc.slokker.goatlauncher.data.SessionStore
 import cc.slokker.goatlauncher.data.SettingsRepository
+import cc.slokker.goatlauncher.data.Updater
 import cc.slokker.goatlauncher.data.WatchNextSource
 import cc.slokker.goatlauncher.data.api.BACKEND_URL
 import cc.slokker.goatlauncher.data.api.BackendApi
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -57,4 +59,5 @@ class AppContainer(context: Context) {
         .build()
 
     val reddit = RedditWallpapers(context, plainHttp)
+    val updater = Updater(context, plainHttp, Gson())
 }

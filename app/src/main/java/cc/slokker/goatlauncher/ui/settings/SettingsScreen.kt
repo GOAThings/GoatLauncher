@@ -51,6 +51,7 @@ import cc.slokker.goatlauncher.data.RedditWallpapers
 import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.ui.LauncherViewModel
+import cc.slokker.goatlauncher.ui.UpdateState
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.common.GlassButton
 import cc.slokker.goatlauncher.ui.common.GlassRow
@@ -214,6 +215,25 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
                     },
                 )
             }
+        }
+
+        item { SectionLabel(s.updates) }
+        item {
+            val update by vm.update.collectAsStateWithLifecycle()
+            val (title, subtitle) = when (val u = update) {
+                is UpdateState.Available -> s.updateReady(u.release.version) to u.release.notes.takeIf { it.isNotBlank() }
+                is UpdateState.Downloading -> s.downloading((u.progress * 100).toInt()) to null
+                is UpdateState.Installing -> s.installing to null
+                UpdateState.Checking -> s.checking to null
+                UpdateState.UpToDate -> s.checkUpdates to s.upToDate(vm.appVersion)
+                is UpdateState.Failed -> s.checkUpdates to s.updateFailed(u.message)
+                UpdateState.Idle -> s.checkUpdates to s.version(vm.appVersion)
+            }
+            GlassRow(
+                title = title,
+                subtitle = subtitle,
+                onClick = { if (update is UpdateState.Available) vm.installUpdate() else vm.checkForUpdate(manual = true) },
+            )
         }
 
         item { SectionLabel(s.android) }

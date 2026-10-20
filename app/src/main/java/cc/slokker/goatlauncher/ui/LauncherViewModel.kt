@@ -13,11 +13,13 @@ import cc.slokker.goatlauncher.BuildConfig
 import cc.slokker.goatlauncher.LauncherApp
 import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.DeviceSettings
+import cc.slokker.goatlauncher.data.AppRelease
 import cc.slokker.goatlauncher.data.ImageImport
 import cc.slokker.goatlauncher.data.RedditImage
 import cc.slokker.goatlauncher.data.LauncherApp as App
 import cc.slokker.goatlauncher.data.SessionStore
 import cc.slokker.goatlauncher.data.SystemIntents
+import cc.slokker.goatlauncher.data.Updater
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.data.WatchNextItem
 import cc.slokker.goatlauncher.data.api.BackendDevice
@@ -27,6 +29,7 @@ import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.size.Scale
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -42,6 +45,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+sealed interface UpdateState {
+    data object Idle : UpdateState
+    data object Checking : UpdateState
+    data object UpToDate : UpdateState
+    data class Available(val release: AppRelease) : UpdateState
+    data class Downloading(val release: AppRelease, val progress: Float) : UpdateState
+    data class Installing(val release: AppRelease) : UpdateState
+    data class Failed(val message: String) : UpdateState
+}
 
 sealed interface Screen {
     data object Home : Screen
@@ -93,6 +106,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Imagens que não servem de fundo (ao alto, ou que não carregaram). */
     private val badReddit = mutableSetOf<String>()
 
+    private val _update = MutableStateFlow<UpdateState>(UpdateState.Idle)
+    val update: StateFlow<UpdateState> = _update.asStateFlow()
+    val appVersion: String get() = c.updater.currentVersion
+
     private val _toast = MutableStateFlow<String?>(null)
     val toast: StateFlow<String?> = _toast.asStateFlow()
 
@@ -136,6 +153,17 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                     delay(c.reddit.msUntilRotation(wp.value))
                     next = true
                 }
+            }
+        }
+        viewModelScope.launch {
+            c.updater.installFailures.collect { _update.value = UpdateState.Failed(it) }
+        }
+        viewModelScope.launch {
+            // Procura versões novas pouco depois de abrir e de 12 em 12 horas (o launcher fica aberto dias a fio).
+            delay(20_000)
+            while (true) {
+                checkForUpdate(manual = false)
+                delay(UPDATE_CHECK_MS)
             }
         }
         reloadApps()
@@ -249,6 +277,55 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         // Um logo quadrado publicado como 16:9 (como os canais da GoatTV).
         pkgs.getOrNull(1)?.let { p -> out[p] = listOf(item(4, p, "CANAL", "https://picsum.photos/id/237/400/400", 16f / 9f, null, null, 0)) }
         return out
+    }
+
+    // ---- Atualizações ----
+
+    fun checkForUpdate(manual: Boolean) {
+        if (!c.updater.enabled) {
+            if (manual) toast(strings.updatesOnlyRelease)
+            return
+        }
+        val state = _update.value
+        if (state is UpdateState.Checking || state is UpdateState.Downloading || state is UpdateState.Installing) return
+        if (manual) _update.value = UpdateState.Checking
+        viewModelScope.launch {
+            _update.value = try {
+                val latest = c.updater.latest()
+                if (latest != null && Updater.isNewer(latest.version, c.updater.currentVersion)) {
+                    if (!manual && state !is UpdateState.Available) toast(strings.updateAvailable(latest.version))
+                    UpdateState.Available(latest)
+                } else {
+                    UpdateState.UpToDate
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (manual) UpdateState.Failed(e.message ?: e.javaClass.simpleName) else state
+            }
+        }
+    }
+
+    /** Descarrega e entrega ao instalador do Android a versão encontrada (ou procura, se ainda não houver). */
+    fun installUpdate() {
+        val release = (_update.value as? UpdateState.Available)?.release ?: return checkForUpdate(manual = true)
+        if (!c.updater.canInstall()) {
+            toast(strings.allowInstall)
+            c.updater.openInstallPermission()
+            return
+        }
+        viewModelScope.launch {
+            try {
+                _update.value = UpdateState.Downloading(release, 0f)
+                val apk = c.updater.download(release) { p -> _update.value = UpdateState.Downloading(release, p) }
+                _update.value = UpdateState.Installing(release)
+                c.updater.install(apk)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _update.value = UpdateState.Failed(e.message ?: e.javaClass.simpleName)
+            }
+        }
     }
 
     // ---- Abrir ----
@@ -395,6 +472,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     private companion object {
+        /** De quanto em quanto tempo procurar versões novas. */
+        const val UPDATE_CHECK_MS = 12 * 60 * 60_000L
+
         /** Primeiro as apps pela ordem guardada; as que lá não estão vão para o fim (por nome). */
         fun ordered(all: List<App>, order: List<String>): List<App> {
             val byPkg = all.associateBy { it.packageName }
