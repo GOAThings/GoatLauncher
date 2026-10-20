@@ -27,7 +27,7 @@ mkdir -p build
 cp app/build/outputs/apk/release/app-release.apk "$apk"
 
 git commit -qam "Versão $VERSION"
-git tag "v$VERSION"
+git tag -a "v$VERSION" -m "Versão $VERSION"  # anotada: o --follow-tags só envia tags anotadas
 git push -q --follow-tags
 
 gh release create "v$VERSION" "$apk" --repo "$RELEASES_REPO" --title "GoatLauncher $VERSION" --notes "${NOTES:-Versão $VERSION}"
