@@ -12,7 +12,7 @@ import com.google.gson.JsonObject
  *                "continue_style": "row" | "shelf" | "downunder", "show_weather": true }
  *   "device":  { "apps": ["com.netflix.ninja", …], "hidden": ["com.android.vending"],
  *                "icons": {"com.netflix.ninja": "pack:dev.pack/netflix" | "file:com.netflix.ninja-123.png"},
- *                "names": {"io.gh.reisxd.tizentube.cobalt": "YouTube"} }
+ *                "names": {"io.gh.reisxd.tizentube.cobalt": "YouTube"}, "no_continue": ["com.netflix.ninja"] }
  *
  * Um fundo "file" só existe na TV onde foi escolhido; as outras mostram o fundo por defeito.
  *
@@ -97,6 +97,8 @@ data class DeviceSettings(
     val icons: Map<String, String> = emptyMap(),
     /** Nomes escolhidos pela pessoa, por pacote (em vez do nome da app). */
     val names: Map<String, String> = emptyMap(),
+    /** Apps cujo "Continuar a ver" (ou recomendações do YouTube) não aparece no Início. */
+    val noContinue: Set<String> = emptySet(),
     val raw: JsonObject = JsonObject(),
 ) {
     fun toJson(): JsonObject = raw.deepCopy().apply {
@@ -104,6 +106,7 @@ data class DeviceSettings(
         add("hidden", JsonArray().apply { hidden.sorted().forEach(::add) })
         add("icons", JsonObject().apply { icons.toSortedMap().forEach { (pkg, spec) -> addProperty(pkg, spec) } })
         add("names", JsonObject().apply { names.toSortedMap().forEach { (pkg, name) -> addProperty(pkg, name) } })
+        add("no_continue", JsonArray().apply { noContinue.sorted().forEach(::add) })
     }
 
     companion object {
@@ -114,6 +117,7 @@ data class DeviceSettings(
                 hidden = json.strings("hidden").toSet(),
                 icons = json.stringMap("icons"),
                 names = json.stringMap("names"),
+                noContinue = json.strings("no_continue").toSet(),
                 raw = json,
             )
         }

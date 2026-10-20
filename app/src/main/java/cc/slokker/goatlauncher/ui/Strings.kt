@@ -42,6 +42,8 @@ class Strings(val english: Boolean) {
     val move get() = t("Mover", "Move")
     val hide get() = t("Esconder do Início", "Hide from Home")
     val showOnHome get() = t("Mostrar no Início", "Show on Home")
+    val hideContinue get() = t("Esconder o Continuar a ver", "Hide Continue watching")
+    val showContinue get() = t("Mostrar o Continuar a ver", "Show Continue watching")
     val appInfo get() = t("Informação da app", "App info")
     val rename get() = t("Mudar nome", "Rename")
     val nameHint get() = t("Nome da app", "App name")

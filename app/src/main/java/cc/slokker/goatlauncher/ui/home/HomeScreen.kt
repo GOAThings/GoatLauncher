@@ -560,6 +560,11 @@ fun HomeScreen(vm: LauncherViewModel) {
                     renameFor = app
                 },
                 hidden = app.packageName in device.hidden,
+                continueOff = app.packageName in device.noContinue,
+                onToggleContinue = {
+                    menuFor = null
+                    vm.setShowContinue(app.packageName, app.packageName in device.noContinue)
+                },
                 onHide = {
                     menuFor = null
                     if (app.packageName in device.hidden) {
@@ -920,6 +925,8 @@ private fun AppMenu(
     onRename: () -> Unit,
     hidden: Boolean,
     onHide: () -> Unit,
+    continueOff: Boolean,
+    onToggleContinue: () -> Unit,
     onInfo: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -937,6 +944,7 @@ private fun AppMenu(
             GlassRow(title = s.changeIcon, onClick = onChangeIcon)
             GlassRow(title = s.rename, onClick = onRename)
             GlassRow(title = if (hidden) s.showOnHome else s.hide, onClick = onHide)
+            GlassRow(title = if (continueOff) s.showContinue else s.hideContinue, onClick = onToggleContinue)
             GlassRow(title = s.appInfo, onClick = onInfo)
         }
         LaunchedEffect(Unit) {

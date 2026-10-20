@@ -110,8 +110,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _youtube = MutableStateFlow<List<WatchNextItem>>(emptyList())
 
     /** O Watch Next de todas as apps, mais as recomendações do YouTube na app de YouTube instalada. */
-    val watchNext: StateFlow<Map<String, List<WatchNextItem>>> = combine(_watchNext, _youtube) { system, yt ->
-        if (yt.isEmpty()) system else system + (yt.first().packageName to (system[yt.first().packageName].orEmpty() + yt))
+    val watchNext: StateFlow<Map<String, List<WatchNextItem>>> = combine(_watchNext, _youtube, settings.device) { system, yt, d ->
+        val all = if (yt.isEmpty()) system else system + (yt.first().packageName to (system[yt.first().packageName].orEmpty() + yt))
+        // Apps em que a pessoa desligou o "Continuar a ver" (menu da app).
+        all - d.noContinue
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
     private val _youtubeLinked = MutableStateFlow(c.youtube.linked)
@@ -579,6 +581,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             val name = ImageImport.saveWallpaper(context, source)
             if (name == null) toast(strings.imageFailed) else setWallpaper(Wallpaper(Wallpaper.TYPE_FILE, name))
         }
+    }
+
+    fun setShowContinue(pkg: String, show: Boolean) = settings.updateDevice {
+        it.copy(noContinue = if (show) it.noContinue - pkg else it.noContinue + pkg)
     }
 
     fun setHidden(pkg: String, hidden: Boolean) = settings.updateDevice {
