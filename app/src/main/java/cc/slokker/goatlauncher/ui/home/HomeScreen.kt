@@ -623,6 +623,9 @@ private fun TopBar(
 ) {
     val s = LocalStrings.current
     val tabs = remember { List(3) { FocusRequester() } }
+    // Só se troca de separador ao andar com ← → nos separadores. Quando o sistema põe lá o foco sozinho
+    // (ex.: o elemento com foco desapareceu), não se abre nada.
+    var arrowed by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxWidth().height(48.dp)) {
         TopGreeting(showGreeting, weather, Modifier.align(Alignment.CenterStart))
         // Cápsula translúcida, sem contorno; o separador aberto é uma cápsula mais clara lá dentro.
@@ -631,6 +634,10 @@ private fun TopBar(
             Modifier
                 .align(Alignment.Center)
                 .onFocusChanged { onFocusChanged(it.hasFocus) }
+                .onPreviewKeyEvent { e ->
+                    if (e.type == KeyEventType.KeyDown && (e.key == Key.DirectionLeft || e.key == Key.DirectionRight)) arrowed = true
+                    false
+                }
                 .focusRestorer(tabs[selected])
                 .background(Color.White.copy(alpha = 0.14f), CircleShape)
                 .padding(5.dp),
@@ -642,7 +649,10 @@ private fun TopBar(
                     // Passar o foco por um separador abre-o (sem carregar em OK).
                     modifier = Modifier
                         .focusRequester(tabs[i])
-                        .onFocusChanged { if (it.isFocused && i != selected) action() },
+                        .onFocusChanged {
+                            if (it.isFocused && arrowed && i != selected) action()
+                            if (it.isFocused) arrowed = false
+                        },
                     shape = ClickableSurfaceDefaults.shape(CircleShape),
                     colors = ClickableSurfaceDefaults.colors(
                         containerColor = if (i == selected) Color.White.copy(alpha = 0.2f) else Color.Transparent,
