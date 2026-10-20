@@ -76,6 +76,7 @@ class Strings(val english: Boolean) {
     val continueStyle get() = t("Estilo do Continuar a ver", "Continue watching style")
     val styleRow get() = t("Fila de cartões", "Row of cards")
     val styleShelf get() = t("Destaque", "Spotlight")
+    val styleDownUnder get() = t("Down Under", "Down Under")
     val continueWatching get() = t("Continuar a ver", "Continue watching")
     val continueWatchingHint get() = t("O que cada app publica no \"A seguir\" do Android TV", "What each app publishes to Android TV's \"Play next\"")
     val apps get() = t("Apps", "Apps")

@@ -21,6 +21,8 @@ class LauncherApp(
     val banner: ImageBitmap?,
     val icon: ImageBitmap?,
     val color: Color,
+    /** Ícone pequeno da app (ex.: ao lado dos detalhes de um cartão do "Continuar a ver"). */
+    val smallIcon: ImageBitmap?,
 )
 
 /** As apps com entrada no launcher da TV (categoria LEANBACK_LAUNCHER), menos este launcher. */
@@ -62,6 +64,7 @@ class InstalledApps(private val context: Context) {
             banner = banner?.toImage(BANNER_W, BANNER_H),
             icon = icon?.toImage(ICON_SIZE, ICON_SIZE),
             color = icon?.let(::dominantColor) ?: Color(0xFF1C2333),
+            smallIcon = runCatching { activity.loadIcon(pm).toImage(SMALL_ICON, SMALL_ICON) }.getOrNull(),
         )
     }
 
@@ -98,5 +101,6 @@ class InstalledApps(private val context: Context) {
         private const val BANNER_W = 480
         private const val BANNER_H = 270
         private const val ICON_SIZE = 192
+        private const val SMALL_ICON = 48
     }
 }

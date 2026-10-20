@@ -18,6 +18,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -359,6 +360,71 @@ fun WatchNextCard(item: WatchNextItem, onClick: () -> Unit, modifier: Modifier =
         }
     }
 }
+
+/**
+ * Cartão do estilo "Down Under": imagem 16:9, a barra de progresso por baixo dela, o título e, numa linha,
+ * o ícone da app com "T1 E3 · faltam 32 min".
+ */
+@Composable
+fun WideWatchCard(item: WatchNextItem, app: LauncherApp?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val s = LocalStrings.current
+    Column(modifier.width(WideCardWidth)) {
+        Surface(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+            shape = ClickableSurfaceDefaults.shape(CardShape),
+            colors = ClickableSurfaceDefaults.colors(
+                containerColor = Color(0xFF1C2333),
+                focusedContainerColor = Color(0xFF1C2333),
+                pressedContainerColor = Color(0xFF1C2333),
+            ),
+            scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
+            border = ClickableSurfaceDefaults.border(
+                focusedBorder = Border(BorderStroke(3.dp, Color.White), inset = 0.dp, shape = CardShape),
+            ),
+            glow = ClickableSurfaceDefaults.glow(focusedGlow = Glow(elevationColor = Color.Black.copy(alpha = 0.6f), elevation = 12.dp)),
+        ) {
+            Box(Modifier.fillMaxSize()) {
+                if (item.imageUri != null) {
+                    val painter = rememberAsyncImagePainter(
+                        ImageRequest.Builder(LocalContext.current).data(item.imageUri).crossfade(true).build(),
+                    )
+                    val state by painter.state.collectAsState()
+                    val size = (state as? AsyncImagePainter.State.Success)?.painter?.intrinsicSize
+                    // Só as imagens deitadas enchem o cartão; logos de canais e cartazes ao alto aparecem inteiros.
+                    val fill = !item.isChannel && (size == null || size.height <= 0f || size.width / size.height > 1.4f)
+                    Image(
+                        painter = painter,
+                        contentDescription = item.title,
+                        contentScale = if (fill) ContentScale.Crop else ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize().then(if (fill) Modifier else Modifier.padding(12.dp)),
+                    )
+                } else {
+                    Icon(GoatIcons.Play, contentDescription = null, modifier = Modifier.align(Alignment.Center).size(28.dp))
+                }
+            }
+        }
+        Spacer(Modifier.height(7.dp))
+        Box(Modifier.fillMaxWidth().height(3.dp).background(Color.White.copy(alpha = if (item.progress != null) 0.25f else 0f), GoatShapes.Small)) {
+            item.progress?.let { p -> Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Color.White, GoatShapes.Small)) }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(item.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            app?.smallIcon?.let {
+                Image(it, contentDescription = app.label, modifier = Modifier.size(13.dp))
+                Spacer(Modifier.width(6.dp))
+            }
+            val details = listOfNotNull(
+                s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
+                item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
+            ).joinToString(" · ").ifEmpty { app?.label.orEmpty() }
+            Text(details, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+private val WideCardWidth = 168.dp
 
 /** Aviso curto no topo do ecrã. */
 @Composable

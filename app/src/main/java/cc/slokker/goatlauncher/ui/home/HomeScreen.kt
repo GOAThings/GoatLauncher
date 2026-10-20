@@ -116,6 +116,9 @@ private const val AppsColumns = 5
 /** Quanto tempo o foco tem de ficar num favorito para o "Continuar a ver" mudar para ele. */
 private const val SECTION_SETTLE_MS = 150L
 
+/** Quantos cartões, no máximo, na fila do estilo "Down Under". */
+private const val DOWN_UNDER_MAX = 20
+
 private val TileWidth = 148.dp
 private val TileGap = 24.dp
 private val TilesRowWidth = TileWidth * FavoriteCount + TileGap * (FavoriteCount - 1)
@@ -143,6 +146,7 @@ fun HomeScreen(vm: LauncherViewModel) {
     val currentList by rememberUpdatedState(list)
     val favorites = list.take(FavoriteCount)
     val shelfStyle = account.continueStyle == AccountSettings.STYLE_SHELF
+    val downUnder = account.continueStyle == AccountSettings.STYLE_DOWN_UNDER
 
     var focusedPkg by remember { mutableStateOf(vm.focusedPackage) }
     // O "Continuar a ver" só muda quando o foco assenta num favorito: a correr pela fila não carrega cada um.
@@ -227,7 +231,7 @@ fun HomeScreen(vm: LauncherViewModel) {
             width = TileWidth,
             custom = custom,
             showLabel = account.showAppName,
-            hasContinue = home && account.showContinueWatching && !watchNext[app.packageName].isNullOrEmpty(),
+            hasContinue = home && !downUnder && account.showContinueWatching && !watchNext[app.packageName].isNullOrEmpty(),
             moving = moving == app.packageName,
             onFocused = {
                 focusedPkg = app.packageName
@@ -425,6 +429,10 @@ fun HomeScreen(vm: LauncherViewModel) {
                                 }
                             }
                             Spacer(Modifier.height(28.dp))
+                        } else if (downUnder) {
+                            Spacer(Modifier.weight(1f))
+                            Hero(account.showGreeting)
+                            Spacer(Modifier.height(12.dp))
                         } else {
                             Spacer(Modifier.weight(1f))
                             Hero(account.showGreeting)
@@ -448,6 +456,16 @@ fun HomeScreen(vm: LauncherViewModel) {
                             Spacer(Modifier.height(12.dp))
                         }
                         FavoritesBlock()
+                        if (downUnder && account.showContinueWatching) {
+                            // Tudo o que há para continuar, de todas as apps, o mais recente primeiro.
+                            val all = remember(list, watchNext) {
+                                list.flatMap { watchNext[it.packageName].orEmpty() }.sortedByDescending { it.lastEngagement }.take(DOWN_UNDER_MAX)
+                            }
+                            if (all.isNotEmpty()) {
+                                Spacer(Modifier.height(14.dp))
+                                DownUnderRow(all, list.associateBy { it.packageName }, onOpen = { vm.openWatchNext(context, it) })
+                            }
+                        }
                     }
                 }
             }
@@ -693,6 +711,33 @@ private fun Modifier.bleed(horizontal: Dp): Modifier = layout { measurable, cons
         constraints.copy(minWidth = constraints.minWidth + extra, maxWidth = constraints.maxWidth + extra),
     )
     layout(placeable.width - extra, placeable.height) { placeable.place(-extra / 2, 0) }
+}
+
+/** O estilo "Down Under": uma fila com o "Continuar a ver" de todas as apps, por baixo dos favoritos. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DownUnderRow(items: List<WatchNextItem>, apps: Map<String, LauncherApp>, onOpen: (WatchNextItem) -> Unit) {
+    val s = LocalStrings.current
+    val first = remember { FocusRequester() }
+    Column {
+        Text(s.continueWatching, style = MaterialTheme.typography.titleSmall, color = GoatColors.TextDim, modifier = Modifier.padding(start = 4.dp))
+        CompositionLocalProvider(LocalBringIntoViewSpec provides rememberEdgeScroll(SafeH + 8.dp)) {
+            LazyRow(
+                modifier = Modifier.bleed(SafeH).focusRestorer(first),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(start = SafeH + 4.dp, end = SafeH + 4.dp, top = 8.dp, bottom = 2.dp),
+            ) {
+                itemsIndexed(items, key = { _, item -> item.packageName + item.id }) { i, item ->
+                    WideWatchCard(
+                        item = item,
+                        app = apps[item.packageName],
+                        onClick = { onOpen(item) },
+                        modifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
+                    )
+                }
+            }
+        }
+    }
 }
 
 /** O estilo "fila de cartões": o "Continuar a ver" do favorito com foco, por cima dos favoritos. */

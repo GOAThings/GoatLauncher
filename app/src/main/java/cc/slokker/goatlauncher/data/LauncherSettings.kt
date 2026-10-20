@@ -9,7 +9,7 @@ import com.google.gson.JsonObject
  *
  *   "account": { "wallpaper": {"type": "builtin" | "file" | "url" | "reddit", "value": "lake" | "wall-123.jpg" | "https://…" | "EarthPorn"},
  *                "clock_24h": true, "show_greeting": true, "show_continue_watching": true, "show_app_name": true,
- *                "continue_style": "row" | "shelf" }
+ *                "continue_style": "row" | "shelf" | "downunder" }
  *   "device":  { "apps": ["com.netflix.ninja", …], "hidden": ["com.android.vending"],
  *                "icons": {"com.netflix.ninja": "pack:dev.pack/netflix" | "file:com.netflix.ninja-123.png"} }
  *
@@ -42,7 +42,10 @@ data class AccountSettings(
     val showContinueWatching: Boolean = true,
     /** O nome de cada app por baixo do banner. */
     val showAppName: Boolean = true,
-    /** "row": fila de cartões por cima dos favoritos; "shelf": destaque em ecrã inteiro (como o top shelf do tvOS). */
+    /**
+     * "row": fila de cartões (do favorito com foco) por cima dos favoritos; "shelf": destaque em ecrã inteiro
+     * (como o top shelf do tvOS); "downunder": uma fila com tudo, de todas as apps, por baixo dos favoritos.
+     */
     val continueStyle: String = STYLE_ROW,
     val raw: JsonObject = JsonObject(),
 ) {
@@ -61,6 +64,7 @@ data class AccountSettings(
     companion object {
         const val STYLE_ROW = "row"
         const val STYLE_SHELF = "shelf"
+        const val STYLE_DOWN_UNDER = "downunder"
 
         fun fromJson(json: JsonObject?): AccountSettings {
             if (json == null) return AccountSettings()
@@ -73,7 +77,7 @@ data class AccountSettings(
                 showGreeting = json.bool("show_greeting") ?: true,
                 showContinueWatching = json.bool("show_continue_watching") ?: true,
                 showAppName = json.bool("show_app_name") ?: true,
-                continueStyle = json.str("continue_style")?.takeIf { it == STYLE_SHELF } ?: STYLE_ROW,
+                continueStyle = json.str("continue_style")?.takeIf { it == STYLE_SHELF || it == STYLE_DOWN_UNDER } ?: STYLE_ROW,
                 raw = json,
             )
         }

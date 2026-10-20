@@ -175,11 +175,16 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
             )
         }
         item {
-            val shelf = account.continueStyle == AccountSettings.STYLE_SHELF
+            // OK passa ao estilo seguinte: fila de cartões → destaque → Down Under → fila de cartões.
+            val (label, next) = when (account.continueStyle) {
+                AccountSettings.STYLE_SHELF -> s.styleShelf to AccountSettings.STYLE_DOWN_UNDER
+                AccountSettings.STYLE_DOWN_UNDER -> s.styleDownUnder to AccountSettings.STYLE_ROW
+                else -> s.styleRow to AccountSettings.STYLE_SHELF
+            }
             GlassRow(
                 title = s.continueStyle,
-                subtitle = if (shelf) s.styleShelf else s.styleRow,
-                onClick = { vm.setContinueStyle(if (shelf) AccountSettings.STYLE_ROW else AccountSettings.STYLE_SHELF) },
+                subtitle = label,
+                onClick = { vm.setContinueStyle(next) },
                 trailing = { Chevron() },
             )
         }
