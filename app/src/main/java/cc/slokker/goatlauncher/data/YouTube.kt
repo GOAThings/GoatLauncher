@@ -95,6 +95,7 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
         val res = post("$BASE/youtubei/v1/browse?prettyPrint=false", body, bearer = token)
         val tiles = mutableListOf<JsonObject>()
         collect(res, "tileRenderer", tiles)
+        if (tiles.isEmpty()) Log.w(TAG, "Início sem tiles: chaves ${res.keySet()}, renderers ${renderers(res)}")
         val now = System.currentTimeMillis()
         tiles.mapNotNull { tile(it, packageName) }
             .distinctBy { it.intentUri }
@@ -107,7 +108,8 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
     }
 
     private fun tile(t: JsonObject, packageName: String): WatchNextItem? {
-        val videoId = t.path("onSelectCommand", "watchEndpoint", "videoId")?.asString ?: return null
+        val videoId = mutableListOf<JsonObject>().also { collect(t, "watchEndpoint", it) }
+            .firstNotNullOfOrNull { it.get("videoId").asStringOrNull() } ?: return null
         val meta = t.path("metadata", "tileMetadataRenderer")
         val title = text(meta?.get("title")) ?: return null
         val header = t.path("header", "tileHeaderRenderer")
@@ -229,6 +231,22 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
         fun parseDuration(s: String): Long? {
             val parts = s.trim().split(':').map { it.toLongOrNull() ?: return null }
             return parts.fold(0L) { acc, p -> acc * 60 + p } * 1000
+        }
+
+        /** Os tipos de objeto mais comuns na resposta (para perceber o formato quando não há tiles). */
+        fun renderers(e: JsonElement): List<Pair<String, Int>> {
+            val counts = HashMap<String, Int>()
+            fun walk(x: JsonElement) {
+                when {
+                    x.isJsonObject -> x.asJsonObject.entrySet().forEach { (k, v) ->
+                        if (k.endsWith("Renderer") || k.endsWith("ViewModel") || k.endsWith("Endpoint")) counts[k] = (counts[k] ?: 0) + 1
+                        walk(v)
+                    }
+                    x.isJsonArray -> x.asJsonArray.forEach(::walk)
+                }
+            }
+            walk(e)
+            return counts.entries.sortedByDescending { it.value }.take(20).map { it.key to it.value }
         }
 
         /** Junta todos os objetos [key] em qualquer profundidade. */

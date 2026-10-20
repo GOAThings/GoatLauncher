@@ -357,6 +357,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
         try {
             val items = c.youtube.recommendations(pkg)
+            Log.d("YouTube", "Recomendações: ${items.size}")
             _youtube.value = items
             youtubeLoadedAt = SystemClock.elapsedRealtime()
             prefetchImages(mapOf(pkg to items))
