@@ -79,9 +79,6 @@ private val GoatTypography = Typography().run {
     )
 }
 
-/** Título grande do ecrã inicial ("Bem-vindo a casa"). */
-val HeroStyle = TextStyle(fontFamily = GoatFont, fontWeight = FontWeight(700), fontSize = 46.sp, letterSpacing = (-1).sp, lineHeight = 52.sp)
-
 /** Título do destaque do "Continuar a ver" (o episódio ou filme). */
 val ShelfTitleStyle = TextStyle(fontFamily = GoatFont, fontWeight = FontWeight(700), fontSize = 54.sp, letterSpacing = (-1.2).sp, lineHeight = 60.sp)
 

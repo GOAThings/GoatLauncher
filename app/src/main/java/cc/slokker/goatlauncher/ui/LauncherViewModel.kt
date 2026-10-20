@@ -22,6 +22,7 @@ import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.data.Updater
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.data.WatchNextItem
+import cc.slokker.goatlauncher.data.WeatherNow
 import cc.slokker.goatlauncher.data.api.BackendDevice
 import cc.slokker.goatlauncher.data.api.BackendUser
 import cc.slokker.goatlauncher.ui.home.CardHeight
@@ -83,7 +84,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     /** A fila do ecrã inicial: pela ordem guardada, sem as escondidas. */
     val apps: StateFlow<List<App>?> = combine(installed, settings.device) { all, d ->
-        all?.let { ordered(it, d.apps).filterNot { app -> app.packageName in d.hidden } }
+        all?.let {
+            ordered(it, d.apps)
+                .filterNot { app -> app.packageName in d.hidden }
+                .map { app -> d.names[app.packageName]?.let(app::withLabel) ?: app }
+        }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** O "Continuar a ver" de todas as apps, por pacote. Mudar o foco só filtra isto (sem consultas novas). */
@@ -105,6 +110,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     /** Imagens que não servem de fundo (ao alto, ou que não carregaram). */
     private val badReddit = mutableSetOf<String>()
+
+    private val _weather = MutableStateFlow(c.weather.cached())
+
+    /** O tempo agora (null sem dados ou com a meteorologia desligada). */
+    val weather: StateFlow<WeatherNow?> = _weather.asStateFlow()
 
     private val _update = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val update: StateFlow<UpdateState> = _update.asStateFlow()
@@ -152,6 +162,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                     showReddit(wp.value, next)
                     delay(c.reddit.msUntilRotation(wp.value))
                     next = true
+                }
+            }
+        }
+        viewModelScope.launch {
+            // Tempo: ao abrir e de 30 em 30 minutos, enquanto estiver ligado nas definições.
+            settings.account.map { it.showWeather }.distinctUntilChanged().collectLatest { on ->
+                while (on) {
+                    c.weather.current()?.let { _weather.value = it }
+                    delay(WEATHER_MS)
                 }
             }
         }
@@ -410,6 +429,14 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun setShowAppName(on: Boolean) = settings.updateAccount { it.copy(showAppName = on) }
 
+    fun setShowWeather(on: Boolean) = settings.updateAccount { it.copy(showWeather = on) }
+
+    /** Nome da app [pkg] no launcher; null (ou vazio) repõe o nome da app. */
+    fun setCustomName(pkg: String, name: String?) = settings.updateDevice {
+        val clean = name?.trim().orEmpty()
+        it.copy(names = if (clean.isEmpty()) it.names - pkg else it.names + (pkg to clean))
+    }
+
     fun setContinueStyle(style: String) = settings.updateAccount { it.copy(continueStyle = style) }
 
     val icons = c.icons
@@ -474,6 +501,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private companion object {
         /** De quanto em quanto tempo procurar versões novas. */
         const val UPDATE_CHECK_MS = 12 * 60 * 60_000L
+        const val WEATHER_MS = 30 * 60_000L
 
         /** Primeiro as apps pela ordem guardada; as que lá não estão vão para o fim (por nome). */
         fun ordered(all: List<App>, order: List<String>): List<App> {

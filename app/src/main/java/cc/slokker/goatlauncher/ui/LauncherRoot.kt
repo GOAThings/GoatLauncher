@@ -16,7 +16,6 @@ import cc.slokker.goatlauncher.ui.activation.ActivationScreen
 import cc.slokker.goatlauncher.ui.home.HomeScreen
 import cc.slokker.goatlauncher.ui.home.ToastPill
 import cc.slokker.goatlauncher.ui.home.WallpaperView
-import cc.slokker.goatlauncher.ui.settings.SettingsScreen
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import kotlinx.coroutines.delay
 
@@ -35,9 +34,8 @@ fun LauncherRoot(vm: LauncherViewModel) {
             if (!ready) return@Box
             WallpaperView(account.wallpaper, reddit?.url)
             when (screen) {
-                // Início e Apps são o mesmo ecrã (a barra de separadores fica, só o conteúdo muda).
-                Screen.Home, Screen.Apps -> HomeScreen(vm)
-                Screen.Settings -> SettingsScreen(vm)
+                // Início, Apps e Definições são separadores do mesmo ecrã (a barra fica, só o conteúdo muda).
+                Screen.Home, Screen.Apps, Screen.Settings -> HomeScreen(vm)
                 Screen.Activation -> ActivationScreen(api, onApproved = vm::onLinked, onBack = vm::closeActivation)
             }
             toast?.let { text ->

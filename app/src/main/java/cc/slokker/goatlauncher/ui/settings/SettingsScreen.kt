@@ -74,24 +74,33 @@ private enum class Page { Main, Wallpaper, WallpaperFiles, HiddenApps }
 
 /** Definições do launcher: um painel de vidro à direita, por cima do fundo. Voltar sobe um nível. */
 @Composable
-fun SettingsScreen(vm: LauncherViewModel) {
+fun SettingsScreen(
+    vm: LauncherViewModel,
+    embedded: Boolean = false,
+    autoFocus: Boolean = true,
+    onExit: () -> Unit = vm::closeSettings,
+) {
     val s = LocalStrings.current
     var page by remember { mutableStateOf(Page.Main) }
     // Pasta aberta em "Imagem da box" (null = lista de discos).
     var dir by remember { mutableStateOf<File?>(null) }
     val first = remember { FocusRequester() }
 
-    // O navegador de imagens trata do seu foco (muda a cada pasta).
-    LaunchedEffect(page) { if (page != Page.WallpaperFiles) focusSoon(first) }
+    // O navegador de imagens trata do seu foco (muda a cada pasta). A primeira página só leva o foco se
+    // [autoFocus]: aberta por passar o foco no separador, o foco fica lá até se carregar em ↓.
+    var firstPage by remember { mutableStateOf(true) }
+    LaunchedEffect(page) {
+        if (page != Page.WallpaperFiles && (autoFocus || !firstPage)) focusSoon(first)
+        firstPage = false
+    }
 
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.35f))
-            .padding(TvSafePadding)
+            .then(if (embedded) Modifier else Modifier.background(Color.Black.copy(alpha = 0.35f)).padding(TvSafePadding))
             .onBackKey {
                 when (page) {
-                    Page.Main -> vm.closeSettings()
+                    Page.Main -> onExit()
                     Page.WallpaperFiles -> dir?.let { dir = parentFolder(it) } ?: run { page = Page.Wallpaper }
                     else -> page = Page.Main
                 }
@@ -100,8 +109,9 @@ fun SettingsScreen(vm: LauncherViewModel) {
     ) {
         Column(
             Modifier
-                .align(Alignment.CenterEnd)
-                .width(520.dp)
+                .align(if (embedded) Alignment.TopCenter else Alignment.CenterEnd)
+                .then(if (embedded) Modifier.padding(top = 16.dp) else Modifier)
+                .width(if (embedded) 640.dp else 520.dp)
                 .fillMaxHeight()
                 .glass(GoatShapes.Panel, tint = Color(0xD9111522))
                 .padding(horizontal = 20.dp, vertical = 18.dp),
@@ -162,6 +172,9 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
         }
         item {
             GlassRow(title = s.greeting, onClick = { vm.setShowGreeting(!account.showGreeting) }, trailing = { Toggle(account.showGreeting) })
+        }
+        item {
+            GlassRow(title = s.weather, onClick = { vm.setShowWeather(!account.showWeather) }, trailing = { Toggle(account.showWeather) })
         }
         item {
             GlassRow(title = s.showAppName, onClick = { vm.setShowAppName(!account.showAppName) }, trailing = { Toggle(account.showAppName) })

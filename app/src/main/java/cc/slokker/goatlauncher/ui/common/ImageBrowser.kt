@@ -20,6 +20,9 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -147,7 +150,13 @@ fun ImageBrowser(dir: File?, onDir: (File?) -> Unit, onPick: (File) -> Unit, fir
 
 /** Campo de texto de uma linha para a TV (ex.: o filtro dos ícones). O ↓ do comando passa para o que está por baixo. */
 @Composable
-fun TvTextField(value: String, onValueChange: (String) -> Unit, placeholder: String, modifier: Modifier = Modifier) {
+fun TvTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    onDone: (() -> Unit)? = null,
+) {
     val focusManager = LocalFocusManager.current
     BasicTextField(
         value = value,
@@ -155,6 +164,8 @@ fun TvTextField(value: String, onValueChange: (String) -> Unit, placeholder: Str
         singleLine = true,
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = GoatColors.Text),
         cursorBrush = SolidColor(GoatColors.Sky),
+        keyboardOptions = KeyboardOptions(imeAction = if (onDone != null) ImeAction.Done else ImeAction.Default),
+        keyboardActions = KeyboardActions(onDone = { onDone?.invoke() }),
         modifier = modifier
             .onPreviewKeyEvent { e ->
                 if (e.key == Key.DirectionDown && e.type == KeyEventType.KeyDown) focusManager.moveFocus(FocusDirection.Down) else false

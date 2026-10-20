@@ -23,7 +23,10 @@ class LauncherApp(
     val color: Color,
     /** Ícone pequeno da app (ex.: ao lado dos detalhes de um cartão do "Continuar a ver"). */
     val smallIcon: ImageBitmap?,
-)
+) {
+    /** A mesma app com outro nome (o que a pessoa escolheu). */
+    fun withLabel(name: String) = LauncherApp(packageName, name, banner, icon, color, smallIcon)
+}
 
 /** As apps com entrada no launcher da TV (categoria LEANBACK_LAUNCHER), menos este launcher. */
 class InstalledApps(private val context: Context) {

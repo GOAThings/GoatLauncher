@@ -55,6 +55,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.focus.onFocusChanged
+import cc.slokker.goatlauncher.ui.common.TvTextField
+import cc.slokker.goatlauncher.ui.common.GlassButton
+import cc.slokker.goatlauncher.ui.settings.SettingsScreen
+import cc.slokker.goatlauncher.data.WeatherNow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
@@ -138,6 +144,8 @@ fun HomeScreen(vm: LauncherViewModel) {
     val context = LocalContext.current
     val screen by vm.screen.collectAsStateWithLifecycle()
     val onApps = screen == Screen.Apps
+    val onSettings = screen == Screen.Settings
+    val weather by vm.weather.collectAsStateWithLifecycle()
     val apps by vm.apps.collectAsStateWithLifecycle()
     val watchNext by vm.watchNext.collectAsStateWithLifecycle()
     val account by vm.account.collectAsStateWithLifecycle()
@@ -165,6 +173,8 @@ fun HomeScreen(vm: LauncherViewModel) {
         ?.takeIf { shelfStyle }
 
     var menuFor by remember { mutableStateOf<LauncherApp?>(null) }
+    var renameFor by remember { mutableStateOf<LauncherApp?>(null) }
+    var tabBarFocused by remember { mutableStateOf(false) }
     var iconFor by remember { mutableStateOf<LauncherApp?>(null) }
     var moving by remember { mutableStateOf<String?>(null) }
     val searchIntent = remember { SystemIntents.search(context) }
@@ -321,6 +331,8 @@ fun HomeScreen(vm: LauncherViewModel) {
                         }
                         else -> false
                     }
+                    // As Definições tratam o seu Voltar (páginas); se o foco estiver nos separadores, ver onKeyEvent.
+                    e.key == Key.Back && onSettings -> false
                     // É o ecrã inicial: Voltar não sai daqui. Nas Apps, volta ao Início.
                     e.key == Key.Back -> {
                         if (up && onApps) {
@@ -331,6 +343,15 @@ fun HomeScreen(vm: LauncherViewModel) {
                     }
                     else -> false
                 }
+            }
+            // Voltar nas Definições que ninguém tratou (o foco está nos separadores): volta ao Início.
+            .onKeyEvent { e ->
+                if (e.key != Key.Back || !onSettings) return@onKeyEvent false
+                if (e.type == KeyEventType.KeyUp) {
+                    vm.openHome()
+                    focusApp(lastFavorite())
+                }
+                true
             },
     ) {
         AnimatedVisibility(visible = shelfFullBleed && !onApps, enter = fadeIn(tween(400)), exit = fadeOut(tween(300))) {
@@ -357,27 +378,45 @@ fun HomeScreen(vm: LauncherViewModel) {
                 .graphicsLayer { alpha = sideScrim }
                 .background(Brush.horizontalGradient(0f to Color.Black.copy(alpha = 0.7f), 0.45f to Color.Black.copy(alpha = 0.35f), 0.75f to Color.Transparent)),
         )
-        val appsDim by animateFloatAsState(if (onApps) 1f else 0f, tween(250), label = "dim")
+        val appsDim by animateFloatAsState(if (onApps || onSettings) 1f else 0f, tween(250), label = "dim")
         Box(Modifier.fillMaxSize().graphicsLayer { alpha = appsDim }.background(Color.Black.copy(alpha = 0.6f)))
 
         Column(Modifier.fillMaxSize().padding(TvSafePadding)) {
             TopBar(
-                appsTab = onApps,
+                selected = when {
+                    onApps -> 1
+                    onSettings -> 2
+                    else -> 0
+                },
                 clock24h = account.clock24h,
+                showGreeting = account.showGreeting,
+                weather = weather?.takeIf { account.showWeather },
                 hasSearch = searchIntent != null,
                 onHome = vm::openHome,
                 onApps = vm::openApps,
                 onSettings = vm::openSettings,
                 onSearch = { if (!SystemIntents.start(context, searchIntent)) vm.toast(s.noSearch) },
+                onFocusChanged = { tabBarFocused = it },
             )
 
             AnimatedContent(
-                targetState = onApps,
+                targetState = screen,
                 transitionSpec = { fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(150)) },
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 label = "tab",
-            ) { appsTab ->
-                if (appsTab) {
+            ) { tab ->
+                if (tab == Screen.Settings) {
+                    // Definições no próprio separador. Escolhidas pelo foco nos separadores, não tiram de lá o foco.
+                    SettingsScreen(
+                        vm,
+                        embedded = true,
+                        autoFocus = !tabBarFocused,
+                        onExit = {
+                            vm.openHome()
+                            focusApp(lastFavorite())
+                        },
+                    )
+                } else if (tab == Screen.Apps) {
                     // ---- Apps: todas as apps, os favoritos na primeira linha ----
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
                         if (list.isEmpty()) {
@@ -425,17 +464,13 @@ fun HomeScreen(vm: LauncherViewModel) {
                                         onOpen = { vm.openWatchNext(context, item) },
                                     )
                                 } else {
-                                    Hero(account.showGreeting)
+                                    Spacer(Modifier.fillMaxWidth())
                                 }
                             }
                             Spacer(Modifier.height(28.dp))
                         } else if (downUnder) {
                             Spacer(Modifier.weight(1f))
-                            Hero(account.showGreeting)
-                            Spacer(Modifier.height(12.dp))
                         } else {
-                            Spacer(Modifier.weight(1f))
-                            Hero(account.showGreeting)
                             Spacer(Modifier.weight(1f))
                             // Entre favoritos, a secção troca com um fade (e a altura acompanha), em vez de saltar.
                             AnimatedContent(
@@ -482,6 +517,10 @@ fun HomeScreen(vm: LauncherViewModel) {
                     menuFor = null
                     iconFor = app
                 },
+                onRename = {
+                    menuFor = null
+                    renameFor = app
+                },
                 onHide = {
                     menuFor = null
                     // O foco passa para a vizinha antes de a app sair.
@@ -498,32 +537,50 @@ fun HomeScreen(vm: LauncherViewModel) {
             )
         }
 
+        renameFor?.let { app ->
+            RenameDialog(
+                app = app,
+                custom = device.names[app.packageName] != null,
+                onSave = {
+                    renameFor = null
+                    vm.setCustomName(app.packageName, it)
+                },
+                onDismiss = { renameFor = null },
+            )
+        }
+
         iconFor?.let { app ->
             IconPicker(app, current = device.icons[app.packageName], vm = vm, onDone = { iconFor = null })
         }
     }
 }
 
-/** Separadores ao centro (Início, Apps, Definições), pesquisa e relógio à direita. */
+/**
+ * Separadores ao centro (Início, Apps, Definições: mudam ao passar o foco, como no tvOS), pesquisa e,
+ * à direita, as horas com a saudação, a data e o tempo.
+ */
 @Composable
 private fun TopBar(
-    appsTab: Boolean,
+    selected: Int,
     clock24h: Boolean,
+    showGreeting: Boolean,
+    weather: WeatherNow?,
     hasSearch: Boolean,
     onHome: () -> Unit,
     onApps: () -> Unit,
     onSettings: () -> Unit,
     onSearch: () -> Unit,
+    onFocusChanged: (Boolean) -> Unit,
 ) {
     val s = LocalStrings.current
     val tabs = remember { List(3) { FocusRequester() } }
-    val selected = if (appsTab) 1 else 0
     Box(Modifier.fillMaxWidth().height(48.dp)) {
         // Cápsula translúcida, sem contorno; o separador aberto é uma cápsula mais clara lá dentro.
         // Ao subir para os separadores, o foco cai no separador aberto.
         Row(
             Modifier
                 .align(Alignment.Center)
+                .onFocusChanged { onFocusChanged(it.hasFocus) }
                 .focusRestorer(tabs[selected])
                 .background(Color.White.copy(alpha = 0.14f), CircleShape)
                 .padding(5.dp),
@@ -532,7 +589,10 @@ private fun TopBar(
             listOf(s.tabHome to onHome, s.tabApps to onApps, s.settings to onSettings).forEachIndexed { i, (label, action) ->
                 Surface(
                     onClick = action,
-                    modifier = Modifier.focusRequester(tabs[i]),
+                    // Passar o foco por um separador abre-o (sem carregar em OK).
+                    modifier = Modifier
+                        .focusRequester(tabs[i])
+                        .onFocusChanged { if (it.isFocused && i != selected) action() },
                     shape = ClickableSurfaceDefaults.shape(CircleShape),
                     colors = ClickableSurfaceDefaults.colors(
                         containerColor = if (i == selected) Color.White.copy(alpha = 0.2f) else Color.Transparent,
@@ -577,7 +637,7 @@ private fun TopBar(
                     }
                 }
             }
-            TopClock(clock24h)
+            TopInfo(clock24h, showGreeting, weather)
         }
     }
 }
@@ -768,12 +828,42 @@ private fun ContinueWatchingRow(app: LauncherApp, items: List<WatchNextItem>, on
     }
 }
 
-/** Pressão longa num banner: Mover, Mudar ícone, Esconder, Informação da app. */
+/** Nome da app no launcher (ex.: "YouTube" em vez de "TizenTube"). Guardar vazio repõe o nome da app. */
+@Composable
+private fun RenameDialog(app: LauncherApp, custom: Boolean, onSave: (String?) -> Unit, onDismiss: () -> Unit) {
+    val s = LocalStrings.current
+    val field = remember { FocusRequester() }
+    var text by remember { mutableStateOf(app.label) }
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            Modifier
+                .width(460.dp)
+                .glass(GoatShapes.Panel, tint = Color(0xF0111522))
+                .padding(20.dp),
+        ) {
+            Text(s.rename, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
+            TvTextField(text, { text = it }, s.nameHint, Modifier.fillMaxWidth().focusRequester(field), onDone = { onSave(text) })
+            Spacer(Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                GlassButton(s.save, onClick = { onSave(text) })
+                if (custom) GlassButton(s.restoreName, onClick = { onSave(null) })
+                GlassButton(s.cancel, onClick = onDismiss)
+            }
+        }
+        LaunchedEffect(Unit) {
+            withFrameNanos { }
+            field.requestFocusSafely()
+        }
+    }
+}
+
+/** Pressão longa num banner: Mover, Mudar ícone, Mudar nome, Esconder, Informação da app. */
 @Composable
 private fun AppMenu(
     app: LauncherApp,
     onMove: () -> Unit,
     onChangeIcon: () -> Unit,
+    onRename: () -> Unit,
     onHide: () -> Unit,
     onInfo: () -> Unit,
     onDismiss: () -> Unit,
@@ -790,6 +880,7 @@ private fun AppMenu(
             Text(app.label, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 12.dp, bottom = 10.dp))
             GlassRow(title = s.move, onClick = onMove, modifier = Modifier.focusRequester(first))
             GlassRow(title = s.changeIcon, onClick = onChangeIcon)
+            GlassRow(title = s.rename, onClick = onRename)
             GlassRow(title = s.hide, onClick = onHide)
             GlassRow(title = s.appInfo, onClick = onInfo)
         }

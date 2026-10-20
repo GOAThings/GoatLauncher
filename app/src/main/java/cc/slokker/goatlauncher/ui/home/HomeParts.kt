@@ -58,10 +58,10 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.data.LauncherApp
 import cc.slokker.goatlauncher.data.WatchNextItem
+import cc.slokker.goatlauncher.data.WeatherNow
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.Strings
 import cc.slokker.goatlauncher.ui.common.GoatIcons
-import cc.slokker.goatlauncher.ui.theme.HeroStyle
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import coil3.compose.AsyncImagePainter
@@ -92,18 +92,12 @@ private fun rememberMinute(): Long {
     return minute * 60_000
 }
 
-/** Relógio pequeno, em cima à direita. */
+/**
+ * Em cima à direita: as horas e, por baixo, "Boa noite · Terça, 20 de outubro · ☁ 14°"
+ * (a saudação e o tempo desligam-se nas definições).
+ */
 @Composable
-fun TopClock(clock24h: Boolean, modifier: Modifier = Modifier) {
-    val s = LocalStrings.current
-    val now = rememberMinute()
-    val time = SimpleDateFormat(if (clock24h) "HH:mm" else "h:mm a", s.locale).format(now)
-    Text(time, modifier, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium))
-}
-
-/** Saudação, "Bem-vindo a casa" e a data, à esquerda. */
-@Composable
-fun Hero(showGreeting: Boolean, modifier: Modifier = Modifier) {
+fun TopInfo(clock24h: Boolean, showGreeting: Boolean, weather: WeatherNow?, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
     val now = rememberMinute()
     val hour = Calendar.getInstance().apply { timeInMillis = now }.get(Calendar.HOUR_OF_DAY)
@@ -112,15 +106,30 @@ fun Hero(showGreeting: Boolean, modifier: Modifier = Modifier) {
         in 12..19 -> s.goodAfternoon
         else -> s.goodEvening
     }
-    Column(modifier) {
-        if (showGreeting) {
-            Text(greeting.uppercase(s.locale), style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 2.sp), color = GoatColors.TextDim)
-            Spacer(Modifier.height(4.dp))
+    Column(modifier, horizontalAlignment = Alignment.End) {
+        Text(
+            SimpleDateFormat(if (clock24h) "HH:mm" else "h:mm a", s.locale).format(now),
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            val text = listOfNotNull(greeting.takeIf { showGreeting }, formatDate(now, s)).joinToString(" · ")
+            Text(text, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1)
+            if (weather != null) {
+                Text(" · ", style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim)
+                Icon(weatherIcon(weather), contentDescription = null, tint = GoatColors.TextDim, modifier = Modifier.size(13.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("${weather.temperature}°", style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim)
+            }
         }
-        Text(s.welcome, style = HeroStyle)
-        Spacer(Modifier.height(4.dp))
-        Text(formatDate(now, s), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal), color = GoatColors.TextDim)
     }
+}
+
+private fun weatherIcon(w: WeatherNow) = when (w.kind) {
+    WeatherNow.Kind.CLEAR, WeatherNow.Kind.PARTLY -> if (w.isDay) GoatIcons.Sun else GoatIcons.Moon
+    WeatherNow.Kind.RAIN -> GoatIcons.Rain
+    WeatherNow.Kind.SNOW -> GoatIcons.Snow
+    WeatherNow.Kind.STORM -> GoatIcons.Storm
+    else -> GoatIcons.Cloud
 }
 
 /** "Segunda, 20 de outubro" / "Monday, 20 October". */
