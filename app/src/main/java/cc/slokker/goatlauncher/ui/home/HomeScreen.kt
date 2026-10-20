@@ -283,7 +283,8 @@ fun HomeScreen(vm: LauncherViewModel) {
     )
     val shelfState by shelfPainter.state.collectAsState()
     val shelfSize = (shelfState as? AsyncImagePainter.State.Success)?.painter?.intrinsicSize
-    val shelfFullBleed = shelfItem?.imageUri != null && shelfSize != null && shelfSize.height > 0f &&
+    // Os canais em direto (ex.: GoatTV) só têm o logo: nunca enchem o ecrã, mesmo que o logo seja largo.
+    val shelfFullBleed = shelfItem != null && !shelfItem.isChannel && shelfItem.imageUri != null && shelfSize != null && shelfSize.height > 0f &&
         abs(shelfSize.width / shelfSize.height - 16f / 9f) < 0.25f
 
     Box(
@@ -603,14 +604,18 @@ private fun ShelfHero(
             }
             .focusable(interactionSource = interaction),
     ) {
+        // Sem imagem de fundo (ex.: logo de um canal): o logo aparece num cartão, como na fila de cartões.
         if (showLogo && item.imageUri != null) {
-            AsyncImage(
-                model = item.imageUri,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                alignment = Alignment.CenterStart,
-                modifier = Modifier.height(64.dp).widthIn(max = 200.dp).padding(bottom = 10.dp),
-            )
+            Box(
+                Modifier
+                    .padding(bottom = 16.dp)
+                    .size(width = 176.dp, height = 99.dp)
+                    .background(Color(0xFF1C2333), GoatShapes.Control)
+                    .padding(14.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                AsyncImage(model = item.imageUri, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+            }
         }
         Text(
             s.shelfLabel(app.label).uppercase(s.locale),

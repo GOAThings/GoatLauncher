@@ -319,8 +319,11 @@ fun WatchNextCard(item: WatchNextItem, onClick: () -> Unit, modifier: Modifier =
                     )
                     val state by painter.state.collectAsState()
                     val size = (state as? AsyncImagePainter.State.Success)?.painter?.intrinsicSize
-                    val matches = size == null || size.width <= 0f || size.height <= 0f ||
-                        abs(size.width / size.height - item.aspectRatio) / item.aspectRatio < 0.12f
+                    // Logo de um canal: sempre inteiro, mesmo que tenha a forma do cartão.
+                    val matches = !item.isChannel && (
+                        size == null || size.width <= 0f || size.height <= 0f ||
+                            abs(size.width / size.height - item.aspectRatio) / item.aspectRatio < 0.12f
+                        )
                     Image(
                         painter = painter,
                         contentDescription = item.title,

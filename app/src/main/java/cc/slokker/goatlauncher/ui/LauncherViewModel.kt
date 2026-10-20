@@ -264,7 +264,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         fun item(id: Long, pkg: String, title: String, image: String, ratio: Float, s: String?, e: String?, pos: Long) = WatchNextItem(
             id = -id, packageName = pkg, title = title, episodeTitle = null, season = s, episode = e,
             imageUri = image, aspectRatio = ratio, positionMs = pos, durationMs = 2_700_000, type = WatchNextItem.TYPE_CONTINUE,
-            lastEngagement = System.currentTimeMillis() - id, intentUri = null,
+            lastEngagement = System.currentTimeMillis() - id, intentUri = null, isChannel = id == 4L,
         )
         val out = mutableMapOf<String, List<WatchNextItem>>()
         pkgs.getOrNull(0)?.let { p ->

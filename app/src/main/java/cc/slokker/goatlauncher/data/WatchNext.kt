@@ -31,6 +31,8 @@ data class WatchNextItem(
     val type: Int,
     val lastEngagement: Long,
     val intentUri: String?,
+    /** Um canal em direto (ex.: GoatTV): a imagem é o logo do canal, nunca uma cena do conteúdo. */
+    val isChannel: Boolean = false,
 ) {
     /** 0..1, ou null sem duração ou posição. */
     val progress: Float?
@@ -127,6 +129,7 @@ class WatchNextSource(private val context: Context) {
             type = c.int(COL_TYPE) ?: WatchNextItem.TYPE_CONTINUE,
             lastEngagement = c.long(COL_ENGAGEMENT) ?: 0,
             intentUri = c.str(COL_INTENT),
+            isChannel = c.int(COL_PROGRAM_TYPE) == TvContractCompat.WatchNextPrograms.TYPE_CHANNEL || c.int(COL_LIVE) == 1,
         )
     }
 
@@ -172,6 +175,8 @@ class WatchNextSource(private val context: Context) {
             "last_engagement_time_utc_millis",
             "intent_uri",
             "browsable",
+            "type",
+            "live",
         )
         const val COL_ID = 0
         const val COL_PACKAGE = 1
@@ -189,5 +194,7 @@ class WatchNextSource(private val context: Context) {
         const val COL_ENGAGEMENT = 13
         const val COL_INTENT = 14
         const val COL_BROWSABLE = 15
+        const val COL_PROGRAM_TYPE = 16
+        const val COL_LIVE = 17
     }
 }
