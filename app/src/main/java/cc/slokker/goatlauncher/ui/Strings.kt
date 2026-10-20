@@ -1,0 +1,124 @@
+package cc.slokker.goatlauncher.ui
+
+import androidx.compose.runtime.staticCompositionLocalOf
+import java.util.Locale
+
+/** Textos em português e inglês, lado a lado: `t("Português", "English")`. Segue o idioma da TV. */
+class Strings(val english: Boolean) {
+    private fun t(pt: String, en: String) = if (english) en else pt
+
+    val locale: Locale get() = if (english) Locale.UK else Locale.forLanguageTag("pt-PT")
+
+    // ---- Início ----
+    val goodMorning get() = t("Bom dia", "Good morning")
+    val goodAfternoon get() = t("Boa tarde", "Good afternoon")
+    val goodEvening get() = t("Boa noite", "Good evening")
+    val search get() = t("Pesquisa", "Search")
+    val tabHome get() = t("Início", "Home")
+    val tabApps get() = t("Apps", "Apps")
+    val welcome get() = t("Bem-vindo a casa", "Welcome home")
+    val favorites get() = t("Favoritos", "Favorites")
+    val moreApps get() = t("Mais apps", "More apps")
+    val holdToRearrange get() = t("Mantém OK para reordenar", "Hold OK to rearrange")
+    fun shelfLabel(app: String) = t("$app · continuar a ver", "$app · continue watching")
+    val continueNow get() = t("Continuar", "Continue")
+    fun shelfMore(n: Int) = t("‹ › mais $n", "‹ › $n more")
+    val settings get() = t("Definições", "Settings")
+    fun continueIn(app: String) = t("Continuar a ver em $app", "Continue watching in $app")
+    fun seasonEpisode(season: String?, episode: String?) = listOfNotNull(
+        season?.let { t("T$it", "S$it") },
+        episode?.let { t("E$it", "E$it") },
+    ).joinToString(" ")
+    fun minutesLeft(min: Long) = if (min >= 60) {
+        t("faltam ${min / 60} h ${min % 60} min", "${min / 60} h ${min % 60} min left")
+    } else {
+        t("faltam $min min", "$min min left")
+    }
+    val noApps get() = t("Nenhuma app de TV instalada.", "No TV apps installed.")
+    val cantOpen get() = t("Não foi possível abrir.", "Couldn't open that.")
+    val noSearch get() = t("Esta TV não tem pesquisa do sistema.", "This TV has no system search.")
+
+    // ---- Menu da app ----
+    val move get() = t("Mover", "Move")
+    val hide get() = t("Esconder", "Hide")
+    val appInfo get() = t("Informação da app", "App info")
+    val changeIcon get() = t("Mudar ícone", "Change icon")
+    val restoreIcon get() = t("Repor o original", "Restore original")
+    val iconPack get() = t("Icon pack", "Icon pack")
+    val openIconPack get() = t("Abrir no icon pack", "Open in the icon pack")
+    val suggested get() = t("Feitos para esta app", "Made for this app")
+    val allIcons get() = t("Todos os ícones", "All icons")
+    val filterHint get() = t("Filtrar…", "Filter…")
+    val noIcons get() = t("Nenhum ícone encontrado", "No icons found")
+    val loading get() = t("A carregar…", "Loading…")
+    val boxImages get() = t("Imagens da box", "Images on this box")
+    val boxImagesHint get() = t("Pastas da box e discos USB ou de rede", "Folders on this box and USB or network drives")
+    val fileManager get() = t("Gestor de ficheiros", "File manager")
+    val internalStorage get() = t("Armazenamento interno", "Internal storage")
+    val upFolder get() = t("Pasta acima", "Up one folder")
+    val noImages get() = t("Sem imagens nesta pasta", "No images in this folder")
+    val storagePermission get() = t("O launcher precisa de acesso às imagens da box.", "The launcher needs access to images on this box.")
+    val allow get() = t("Permitir", "Allow")
+    val imageFailed get() = t("Não foi possível usar esta imagem", "Couldn't use this image")
+    val moveHint get() = t("Setas para mover · OK para terminar", "Arrows to move · OK when done")
+
+    // ---- Definições ----
+    val appearance get() = t("Aspeto", "Appearance")
+    val wallpaper get() = t("Fundo", "Wallpaper")
+    val wallpaperImage get() = t("Imagem escolhida", "Chosen image")
+    val reddit get() = t("Reddit", "Reddit")
+    val redditHint get() = t("Fotos do top da semana; muda a cada 30 minutos", "Top photos of the week; changes every 30 minutes")
+    val otherSubreddit get() = t("Outro subreddit", "Other subreddit")
+    val use get() = t("Usar", "Use")
+    val clock24h get() = t("Relógio de 24 horas", "24-hour clock")
+    val greeting get() = t("Saudação", "Greeting")
+    val showAppName get() = t("Nomes das apps", "App names")
+    val continueStyle get() = t("Estilo do Continuar a ver", "Continue watching style")
+    val styleRow get() = t("Fila de cartões", "Row of cards")
+    val styleShelf get() = t("Destaque", "Spotlight")
+    val continueWatching get() = t("Continuar a ver", "Continue watching")
+    val continueWatchingHint get() = t("O que cada app publica no \"A seguir\" do Android TV", "What each app publishes to Android TV's \"Play next\"")
+    val apps get() = t("Apps", "Apps")
+    val hiddenApps get() = t("Apps escondidas", "Hidden apps")
+    fun hiddenCount(n: Int) = when (n) {
+        0 -> t("Nenhuma", "None")
+        1 -> t("1 app", "1 app")
+        else -> t("$n apps", "$n apps")
+    }
+    val hiddenAppsHint get() = t("OK esconde ou mostra a app no ecrã inicial", "OK hides or shows the app on the home screen")
+    val account get() = t("Conta Slokker", "Slokker account")
+    val linkAccount get() = t("Ligar à conta Slokker", "Link to a Slokker account")
+    val linkAccountHint get() = t("Guarda o fundo e a ordem das apps na conta", "Keeps your wallpaper and app order in your account")
+    fun linkedAs(email: String?) = if (email != null) t("Ligada a $email", "Linked to $email") else t("Ligada à conta", "Linked to an account")
+    val syncNow get() = t("Sincronizar agora", "Sync now")
+    val synced get() = t("Definições sincronizadas", "Settings synced")
+    val unlink get() = t("Desligar desta TV", "Unlink this TV")
+    val unlinkHint get() = t("As definições ficam nesta TV, mas deixam de sincronizar", "Settings stay on this TV but stop syncing")
+    val pressAgainToConfirm get() = t("Carrega de novo para confirmar", "Press again to confirm")
+    val unlinked get() = t("Esta TV já não está ligada à conta", "This TV is no longer linked")
+    val android get() = t("Android", "Android")
+    val androidSettings get() = t("Definições do Android", "Android settings")
+    fun version(v: String) = t("GoatLauncher $v", "GoatLauncher $v")
+    val save get() = t("Guardar", "Save")
+    val cancel get() = t("Cancelar", "Cancel")
+
+    // ---- Ativação ----
+    val activateTitle get() = t("Ligar à conta Slokker", "Link to a Slokker account")
+    val activateGoTo get() = t("No telemóvel, vai a", "On your phone, go to")
+    val activateEnterCode get() = t("e escreve o código", "and enter the code")
+    fun activateExpires(min: Long, sec: Long) =
+        t("Expira em %d:%02d. Depois aparece um novo sozinho.", "Expires in %d:%02d. A new one will appear on its own.").format(min, sec)
+    val activateRequesting get() = t("A pedir um código…", "Requesting a code…")
+    val activateQr get() = t("Ou lê o QR com a câmara", "Or scan the QR code with your camera")
+    val activateQrDescription get() = t("Código QR para ligar", "QR code to link")
+    fun activateServerError(code: Int) = t("O servidor respondeu $code. A tentar de novo…", "The server replied $code. Retrying…")
+    val activateOffline get() = t("Sem ligação à internet. A tentar de novo…", "No internet connection. Retrying…")
+    val activateBadResponse get() = t("Resposta inesperada do servidor. A tentar de novo…", "Unexpected server response. Retrying…")
+    val linked get() = t("TV ligada à conta", "TV linked to your account")
+
+    companion object {
+        fun forSystem() = Strings(english = Locale.getDefault().language != "pt")
+    }
+}
+
+val LocalStrings = staticCompositionLocalOf { Strings.forSystem() }

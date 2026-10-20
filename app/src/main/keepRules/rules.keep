@@ -1,0 +1,5 @@
+# Modelos lidos pelo Gson por reflexão (respostas da API da conta Slokker).
+-keep class cc.slokker.goatlauncher.data.api.** { *; }
+# Lista do Reddit guardada em JSON (Gson, com TypeToken genérico).
+-keep class cc.slokker.goatlauncher.data.RedditImage { *; }
+-keepattributes Signature
