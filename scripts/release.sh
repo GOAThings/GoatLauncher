@@ -25,10 +25,14 @@ sed -i "s/versionCode = $code/versionCode = $((code + 1))/; s/versionName = \"[^
 apk="build/goatlauncher-$VERSION.apk"
 mkdir -p build
 cp app/build/outputs/apk/release/app-release.apk "$apk"
+# Cópia com nome fixo: https://github.com/$RELEASES_REPO/releases/latest/download/goatlauncher.apk dá sempre
+# a versão mais recente (é para aí que aponta o código do Downloader, que nunca muda).
+latest="build/goatlauncher.apk"
+cp "$apk" "$latest"
 
 git commit -qam "Versão $VERSION"
 git tag -a "v$VERSION" -m "Versão $VERSION"  # anotada: o --follow-tags só envia tags anotadas
 git push -q --follow-tags
 
-gh release create "v$VERSION" "$apk" --repo "$RELEASES_REPO" --title "GoatLauncher $VERSION" --notes "${NOTES:-Versão $VERSION}"
+gh release create "v$VERSION" "$apk" "$latest" --repo "$RELEASES_REPO" --title "GoatLauncher $VERSION" --notes "${NOTES:-Versão $VERSION}"
 echo "Publicada a $VERSION em https://github.com/$RELEASES_REPO/releases"
