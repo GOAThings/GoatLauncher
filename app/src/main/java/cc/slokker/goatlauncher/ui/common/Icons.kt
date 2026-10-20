@@ -49,6 +49,27 @@ object GoatIcons {
         icon("Apps", "M4,8h4V4H4v4zm6,12h4v-4h-4v4zm-6,0h4v-4H4v4zm0,-6h4v-4H4v4zm6,0h4v-4h-4v4zm6,-10v4h4V4h-4zm-6,4h4V4h-4v4zm6,6h4v-4h-4v4zm0,6h4v-4h-4v4z")
     }
 
+    // Rede (Material Icons).
+    val Wifi: ImageVector by lazy {
+        icon("Wifi", "M1,9l2,2c4.97,-4.97 13.03,-4.97 18,0l2,-2C16.93,2.93 7.08,2.93 1,9zm8,8l3,3 3,-3c-1.65,-1.66 -4.34,-1.66 -6,0zm-4,-4l2,2c2.76,-2.76 7.24,-2.76 10,0l2,-2C15.14,9.14 8.87,9.14 5,13z")
+    }
+
+    val Ethernet: ImageVector by lazy {
+        icon(
+            "Ethernet",
+            "M7.77,6.76L6.23,5.48 0.82,12l5.41,6.52 1.54,-1.28L3.42,12l4.35,-5.24zM7,13h2v-2H7v2zm10,-2h-2v2h2v-2zm-6,2h2v-2h-2v2z" +
+                "m6.77,-7.52l-1.54,1.28L20.58,12l-4.35,5.24 1.54,1.28L23.18,12l-5.41,-6.52z",
+        )
+    }
+
+    val WifiOff: ImageVector by lazy {
+        icon(
+            "WifiOff",
+            "M23.64,7c-0.45,-0.34 -4.93,-4 -11.64,-4 -1.5,0 -2.89,0.19 -4.15,0.48L18.18,13.8 23.64,7zM17.04,15.22L3.27,1.44 2,2.72l2.05,2.06" +
+                "C1.91,5.76 0.59,6.82 0.36,7l11.63,14.49 0.01,0.01 0.01,-0.01 3.9,-4.86 3.32,3.32 1.27,-1.27 -3.46,-3.46z",
+        )
+    }
+
     // Tempo (Material Icons).
     val Sun: ImageVector by lazy {
         icon(

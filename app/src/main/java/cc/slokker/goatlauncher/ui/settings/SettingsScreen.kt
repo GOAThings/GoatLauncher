@@ -26,6 +26,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,7 +71,7 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
 
-private enum class Page { Main, Wallpaper, WallpaperFiles, HiddenApps }
+private enum class Page { Main, Wallpaper, WallpaperFiles, HiddenApps, YouTube }
 
 /** Definições do launcher: um painel de vidro à direita, por cima do fundo. Voltar sobe um nível. */
 @Composable
@@ -118,6 +120,7 @@ fun SettingsScreen(
                     Page.Wallpaper -> s.wallpaper
                     Page.WallpaperFiles -> s.boxImages
                     Page.HiddenApps -> s.hiddenApps
+                    Page.YouTube -> s.youtube
                 },
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
@@ -138,6 +141,7 @@ fun SettingsScreen(
                     first = first,
                 )
                 Page.HiddenApps -> HiddenAppsPage(vm, first)
+                Page.YouTube -> YouTubePage(vm, first, onDone = { page = Page.Main })
             }
         }
     }
@@ -228,6 +232,24 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
                         }
                     },
                 )
+            }
+        }
+
+        item { SectionLabel(s.youtube) }
+        item {
+            val linked by vm.youtubeLinked.collectAsStateWithLifecycle()
+            var confirm by remember { mutableStateOf(false) }
+            if (linked) {
+                GlassRow(
+                    title = s.youtubeUnlink,
+                    subtitle = if (confirm) s.pressAgainToConfirm else s.youtubeOnHint,
+                    onClick = {
+                        if (confirm) vm.unlinkYouTube()
+                        confirm = !confirm
+                    },
+                )
+            } else {
+                GlassRow(title = s.youtubeLink, subtitle = s.youtubeLinkHint, onClick = { onPage(Page.YouTube) }, trailing = { Chevron() })
             }
         }
 
@@ -350,6 +372,41 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
                 })
             }
         }
+    }
+}
+
+/** Ligação ao YouTube por código (como na app de TV do YouTube): a TV nunca vê a password. */
+@Composable
+private fun YouTubePage(vm: LauncherViewModel, first: FocusRequester, onDone: () -> Unit) {
+    val s = LocalStrings.current
+    val login by vm.youtubeLogin.collectAsStateWithLifecycle()
+    val linked by vm.youtubeLinked.collectAsStateWithLifecycle()
+    DisposableEffect(Unit) {
+        if (!linked) vm.startYouTubeLogin()
+        onDispose { vm.cancelYouTubeLogin() }
+    }
+    LaunchedEffect(linked) { if (linked) onDone() }
+    Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Text(s.youtubeGoTo, style = MaterialTheme.typography.titleSmall, color = GoatColors.TextDim)
+        Text(
+            login?.verificationUrl?.removePrefix("https://")?.removePrefix("www.") ?: "google.com/device",
+            style = MaterialTheme.typography.headlineSmall,
+            color = GoatColors.Sky,
+        )
+        Spacer(Modifier.height(14.dp))
+        Text(s.youtubeEnterCode, style = MaterialTheme.typography.titleSmall, color = GoatColors.TextDim)
+        Text(
+            login?.userCode ?: "· · ·",
+            style = MaterialTheme.typography.displayMedium.copy(letterSpacing = 4.sp),
+        )
+        Spacer(Modifier.height(14.dp))
+        Text(
+            if (login == null) s.youtubeRequesting else s.youtubeWaiting,
+            style = MaterialTheme.typography.bodyMedium,
+            color = GoatColors.TextFaint,
+        )
+        Spacer(Modifier.height(18.dp))
+        GlassButton(s.cancel, onClick = onDone, modifier = Modifier.focusRequester(first))
     }
 }
 

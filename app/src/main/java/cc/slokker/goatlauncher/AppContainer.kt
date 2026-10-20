@@ -9,6 +9,7 @@ import cc.slokker.goatlauncher.data.SessionStore
 import cc.slokker.goatlauncher.data.SettingsRepository
 import cc.slokker.goatlauncher.data.Updater
 import cc.slokker.goatlauncher.data.WeatherSource
+import cc.slokker.goatlauncher.data.YouTubeSource
 import cc.slokker.goatlauncher.data.WatchNextSource
 import cc.slokker.goatlauncher.data.api.BACKEND_URL
 import cc.slokker.goatlauncher.data.api.BackendApi
@@ -62,4 +63,5 @@ class AppContainer(context: Context) {
     val reddit = RedditWallpapers(context, plainHttp)
     val updater = Updater(context, plainHttp, Gson())
     val weather = WeatherSource(context, plainHttp)
+    val youtube = YouTubeSource(context, plainHttp)
 }

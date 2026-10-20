@@ -14,6 +14,7 @@ class Strings(val english: Boolean) {
     val goodAfternoon get() = t("Boa tarde", "Good afternoon")
     val goodEvening get() = t("Boa noite", "Good evening")
     val search get() = t("Pesquisa", "Search")
+    val network get() = t("Rede", "Network")
     val tabHome get() = t("Início", "Home")
     val tabApps get() = t("Apps", "Apps")
     val favorites get() = t("Favoritos", "Favorites")
@@ -39,7 +40,8 @@ class Strings(val english: Boolean) {
 
     // ---- Menu da app ----
     val move get() = t("Mover", "Move")
-    val hide get() = t("Esconder", "Hide")
+    val hide get() = t("Esconder do Início", "Hide from Home")
+    val showOnHome get() = t("Mostrar no Início", "Show on Home")
     val appInfo get() = t("Informação da app", "App info")
     val rename get() = t("Mudar nome", "Rename")
     val nameHint get() = t("Nome da app", "App name")
@@ -75,6 +77,18 @@ class Strings(val english: Boolean) {
     val clock24h get() = t("Relógio de 24 horas", "24-hour clock")
     val greeting get() = t("Saudação", "Greeting")
     val weather get() = t("Meteorologia", "Weather")
+    val youtube get() = t("YouTube", "YouTube")
+    val youtubeLink get() = t("Ligar à conta Google", "Link a Google account")
+    val youtubeLinkHint get() = t("As tuas recomendações do YouTube no Continuar a ver", "Your YouTube recommendations in Continue watching")
+    val youtubeOn get() = t("Recomendações do YouTube ligadas", "YouTube recommendations on")
+    val youtubeOnHint get() = t("Aparecem no Continuar a ver da app de YouTube", "They show in the YouTube app's Continue watching")
+    val youtubeUnlink get() = t("Desligar a conta Google", "Unlink the Google account")
+    val youtubeGoTo get() = t("No telemóvel ou no computador, vai a", "On your phone or computer, go to")
+    val youtubeEnterCode get() = t("e escreve o código", "and enter the code")
+    val youtubeWaiting get() = t("À espera da confirmação… (um código novo aparece sozinho se este expirar)", "Waiting for confirmation… (a new code appears on its own if this one expires)")
+    val youtubeRequesting get() = t("A pedir um código…", "Requesting a code…")
+    val youtubeLinked get() = t("Conta Google ligada", "Google account linked")
+    val youtubeError get() = t("Não foi possível falar com o YouTube. A tentar de novo…", "Couldn't reach YouTube. Retrying…")
     val showAppName get() = t("Nomes das apps", "App names")
     val continueStyle get() = t("Estilo do Continuar a ver", "Continue watching style")
     val styleRow get() = t("Fila de cartões", "Row of cards")
@@ -93,7 +107,11 @@ class Strings(val english: Boolean) {
     val account get() = t("Conta Slokker", "Slokker account")
     val linkAccount get() = t("Ligar à conta Slokker", "Link to a Slokker account")
     val linkAccountHint get() = t("Guarda o fundo e a ordem das apps na conta", "Keeps your wallpaper and app order in your account")
-    fun linkedAs(email: String?) = if (email != null) t("Ligada a $email", "Linked to $email") else t("Ligada à conta", "Linked to an account")
+    fun linkedAs(email: String?) = if (email != null) {
+        t("Ligada a ${maskEmail(email)}", "Linked to ${maskEmail(email)}")
+    } else {
+        t("Ligada à conta", "Linked to an account")
+    }
     val syncNow get() = t("Sincronizar agora", "Sync now")
     val synced get() = t("Definições sincronizadas", "Settings synced")
     val unlink get() = t("Desligar desta TV", "Unlink this TV")
@@ -137,3 +155,13 @@ class Strings(val english: Boolean) {
 }
 
 val LocalStrings = staticCompositionLocalOf { Strings.forSystem() }
+
+/**
+ * Email mascarado para o ecrã ("n••••••@example.com"): não aparece por inteiro em gravações ou fotos da TV.
+ * O Android 11 da SHIELD não tem desfocagem real, por isso esconde-se o nome.
+ */
+fun maskEmail(email: String): String {
+    val at = email.indexOf('@')
+    if (at <= 0) return email
+    return email.first() + "••••••" + email.substring(at)
+}

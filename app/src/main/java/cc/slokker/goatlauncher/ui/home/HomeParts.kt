@@ -92,12 +92,24 @@ private fun rememberMinute(): Long {
     return minute * 60_000
 }
 
+/** Em cima à direita: as horas. */
+@Composable
+fun TopClock(clock24h: Boolean, modifier: Modifier = Modifier) {
+    val s = LocalStrings.current
+    val now = rememberMinute()
+    Text(
+        SimpleDateFormat(if (clock24h) "HH:mm" else "h:mm a", s.locale).format(now),
+        modifier,
+        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
+    )
+}
+
 /**
- * Em cima à direita: as horas e, por baixo, "Boa noite · Terça, 20 de outubro · ☁ 14°"
+ * Em cima à esquerda: "BOA NOITE" e, por baixo, "Terça, 20 de outubro · ☁ 14°"
  * (a saudação e o tempo desligam-se nas definições).
  */
 @Composable
-fun TopInfo(clock24h: Boolean, showGreeting: Boolean, weather: WeatherNow?, modifier: Modifier = Modifier) {
+fun TopGreeting(showGreeting: Boolean, weather: WeatherNow?, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
     val now = rememberMinute()
     val hour = Calendar.getInstance().apply { timeInMillis = now }.get(Calendar.HOUR_OF_DAY)
@@ -106,14 +118,12 @@ fun TopInfo(clock24h: Boolean, showGreeting: Boolean, weather: WeatherNow?, modi
         in 12..19 -> s.goodAfternoon
         else -> s.goodEvening
     }
-    Column(modifier, horizontalAlignment = Alignment.End) {
-        Text(
-            SimpleDateFormat(if (clock24h) "HH:mm" else "h:mm a", s.locale).format(now),
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
-        )
+    Column(modifier) {
+        if (showGreeting) {
+            Text(greeting.uppercase(s.locale), style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.6.sp), color = GoatColors.TextDim)
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            val text = listOfNotNull(greeting.takeIf { showGreeting }, formatDate(now, s)).joinToString(" · ")
-            Text(text, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1)
+            Text(formatDate(now, s), style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1)
             if (weather != null) {
                 Text(" · ", style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim)
                 Icon(weatherIcon(weather), contentDescription = null, tint = GoatColors.TextDim, modifier = Modifier.size(13.dp))
@@ -361,7 +371,7 @@ fun WatchNextCard(item: WatchNextItem, onClick: () -> Unit, modifier: Modifier =
         Spacer(Modifier.height(6.dp))
         Text(item.title, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
         val details = listOfNotNull(
-            s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
+            s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() } ?: item.episodeTitle,
             item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
         ).joinToString(" · ")
         if (details.isNotEmpty()) {
@@ -425,7 +435,7 @@ fun WideWatchCard(item: WatchNextItem, app: LauncherApp?, onClick: () -> Unit, m
                 Spacer(Modifier.width(6.dp))
             }
             val details = listOfNotNull(
-                s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
+                s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() } ?: item.episodeTitle,
                 item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
             ).joinToString(" · ").ifEmpty { app?.label.orEmpty() }
             Text(details, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1, overflow = TextOverflow.Ellipsis)

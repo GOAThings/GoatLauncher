@@ -55,6 +55,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cc.slokker.goatlauncher.data.NetworkKind
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.focus.onFocusChanged
 import cc.slokker.goatlauncher.ui.common.TvTextField
@@ -153,13 +154,18 @@ fun HomeScreen(vm: LauncherViewModel) {
     val onApps = screen == Screen.Apps
     val onSettings = screen == Screen.Settings
     val weather by vm.weather.collectAsStateWithLifecycle()
+    val network by vm.network.collectAsStateWithLifecycle()
     val apps by vm.apps.collectAsStateWithLifecycle()
     val watchNext by vm.watchNext.collectAsStateWithLifecycle()
     val account by vm.account.collectAsStateWithLifecycle()
     val device by vm.device.collectAsStateWithLifecycle()
     val list = apps.orEmpty()
+    val tabApps by vm.appsTab.collectAsStateWithLifecycle()
     val currentList by rememberUpdatedState(list)
     val favorites = list.take(FavoriteCount)
+    // No separador Apps: os favoritos e depois todas as outras, incluindo as escondidas do Início.
+    val moreApps = tabApps.orEmpty().filter { app -> favorites.none { it.packageName == app.packageName } }
+    val gridApps = favorites + moreApps
     val shelfStyle = account.continueStyle == AccountSettings.STYLE_SHELF
     val downUnder = account.continueStyle == AccountSettings.STYLE_DOWN_UNDER
 
@@ -184,7 +190,6 @@ fun HomeScreen(vm: LauncherViewModel) {
     var tabBarFocused by remember { mutableStateOf(false) }
     var iconFor by remember { mutableStateOf<LauncherApp?>(null) }
     var moving by remember { mutableStateOf<String?>(null) }
-    val searchIntent = remember { SystemIntents.search(context) }
 
     // O foco vai para a app [targetPkg] (o banner com o [target]) sempre que [focusRequest] muda.
     val target = remember { FocusRequester() }
@@ -195,13 +200,13 @@ fun HomeScreen(vm: LauncherViewModel) {
 
     /** Posição de [pkg] na grelha das Apps (contando os dois títulos de secção). */
     fun gridIndex(pkg: String): Int {
-        val i = list.indexOfFirst { it.packageName == pkg }
-        return if (i < FavoriteCount) 1 + i else 2 + i
+        val i = gridApps.indexOfFirst { it.packageName == pkg }
+        return if (i < favorites.size) 1 + i else 2 + i
     }
 
     LaunchedEffect(focusRequest, list.isNotEmpty()) {
         if (list.isEmpty()) return@LaunchedEffect
-        val pool = if (onApps) list else favorites
+        val pool = if (onApps) gridApps else favorites
         val pkg = targetPkg?.takeIf { p -> pool.any { it.packageName == p } } ?: pool.first().packageName
         targetPkg = pkg
         if (onApps) {
@@ -424,11 +429,11 @@ fun HomeScreen(vm: LauncherViewModel) {
                 clock24h = account.clock24h,
                 showGreeting = account.showGreeting,
                 weather = weather?.takeIf { account.showWeather },
-                hasSearch = searchIntent != null,
+                network = network,
                 onHome = vm::openHome,
                 onApps = vm::openApps,
                 onSettings = vm::openSettings,
-                onSearch = { if (!SystemIntents.start(context, searchIntent)) vm.toast(s.noSearch) },
+                onNetwork = { SystemIntents.openNetworkSettings(context) },
                 onFocusChanged = { tabBarFocused = it },
             )
 
@@ -465,11 +470,11 @@ fun HomeScreen(vm: LauncherViewModel) {
                             ) {
                                 item(key = "h-fav", span = { GridItemSpan(maxLineSpan) }) { SectionHeader(s.favorites, hint = true) }
                                 items(favorites, key = { it.packageName }) { app -> Tile(app, home = false) }
-                                if (list.size > FavoriteCount) {
+                                if (moreApps.isNotEmpty()) {
                                     item(key = "h-more", span = { GridItemSpan(maxLineSpan) }) {
                                         SectionHeader(s.moreApps, hint = false, modifier = Modifier.padding(top = 8.dp))
                                     }
-                                    items(list.drop(FavoriteCount), key = { it.packageName }) { app -> Tile(app, home = false) }
+                                    items(moreApps, key = { it.packageName }) { app -> Tile(app, home = false) }
                                 }
                             }
                         }
@@ -554,13 +559,19 @@ fun HomeScreen(vm: LauncherViewModel) {
                     menuFor = null
                     renameFor = app
                 },
+                hidden = app.packageName in device.hidden,
                 onHide = {
                     menuFor = null
-                    // O foco passa para a vizinha antes de a app sair.
-                    val pool = if (onApps) list else favorites
-                    val i = pool.indexOfFirst { it.packageName == app.packageName }
-                    focusApp((pool.getOrNull(i + 1) ?: pool.getOrNull(i - 1))?.packageName)
-                    vm.setHidden(app.packageName, true)
+                    if (app.packageName in device.hidden) {
+                        vm.setHidden(app.packageName, false)
+                    } else {
+                        // No Início a app sai da fila: o foco passa para a vizinha. Nas Apps continua lá.
+                        if (!onApps) {
+                            val i = favorites.indexOfFirst { it.packageName == app.packageName }
+                            focusApp((favorites.getOrNull(i + 1) ?: favorites.getOrNull(i - 1))?.packageName)
+                        }
+                        vm.setHidden(app.packageName, true)
+                    }
                 },
                 onInfo = {
                     menuFor = null
@@ -589,8 +600,8 @@ fun HomeScreen(vm: LauncherViewModel) {
 }
 
 /**
- * Separadores ao centro (Início, Apps, Definições: mudam ao passar o foco, como no tvOS), pesquisa e,
- * à direita, as horas com a saudação, a data e o tempo.
+ * À esquerda a saudação, a data e o tempo; ao centro os separadores (Início, Apps, Definições: mudam ao passar
+ * o foco, como no tvOS); à direita o estado da rede e as horas.
  */
 @Composable
 private fun TopBar(
@@ -598,16 +609,17 @@ private fun TopBar(
     clock24h: Boolean,
     showGreeting: Boolean,
     weather: WeatherNow?,
-    hasSearch: Boolean,
+    network: NetworkKind,
     onHome: () -> Unit,
     onApps: () -> Unit,
     onSettings: () -> Unit,
-    onSearch: () -> Unit,
+    onNetwork: () -> Unit,
     onFocusChanged: (Boolean) -> Unit,
 ) {
     val s = LocalStrings.current
     val tabs = remember { List(3) { FocusRequester() } }
     Box(Modifier.fillMaxWidth().height(48.dp)) {
+        TopGreeting(showGreeting, weather, Modifier.align(Alignment.CenterStart))
         // Cápsula translúcida, sem contorno; o separador aberto é uma cápsula mais clara lá dentro.
         // Ao subir para os separadores, o foco cai no separador aberto.
         Row(
@@ -650,9 +662,10 @@ private fun TopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            if (hasSearch) {
+            // Estado da rede (Wi-Fi, cabo ou sem rede); OK abre as definições de rede.
+            run {
                 Surface(
-                    onClick = onSearch,
+                    onClick = onNetwork,
                     modifier = Modifier.size(40.dp),
                     shape = ClickableSurfaceDefaults.shape(CircleShape),
                     colors = ClickableSurfaceDefaults.colors(
@@ -666,11 +679,19 @@ private fun TopBar(
                     scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
                 ) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(GoatIcons.Search, contentDescription = s.search, modifier = Modifier.size(18.dp))
+                        Icon(
+                            when (network) {
+                                NetworkKind.ETHERNET -> GoatIcons.Ethernet
+                                NetworkKind.WIFI -> GoatIcons.Wifi
+                                NetworkKind.NONE -> GoatIcons.WifiOff
+                            },
+                            contentDescription = s.network,
+                            modifier = Modifier.size(18.dp),
+                        )
                     }
                 }
             }
-            TopInfo(clock24h, showGreeting, weather)
+            TopClock(clock24h)
         }
     }
 }
@@ -897,6 +918,7 @@ private fun AppMenu(
     onMove: () -> Unit,
     onChangeIcon: () -> Unit,
     onRename: () -> Unit,
+    hidden: Boolean,
     onHide: () -> Unit,
     onInfo: () -> Unit,
     onDismiss: () -> Unit,
@@ -914,7 +936,7 @@ private fun AppMenu(
             GlassRow(title = s.move, onClick = onMove, modifier = Modifier.focusRequester(first))
             GlassRow(title = s.changeIcon, onClick = onChangeIcon)
             GlassRow(title = s.rename, onClick = onRename)
-            GlassRow(title = s.hide, onClick = onHide)
+            GlassRow(title = if (hidden) s.showOnHome else s.hide, onClick = onHide)
             GlassRow(title = s.appInfo, onClick = onInfo)
         }
         LaunchedEffect(Unit) {

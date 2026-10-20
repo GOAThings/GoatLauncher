@@ -15,6 +15,8 @@ import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.DeviceSettings
 import cc.slokker.goatlauncher.data.AppRelease
 import cc.slokker.goatlauncher.data.ImageImport
+import cc.slokker.goatlauncher.data.NetworkKind
+import cc.slokker.goatlauncher.data.networkKind
 import cc.slokker.goatlauncher.data.RedditImage
 import cc.slokker.goatlauncher.data.LauncherApp as App
 import cc.slokker.goatlauncher.data.SessionStore
@@ -23,6 +25,7 @@ import cc.slokker.goatlauncher.data.Updater
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.data.WatchNextItem
 import cc.slokker.goatlauncher.data.WeatherNow
+import cc.slokker.goatlauncher.data.YouTubeLogin
 import cc.slokker.goatlauncher.data.api.BackendDevice
 import cc.slokker.goatlauncher.data.api.BackendUser
 import cc.slokker.goatlauncher.ui.home.CardHeight
@@ -30,7 +33,11 @@ import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.size.Scale
+import android.os.SystemClock
+import android.util.Log
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -91,9 +98,30 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    /** Todas as apps para o separador Apps: pela ordem guardada, também as escondidas do Início. */
+    val appsTab: StateFlow<List<App>?> = combine(installed, settings.device) { all, d ->
+        all?.let { ordered(it, d.apps).map { app -> d.names[app.packageName]?.let(app::withLabel) ?: app } }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     /** O "Continuar a ver" de todas as apps, por pacote. Mudar o foco só filtra isto (sem consultas novas). */
     private val _watchNext = MutableStateFlow<Map<String, List<WatchNextItem>>>(emptyMap())
-    val watchNext: StateFlow<Map<String, List<WatchNextItem>>> = _watchNext.asStateFlow()
+
+    /** Recomendações do YouTube (conta ligada em Definições → YouTube), com o pacote da app que as abre. */
+    private val _youtube = MutableStateFlow<List<WatchNextItem>>(emptyList())
+
+    /** O Watch Next de todas as apps, mais as recomendações do YouTube na app de YouTube instalada. */
+    val watchNext: StateFlow<Map<String, List<WatchNextItem>>> = combine(_watchNext, _youtube) { system, yt ->
+        if (yt.isEmpty()) system else system + (yt.first().packageName to (system[yt.first().packageName].orEmpty() + yt))
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    private val _youtubeLinked = MutableStateFlow(c.youtube.linked)
+    val youtubeLinked: StateFlow<Boolean> = _youtubeLinked.asStateFlow()
+
+    /** Ligação ao YouTube em curso: o código a mostrar (ou null enquanto se pede), e erros. */
+    private val _youtubeLogin = MutableStateFlow<YouTubeLogin?>(null)
+    val youtubeLogin: StateFlow<YouTubeLogin?> = _youtubeLogin.asStateFlow()
+    private var youtubeLoginJob: Job? = null
+    private var youtubeLoadedAt = 0L
 
     private val _homeEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
@@ -110,6 +138,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     /** Imagens que não servem de fundo (ao alto, ou que não carregaram). */
     private val badReddit = mutableSetOf<String>()
+
+    /** Wi-Fi, cabo ou sem rede (o ícone no canto superior direito). */
+    val network: StateFlow<NetworkKind> = networkKind(application)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, NetworkKind.WIFI)
 
     private val _weather = MutableStateFlow(c.weather.cached())
 
@@ -166,6 +198,14 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             }
         }
         viewModelScope.launch {
+            // YouTube: quando já se sabe que apps há, e de 30 em 30 minutos.
+            installed.first { it != null }
+            while (true) {
+                refreshYouTube()
+                delay(YOUTUBE_MS)
+            }
+        }
+        viewModelScope.launch {
             // Tempo: ao abrir e de 30 em 30 minutos, enquanto estiver ligado nas definições.
             settings.account.map { it.showWeather }.distinctUntilChanged().collectLatest { on ->
                 while (on) {
@@ -208,6 +248,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun onResume() {
         reloadApps()
         reloadWatchNext()
+        if (SystemClock.elapsedRealtime() - youtubeLoadedAt > YOUTUBE_STALE_MS) viewModelScope.launch { refreshYouTube() }
         viewModelScope.launch { settings.syncIfStale() }
     }
 
@@ -296,6 +337,77 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         // Um logo quadrado publicado como 16:9 (como os canais da GoatTV).
         pkgs.getOrNull(1)?.let { p -> out[p] = listOf(item(4, p, "CANAL", "https://picsum.photos/id/237/400/400", 16f / 9f, null, null, 0)) }
         return out
+    }
+
+    // ---- YouTube ----
+
+    /** A app que abre os vídeos (TizenTube, a app oficial, SmartTube…), a primeira instalada da lista. */
+    private fun youtubeApp(): String? {
+        val pkgs = installed.value.orEmpty().map { it.packageName }.toSet()
+        return YOUTUBE_APPS.firstOrNull { it in pkgs }
+    }
+
+    private suspend fun refreshYouTube() {
+        val pkg = youtubeApp()
+        if (!c.youtube.linked || pkg == null) {
+            _youtube.value = emptyList()
+            return
+        }
+        try {
+            val items = c.youtube.recommendations(pkg)
+            _youtube.value = items
+            youtubeLoadedAt = SystemClock.elapsedRealtime()
+            prefetchImages(mapOf(pkg to items))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w("YouTube", "Recomendações: ${e.message}")
+        }
+        _youtubeLinked.value = c.youtube.linked
+    }
+
+    /** Pede um código e espera que a pessoa o confirme em google.com/device (pede outro se expirar). */
+    fun startYouTubeLogin() {
+        youtubeLoginJob?.cancel()
+        youtubeLoginJob = viewModelScope.launch {
+            _youtubeLogin.value = null
+            while (true) {
+                val login = try {
+                    c.youtube.startLogin()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    toast(strings.youtubeError)
+                    delay(10_000)
+                    continue
+                }
+                _youtubeLogin.value = login
+                while (System.currentTimeMillis() < login.expiresAt) {
+                    delay(login.intervalSec * 1000L)
+                    val done = runCatching { c.youtube.poll(login) }.getOrNull() ?: continue
+                    if (done) {
+                        _youtubeLinked.value = true
+                        _youtubeLogin.value = null
+                        toast(strings.youtubeLinked)
+                        refreshYouTube()
+                        return@launch
+                    }
+                    break // recusado ou expirado: pede um código novo
+                }
+            }
+        }
+    }
+
+    fun cancelYouTubeLogin() {
+        youtubeLoginJob?.cancel()
+        youtubeLoginJob = null
+        _youtubeLogin.value = null
+    }
+
+    fun unlinkYouTube() {
+        c.youtube.unlink()
+        _youtubeLinked.value = false
+        _youtube.value = emptyList()
     }
 
     // ---- Atualizações ----
@@ -502,6 +614,17 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         /** De quanto em quanto tempo procurar versões novas. */
         const val UPDATE_CHECK_MS = 12 * 60 * 60_000L
         const val WEATHER_MS = 30 * 60_000L
+        const val YOUTUBE_MS = 30 * 60_000L
+        const val YOUTUBE_STALE_MS = 10 * 60_000L
+
+        /** Apps que abrem links do YouTube, por ordem de preferência. */
+        val YOUTUBE_APPS = listOf(
+            "io.gh.reisxd.tizentube.cobalt",
+            "io.gh.reisxd.tizentube",
+            "com.google.android.youtube.tv",
+            "com.teamsmart.videomanager.tv",
+            "com.liskovsoft.smarttubetv.beta",
+        )
 
         /** Primeiro as apps pela ordem guardada; as que lá não estão vão para o fim (por nome). */
         fun ordered(all: List<App>, order: List<String>): List<App> {

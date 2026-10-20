@@ -17,6 +17,11 @@ object SystemIntents {
             .firstOrNull { it.resolveActivity(context.packageManager) != null }
             ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
+    /** Abre as definições de rede (Wi-Fi e cabo, no Android TV ficam no mesmo ecrã); senão as do Android. */
+    fun openNetworkSettings(context: Context): Boolean =
+        listOf(Settings.ACTION_WIFI_SETTINGS, Settings.ACTION_WIRELESS_SETTINGS, Settings.ACTION_SETTINGS)
+            .any { start(context, Intent(it).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+
     fun androidSettings(): Intent = Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
     fun appInfo(pkg: String): Intent =
