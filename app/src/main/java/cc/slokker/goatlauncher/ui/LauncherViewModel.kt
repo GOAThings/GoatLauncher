@@ -298,10 +298,24 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             val sinceStart = SystemClock.elapsedRealtime() - android.os.Process.getStartElapsedRealtime()
             if (sinceStart < GUARD_GRACE_MS) delay(GUARD_GRACE_MS - sinceStart)
             val stuck = HomeGuardService.isEnabled(context) && HomeGuardService.instance == null
-            if (stuck && !_guardStuck.value) toast(strings.guardStuckToast)
             _guardStuck.value = stuck
+            if (!stuck) return@launch
+            // Repara-se sozinho: reinstala-se (na Shield, a própria app a atualizar-se não pede confirmação; noutras
+            // TVs aparece um OK). Se falhar ou a pessoa cancelar, só tenta outra vez passada uma hora; sem permissão
+            // para instalar, fica o aviso (e o OK nas Definições).
+            val now = SystemClock.elapsedRealtime()
+            if (c.updater.canInstall() && now - lastRepairPrompt > REPAIR_PROMPT_GAP_MS) {
+                lastRepairPrompt = now
+                toast(strings.guardRepairing)
+                repairGuard()
+            } else if (now - lastRepairPrompt > REPAIR_PROMPT_GAP_MS) {
+                lastRepairPrompt = now
+                toast(strings.guardStuckToast)
+            }
         }
     }
+
+    private var lastRepairPrompt = -REPAIR_PROMPT_GAP_MS
 
     /** Reinstala a própria app (a mesma versão): o Android trata-a como atualizada e volta a ligar o serviço. */
     fun repairGuard() {
@@ -820,6 +834,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         const val BOOT_WINDOW_MS = 10 * 60_000L
 
         const val GUARD_GRACE_MS = 20_000L
+
+        const val REPAIR_PROMPT_GAP_MS = 60 * 60_000L
 
         /** Apps que abrem links do YouTube, por ordem de preferência. */
         val YOUTUBE_APPS = listOf(

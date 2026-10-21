@@ -150,6 +150,7 @@ class Strings(val english: Boolean) {
 
     // Comando
     val guardStuck get() = t("Parado pelo Android (depois de o sistema reiniciar): OK para reparar", "Stopped by Android (after the system restarted): OK to repair")
+    val guardRepairing get() = t("Os botões do comando pararam: a reparar (se a TV pedir, confirma)", "Remote buttons stopped: repairing (confirm if the TV asks)")
     val guardStuckToast get() = t("Os botões do comando pararam: Definições → Manter como ecrã inicial", "Remote buttons stopped: Settings → Keep as home screen")
     val youtubeFeed get() = t("O YouTube mostra", "YouTube shows")
     val ytBoth get() = t("Os vídeos a meio e as recomendações", "Videos in progress and recommendations")
