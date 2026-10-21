@@ -59,6 +59,9 @@ data class WatchNextItem(
 
     companion object {
         const val TYPE_CONTINUE = TvContractCompat.WatchNextPrograms.WATCH_NEXT_TYPE_CONTINUE
+
+        /** Só do launcher (não existe no Android TV): uma recomendação que a pessoa ainda não começou. */
+        const val TYPE_RECOMMENDED = 100
     }
 }
 

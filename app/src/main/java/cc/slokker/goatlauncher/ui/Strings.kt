@@ -21,6 +21,7 @@ class Strings(val english: Boolean) {
     val moreApps get() = t("Mais apps", "More apps")
     val holdToRearrange get() = t("Mantém OK para reordenar", "Hold OK to rearrange")
     fun shelfLabel(app: String) = t("$app · continuar a ver", "$app · continue watching")
+    fun shelfRecommended(app: String) = t("$app · recomendado", "$app · recommended")
     val continueNow get() = t("Continuar", "Continue")
     fun shelfMore(n: Int) = t("‹ › mais $n", "‹ › $n more")
     val settings get() = t("Definições", "Settings")

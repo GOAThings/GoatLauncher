@@ -8,6 +8,8 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -102,9 +104,22 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
             .sortedByDescending { (it.progress ?: 0f) > 0f } // começados primeiro (a ordem do feed mantém-se)
             .take(max)
             .mapIndexed { i, item ->
+                val started = (item.progress ?: 0f) > 0f
                 // Sem data de visualização: ficam pela ordem do YouTube, depois do que as outras apps publicaram.
-                item.copy(lastEngagement = if ((item.progress ?: 0f) > 0f) now - 60_000L * (i + 1) else i.toLong() * -1)
+                item.copy(
+                    lastEngagement = if (started) now - 60_000L * (i + 1) else i.toLong() * -1,
+                    type = if (started) WatchNextItem.TYPE_CONTINUE else WatchNextItem.TYPE_RECOMMENDED,
+                )
             }
+            .map { async { it.copy(imageUri = wideThumb(it.intentUri.orEmpty().substringAfter("v=")) ?: it.imageUri) } }
+            .awaitAll()
+    }
+
+    /** A miniatura 16:9 em 1280x720; a da API de TV é 4:3 com barras pretas e não enche o destaque. */
+    private fun wideThumb(videoId: String): String? {
+        val url = "https://i.ytimg.com/vi/$videoId/hq720.jpg"
+        val req = Request.Builder().url(url).head().build()
+        return runCatching { http.newCall(req).execute().use { if (it.isSuccessful) url else null } }.getOrNull()
     }
 
     private fun tile(t: JsonObject, packageName: String): WatchNextItem? {

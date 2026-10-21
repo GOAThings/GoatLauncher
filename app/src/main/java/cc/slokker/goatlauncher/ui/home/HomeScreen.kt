@@ -765,7 +765,7 @@ private fun ShelfHero(
             }
         }
         Text(
-            s.shelfLabel(app.label).uppercase(s.locale),
+            (if (item.type == WatchNextItem.TYPE_RECOMMENDED) s.shelfRecommended(app.label) else s.shelfLabel(app.label)).uppercase(s.locale),
             style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 2.sp),
             color = GoatColors.TextDim,
         )
