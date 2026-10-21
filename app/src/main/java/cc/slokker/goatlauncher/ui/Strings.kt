@@ -149,6 +149,12 @@ class Strings(val english: Boolean) {
     fun seconds(n: Int) = t(if (n == 0) "Logo" else "$n s", if (n == 0) "Right away" else "$n s")
 
     // Comando
+    val guardStuck get() = t("Parado pelo Android (depois de o sistema reiniciar): OK para reparar", "Stopped by Android (after the system restarted): OK to repair")
+    val guardStuckToast get() = t("Os botões do comando pararam: Definições → Manter como ecrã inicial", "Remote buttons stopped: Settings → Keep as home screen")
+    val youtubeFeed get() = t("O YouTube mostra", "YouTube shows")
+    val ytBoth get() = t("Os vídeos a meio e as recomendações", "Videos in progress and recommendations")
+    val ytContinue get() = t("Só os vídeos a meio (continuar a ver)", "Only videos in progress (continue watching)")
+    val ytRecommended get() = t("Só as recomendações", "Only recommendations")
     val remote get() = t("Comando", "Remote")
     val buttons get() = t("Botões do comando", "Remote buttons")
     val buttonsNone get() = t("Nenhum: um botão do comando pode abrir uma app", "None: a remote button can open an app")

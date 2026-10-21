@@ -10,7 +10,8 @@ import com.google.gson.JsonObject
  *   "account": { "wallpaper": {"type": "builtin" | "file" | "url" | "reddit", "value": "lake" | "wall-123.jpg" | "https://…" | "EarthPorn"},
  *                "clock_24h": true, "show_greeting": true, "show_continue_watching": true, "show_app_name": true,
  *                "continue_style": "row" | "shelf" | "downunder", "show_weather": true,
- *                "reddit_min_width": 1920, "idle_minutes": 0, "idle_keep_awake": false }
+ *                "reddit_min_width": 1920, "idle_minutes": 0, "idle_keep_awake": false,
+ *                "youtube_feed": "both" | "continue" | "recommended" }
  *   "device":  { "apps": ["com.netflix.ninja", …], "hidden": ["com.android.vending"],
  *                "icons": {"com.netflix.ninja": "pack:dev.pack/netflix" | "file:com.netflix.ninja-123.png"},
  *                "names": {"io.gh.reisxd.tizentube.cobalt": "YouTube"}, "no_continue": ["com.netflix.ninja"],
@@ -75,6 +76,8 @@ data class AccountSettings(
     val idleMinutes: Int = 0,
     /** Com o modo ambiente, o ecrã inicial não deixa a TV adormecer nem começar a proteção de ecrã do sistema. */
     val idleKeepAwake: Boolean = false,
+    /** O que a app do YouTube mostra no "Continuar a ver" (com a conta ligada): YT_BOTH, YT_CONTINUE ou YT_RECOMMENDED. */
+    val youtubeFeed: String = YT_BOTH,
     val raw: JsonObject = JsonObject(),
 ) {
     fun toJson(): JsonObject = raw.deepCopy().apply {
@@ -91,12 +94,17 @@ data class AccountSettings(
         addProperty("reddit_min_width", redditMinWidth)
         addProperty("idle_minutes", idleMinutes)
         addProperty("idle_keep_awake", idleKeepAwake)
+        addProperty("youtube_feed", youtubeFeed)
     }
 
     companion object {
         const val STYLE_ROW = "row"
         const val STYLE_SHELF = "shelf"
         const val STYLE_DOWN_UNDER = "downunder"
+
+        const val YT_BOTH = "both"
+        const val YT_CONTINUE = "continue"
+        const val YT_RECOMMENDED = "recommended"
 
         fun fromJson(json: JsonObject?): AccountSettings {
             if (json == null) return AccountSettings()
@@ -114,6 +122,7 @@ data class AccountSettings(
                 redditMinWidth = json.int("reddit_min_width")?.coerceAtLeast(0) ?: 1920,
                 idleMinutes = json.int("idle_minutes")?.coerceAtLeast(0) ?: 0,
                 idleKeepAwake = json.bool("idle_keep_awake") ?: false,
+                youtubeFeed = json.str("youtube_feed")?.takeIf { it == YT_CONTINUE || it == YT_RECOMMENDED } ?: YT_BOTH,
                 raw = json,
             )
         }

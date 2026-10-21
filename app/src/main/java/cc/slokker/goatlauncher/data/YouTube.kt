@@ -81,8 +81,39 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
      * Recomendações do Início do YouTube (como na app de TV), até [max], com o pacote da app que as abre.
      * Os vídeos já começados vêm primeiro, com o progresso.
      */
-    suspend fun recommendations(packageName: String, max: Int = 20): List<WatchNextItem> = withContext(Dispatchers.IO) {
+    /**
+     * O que aparece no "Continuar a ver" da app do YouTube, conforme [feed] (AccountSettings.YT_*): os vídeos
+     * começados e por acabar (do histórico), as recomendações do Início, ou os dois (começados primeiro).
+     */
+    suspend fun recommendations(packageName: String, feed: String, max: Int = 20): List<WatchNextItem> = withContext(Dispatchers.IO) {
         val token = accessToken() ?: return@withContext emptyList()
+        val home = if (feed != AccountSettings.YT_CONTINUE) browse("default", token, packageName) else null
+        val started = if (feed != AccountSettings.YT_RECOMMENDED) {
+            // Do histórico, só os que ficaram a meio; se o histórico vier num formato que não se percebe, os
+            // começados do Início servem na mesma.
+            browse("FEhistory", token, packageName).filter { (it.progress ?: 0f) in 0.01f..0.95f }
+                .ifEmpty { (home ?: browse("default", token, packageName)).filter { (it.progress ?: 0f) in 0.01f..0.95f } }
+        } else {
+            emptyList()
+        }
+        val now = System.currentTimeMillis()
+        (started + home.orEmpty().filter { feed == AccountSettings.YT_RECOMMENDED || (it.progress ?: 0f) == 0f })
+            .distinctBy { it.intentUri }
+            .take(max)
+            .mapIndexed { i, item ->
+                val isStarted = (item.progress ?: 0f) > 0f
+                // Sem data de visualização: ficam pela ordem do YouTube, depois do que as outras apps publicaram.
+                item.copy(
+                    lastEngagement = if (isStarted) now - 60_000L * (i + 1) else i.toLong() * -1,
+                    type = if (isStarted) WatchNextItem.TYPE_CONTINUE else WatchNextItem.TYPE_RECOMMENDED,
+                )
+            }
+            .map { async { it.copy(imageUri = wideThumb(it.intentUri.orEmpty().substringAfter("v=")) ?: it.imageUri) } }
+            .awaitAll()
+    }
+
+    /** Os vídeos de uma página da app de TV do YouTube ("default" = Início, "FEhistory" = histórico). */
+    private fun browse(browseId: String, token: String, packageName: String): List<WatchNextItem> {
         val body = JsonObject().apply {
             add("context", JsonObject().apply {
                 add("client", JsonObject().apply {
@@ -92,27 +123,16 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
                     addProperty("gl", "PT")
                 })
             })
-            addProperty("browseId", "default")
+            addProperty("browseId", browseId)
         }
-        val res = post("$BASE/youtubei/v1/browse?prettyPrint=false", body, bearer = token)
+        val res = runCatching { post("$BASE/youtubei/v1/browse?prettyPrint=false", body, bearer = token) }
+            .onFailure { Log.w(TAG, "$browseId: ${it.message}") }
+            .getOrNull() ?: return emptyList()
         val tiles = mutableListOf<JsonObject>()
         collect(res, "tileRenderer", tiles)
-        if (tiles.isEmpty()) Log.w(TAG, "Início sem tiles: chaves ${res.keySet()}, renderers ${renderers(res)}")
-        val now = System.currentTimeMillis()
-        tiles.mapNotNull { tile(it, packageName) }
-            .distinctBy { it.intentUri }
-            .sortedByDescending { (it.progress ?: 0f) > 0f } // começados primeiro (a ordem do feed mantém-se)
-            .take(max)
-            .mapIndexed { i, item ->
-                val started = (item.progress ?: 0f) > 0f
-                // Sem data de visualização: ficam pela ordem do YouTube, depois do que as outras apps publicaram.
-                item.copy(
-                    lastEngagement = if (started) now - 60_000L * (i + 1) else i.toLong() * -1,
-                    type = if (started) WatchNextItem.TYPE_CONTINUE else WatchNextItem.TYPE_RECOMMENDED,
-                )
-            }
-            .map { async { it.copy(imageUri = wideThumb(it.intentUri.orEmpty().substringAfter("v=")) ?: it.imageUri) } }
-            .awaitAll()
+        if (tiles.isEmpty()) Log.w(TAG, "$browseId sem tiles: chaves ${res.keySet()}, renderers ${renderers(res)}")
+        Log.d(TAG, "$browseId: ${tiles.size} tiles")
+        return tiles.mapNotNull { tile(it, packageName) }.distinctBy { it.intentUri }
     }
 
     /** A miniatura 16:9 em 1280x720; a da API de TV é 4:3 com barras pretas e não enche o destaque. */

@@ -313,11 +313,16 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
                 guard = HomeGuardService.isEnabled(context)
                 onPauseOrDispose { }
             }
+            val stuck by vm.guardStuck.collectAsStateWithLifecycle()
             GlassRow(
                 title = s.homeGuard,
-                subtitle = if (guard) s.homeGuardOn else s.homeGuardOff,
-                onClick = { SystemIntents.start(context, SystemIntents.accessibilitySettings()) },
-                trailing = { Toggle(guard) },
+                subtitle = when {
+                    guard && stuck -> s.guardStuck
+                    guard -> s.homeGuardOn
+                    else -> s.homeGuardOff
+                },
+                onClick = { if (guard && stuck) vm.repairGuard() else SystemIntents.start(context, SystemIntents.accessibilitySettings()) },
+                trailing = { Toggle(guard && !stuck) },
             )
         }
 
@@ -406,6 +411,13 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
             val linked by vm.youtubeLinked.collectAsStateWithLifecycle()
             var confirm by remember { mutableStateOf(false) }
             if (linked) {
+                // OK passa à seguinte: os dois → só a meio → só recomendações → os dois.
+                val (label, next) = when (account.youtubeFeed) {
+                    AccountSettings.YT_CONTINUE -> s.ytContinue to AccountSettings.YT_RECOMMENDED
+                    AccountSettings.YT_RECOMMENDED -> s.ytRecommended to AccountSettings.YT_BOTH
+                    else -> s.ytBoth to AccountSettings.YT_CONTINUE
+                }
+                GlassRow(title = s.youtubeFeed, subtitle = label, onClick = { vm.setYoutubeFeed(next) }, trailing = { Chevron() })
                 GlassRow(
                     title = s.youtubeUnlink,
                     subtitle = if (confirm) s.pressAgainToConfirm else s.youtubeOnHint,

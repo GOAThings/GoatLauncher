@@ -44,6 +44,7 @@ import kotlinx.coroutines.withContext
 import android.graphics.BitmapFactory
 import android.provider.Settings as AndroidSettings
 import androidx.core.content.edit
+import cc.slokker.goatlauncher.HomeGuardService
 import cc.slokker.goatlauncher.AutoStart
 import cc.slokker.goatlauncher.data.ParentalLock
 import kotlinx.coroutines.channels.Channel
@@ -162,6 +163,14 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _unlocks = MutableStateFlow(0)
     val unlocks: StateFlow<Int> = _unlocks.asStateFlow()
 
+    private val _guardStuck = MutableStateFlow(false)
+
+    /**
+     * O serviço do comando ("Manter como ecrã inicial") está ligado nas definições mas o Android não o ligou:
+     * no Android 11 fica assim depois de o sistema da Shield reiniciar, e só uma atualização da app o desprende.
+     */
+    val guardStuck: StateFlow<Boolean> = _guardStuck.asStateFlow()
+
     /** O launcher está à frente (para o arranque automático não abrir uma app por cima de outra). */
     private var resumed = false
 
@@ -276,10 +285,39 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun onResume() {
         resumed = true
+        checkGuard()
         reloadApps()
         reloadWatchNext()
         if (SystemClock.elapsedRealtime() - youtubeLoadedAt > YOUTUBE_STALE_MS) viewModelScope.launch { refreshYouTube() }
         viewModelScope.launch { settings.syncIfStale() }
+    }
+
+    /** Ver [guardStuck]. Só passado um bocado do arranque: ligar o serviço demora uns segundos. */
+    private fun checkGuard() {
+        viewModelScope.launch {
+            val sinceStart = SystemClock.elapsedRealtime() - android.os.Process.getStartElapsedRealtime()
+            if (sinceStart < GUARD_GRACE_MS) delay(GUARD_GRACE_MS - sinceStart)
+            val stuck = HomeGuardService.isEnabled(context) && HomeGuardService.instance == null
+            if (stuck && !_guardStuck.value) toast(strings.guardStuckToast)
+            _guardStuck.value = stuck
+        }
+    }
+
+    /** Reinstala a própria app (a mesma versão): o Android trata-a como atualizada e volta a ligar o serviço. */
+    fun repairGuard() {
+        if (!c.updater.canInstall()) {
+            c.updater.openInstallPermission()
+            return
+        }
+        viewModelScope.launch {
+            runCatching { c.updater.install(java.io.File(context.applicationInfo.sourceDir)) }
+                .onFailure { toast(strings.updateFailed(it.message ?: it.javaClass.simpleName)) }
+        }
+    }
+
+    fun setYoutubeFeed(feed: String) {
+        settings.updateAccount { it.copy(youtubeFeed = feed) }
+        viewModelScope.launch { refreshYouTube() }
     }
 
     fun onPause() {
@@ -422,7 +460,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             return
         }
         try {
-            val items = c.youtube.recommendations(pkg)
+            val items = c.youtube.recommendations(pkg, settings.account.value.youtubeFeed)
             Log.d("YouTube", "Recomendações: ${items.size}")
             _youtube.value = items
             youtubeLoadedAt = SystemClock.elapsedRealtime()
@@ -780,6 +818,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
         /** O arranque automático só conta nos primeiros minutos depois de ligar (não depois de atualizar a app). */
         const val BOOT_WINDOW_MS = 10 * 60_000L
+
+        const val GUARD_GRACE_MS = 20_000L
 
         /** Apps que abrem links do YouTube, por ordem de preferência. */
         val YOUTUBE_APPS = listOf(
