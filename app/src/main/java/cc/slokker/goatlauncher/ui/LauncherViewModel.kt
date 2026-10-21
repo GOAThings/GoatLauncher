@@ -300,8 +300,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             val stuck = HomeGuardService.isEnabled(context) && HomeGuardService.instance == null
             _guardStuck.value = stuck
             if (!stuck) return@launch
-            // Repara-se sozinho: reinstala-se (na Shield, a própria app a atualizar-se não pede confirmação; noutras
-            // TVs aparece um OK). Se falhar ou a pessoa cancelar, só tenta outra vez passada uma hora; sem permissão
+            // Repara-se sozinho: aparece logo a confirmação da reinstalação (um OK; o Android 11 não deixa uma app
+            // atualizar-se sem perguntar). Se a pessoa cancelar, só volta a pedir passada uma hora; sem permissão
             // para instalar, fica o aviso (e o OK nas Definições).
             val now = SystemClock.elapsedRealtime()
             if (c.updater.canInstall() && now - lastRepairPrompt > REPAIR_PROMPT_GAP_MS) {
