@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
         requestWatchNextPermissions()
         hideSystemBars()
         if (BuildConfig.DEBUG && intent.getBooleanExtra("demo_watch_next", false)) vm.enableDemoWatchNext()
+        intent.getStringExtra(AutoStart.EXTRA_UNLOCK)?.let { vm.requestUnlock(this, it) }
         setContent {
             GoatTheme { LauncherRoot(vm) }
         }
@@ -59,11 +60,18 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         // singleTask: o botão Home com o launcher já aberto chega aqui.
         if (intent.hasCategory(Intent.CATEGORY_HOME)) vm.onHomePressed()
+        // Uma app bloqueada abriu por outro caminho (ver HomeGuardService): pede o código.
+        intent.getStringExtra(AutoStart.EXTRA_UNLOCK)?.let { vm.requestUnlock(this, it) }
     }
 
     override fun onResume() {
         super.onResume()
         vm.onResume()
+    }
+
+    override fun onPause() {
+        vm.onPause()
+        super.onPause()
     }
 
     /**

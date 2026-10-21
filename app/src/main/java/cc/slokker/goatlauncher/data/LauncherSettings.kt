@@ -9,10 +9,13 @@ import com.google.gson.JsonObject
  *
  *   "account": { "wallpaper": {"type": "builtin" | "file" | "url" | "reddit", "value": "lake" | "wall-123.jpg" | "https://…" | "EarthPorn"},
  *                "clock_24h": true, "show_greeting": true, "show_continue_watching": true, "show_app_name": true,
- *                "continue_style": "row" | "shelf" | "downunder", "show_weather": true }
+ *                "continue_style": "row" | "shelf" | "downunder", "show_weather": true,
+ *                "reddit_min_width": 1920, "idle_minutes": 0, "idle_keep_awake": false }
  *   "device":  { "apps": ["com.netflix.ninja", …], "hidden": ["com.android.vending"],
  *                "icons": {"com.netflix.ninja": "pack:dev.pack/netflix" | "file:com.netflix.ninja-123.png"},
- *                "names": {"io.gh.reisxd.tizentube.cobalt": "YouTube"}, "no_continue": ["com.netflix.ninja"] }
+ *                "names": {"io.gh.reisxd.tizentube.cobalt": "YouTube"}, "no_continue": ["com.netflix.ninja"],
+ *                "autostart": "cc.slokker.itv", "autostart_wake": false, "autostart_delay": 5,
+ *                "pin": "<sal>:<sha-256>", "locked": ["com.netflix.ninja"], "lock_settings": true, "lock_hours": [20, 8] }
  *
  * Um fundo "file" só existe na TV onde foi escolhido; as outras mostram o fundo por defeito.
  *
@@ -50,6 +53,12 @@ data class AccountSettings(
     val continueStyle: String = STYLE_ROW,
     /** O tempo (ícone e temperatura) ao lado da saudação, em cima à direita. */
     val showWeather: Boolean = true,
+    /** Fundo do Reddit: fotos mais estreitas do que isto (px) ficam de fora; 0 = todas. */
+    val redditMinWidth: Int = 1920,
+    /** Modo ambiente: minutos sem tocar no comando até o ecrã inicial ficar só com o fundo e as horas; 0 = desligado. */
+    val idleMinutes: Int = 0,
+    /** Com o modo ambiente, o ecrã inicial não deixa a TV adormecer nem começar a proteção de ecrã do sistema. */
+    val idleKeepAwake: Boolean = false,
     val raw: JsonObject = JsonObject(),
 ) {
     fun toJson(): JsonObject = raw.deepCopy().apply {
@@ -63,6 +72,9 @@ data class AccountSettings(
         addProperty("show_app_name", showAppName)
         addProperty("continue_style", continueStyle)
         addProperty("show_weather", showWeather)
+        addProperty("reddit_min_width", redditMinWidth)
+        addProperty("idle_minutes", idleMinutes)
+        addProperty("idle_keep_awake", idleKeepAwake)
     }
 
     companion object {
@@ -83,6 +95,9 @@ data class AccountSettings(
                 showAppName = json.bool("show_app_name") ?: true,
                 continueStyle = json.str("continue_style")?.takeIf { it == STYLE_SHELF || it == STYLE_DOWN_UNDER } ?: STYLE_ROW,
                 showWeather = json.bool("show_weather") ?: true,
+                redditMinWidth = json.int("reddit_min_width")?.coerceAtLeast(0) ?: 1920,
+                idleMinutes = json.int("idle_minutes")?.coerceAtLeast(0) ?: 0,
+                idleKeepAwake = json.bool("idle_keep_awake") ?: false,
                 raw = json,
             )
         }
@@ -99,6 +114,19 @@ data class DeviceSettings(
     val names: Map<String, String> = emptyMap(),
     /** Apps cujo "Continuar a ver" (ou recomendações do YouTube) não aparece no Início. */
     val noContinue: Set<String> = emptySet(),
+    /** App que abre ao ligar a TV (e, com [autostartWake], ao acordar), [autostartDelay] segundos depois. */
+    val autostart: String? = null,
+    val autostartWake: Boolean = false,
+    val autostartDelay: Int = 5,
+    /** Controlo parental (ver ParentalLock): o código guardado com sal e hash; null = desligado. */
+    val pin: String? = null,
+    /** Apps que pedem o código para abrir. */
+    val locked: Set<String> = emptySet(),
+    /** As Definições e as mudanças na organização (menu das apps) pedem o código. */
+    val lockSettings: Boolean = false,
+    /** As apps só ficam bloqueadas entre estas horas (ex.: 20 → 8); null = sempre. */
+    val lockFrom: Int? = null,
+    val lockTo: Int? = null,
     val raw: JsonObject = JsonObject(),
 ) {
     fun toJson(): JsonObject = raw.deepCopy().apply {
@@ -107,6 +135,13 @@ data class DeviceSettings(
         add("icons", JsonObject().apply { icons.toSortedMap().forEach { (pkg, spec) -> addProperty(pkg, spec) } })
         add("names", JsonObject().apply { names.toSortedMap().forEach { (pkg, name) -> addProperty(pkg, name) } })
         add("no_continue", JsonArray().apply { noContinue.sorted().forEach(::add) })
+        if (autostart != null) addProperty("autostart", autostart) else remove("autostart")
+        addProperty("autostart_wake", autostartWake)
+        addProperty("autostart_delay", autostartDelay)
+        if (pin != null) addProperty("pin", pin) else remove("pin")
+        add("locked", JsonArray().apply { locked.sorted().forEach(::add) })
+        addProperty("lock_settings", lockSettings)
+        if (lockFrom != null && lockTo != null) add("lock_hours", JsonArray().apply { add(lockFrom); add(lockTo) }) else remove("lock_hours")
     }
 
     companion object {
@@ -118,6 +153,14 @@ data class DeviceSettings(
                 icons = json.stringMap("icons"),
                 names = json.stringMap("names"),
                 noContinue = json.strings("no_continue").toSet(),
+                autostart = json.str("autostart")?.takeIf { it.isNotBlank() },
+                autostartWake = json.bool("autostart_wake") ?: false,
+                autostartDelay = json.int("autostart_delay")?.coerceIn(0, 120) ?: 5,
+                pin = json.str("pin")?.takeIf { it.contains(':') },
+                locked = json.strings("locked").toSet(),
+                lockSettings = json.bool("lock_settings") ?: false,
+                lockFrom = json.ints("lock_hours").takeIf { it.size == 2 }?.get(0)?.coerceIn(0, 23),
+                lockTo = json.ints("lock_hours").takeIf { it.size == 2 }?.get(1)?.coerceIn(0, 23),
                 raw = json,
             )
         }
@@ -135,6 +178,14 @@ private fun JsonObject.str(name: String): String? =
 
 private fun JsonObject.bool(name: String): Boolean? =
     get(name)?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isBoolean }?.asBoolean
+
+private fun JsonObject.int(name: String): Int? =
+    get(name)?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.asInt
+
+private fun JsonObject.ints(name: String): List<Int> =
+    get(name)?.takeIf { it.isJsonArray }?.asJsonArray
+        ?.mapNotNull { e -> e.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.asInt }
+        .orEmpty()
 
 private fun JsonObject.stringMap(name: String): Map<String, String> =
     obj(name)?.entrySet()

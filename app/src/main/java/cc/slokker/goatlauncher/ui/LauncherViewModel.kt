@@ -38,6 +38,13 @@ import android.util.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import android.graphics.BitmapFactory
+import android.provider.Settings as AndroidSettings
+import androidx.core.content.edit
+import cc.slokker.goatlauncher.AutoStart
+import cc.slokker.goatlauncher.data.ParentalLock
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -63,6 +70,9 @@ sealed interface UpdateState {
     data class Installing(val release: AppRelease) : UpdateState
     data class Failed(val message: String) : UpdateState
 }
+
+/** Pedido do código do controlo parental: o ecrã mostra o teclado e [onSuccess] corre quando acertar. */
+class PinPrompt(val title: String, val onSuccess: () -> Unit)
 
 sealed interface Screen {
     data object Home : Screen
@@ -141,6 +151,19 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Imagens que não servem de fundo (ao alto, ou que não carregaram). */
     private val badReddit = mutableSetOf<String>()
 
+    /** Largura original de cada foto do Reddit já carregada (para a "resolução mínima"). */
+    private val redditWidths = mutableMapOf<String, Int>()
+
+    private val _pinPrompt = MutableStateFlow<PinPrompt?>(null)
+    val pinPrompt: StateFlow<PinPrompt?> = _pinPrompt.asStateFlow()
+
+    /** Muda quando o código é acertado (os bloqueios dependem da hora, não de um estado que o ecrã observe). */
+    private val _unlocks = MutableStateFlow(0)
+    val unlocks: StateFlow<Int> = _unlocks.asStateFlow()
+
+    /** O launcher está à frente (para o arranque automático não abrir uma app por cima de outra). */
+    private var resumed = false
+
     /** Wi-Fi, cabo ou sem rede (o ícone no canto superior direito). */
     val network: StateFlow<NetworkKind> = networkKind(application)
         .stateIn(viewModelScope, SharingStarted.Eagerly, NetworkKind.WIFI)
@@ -186,19 +209,20 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
         viewModelScope.launch {
             // Fundo do Reddit: mostra uma imagem e troca-a a cada RedditWallpapers.ROTATE_MS.
-            settings.account.map { it.wallpaper }.distinctUntilChanged().collectLatest { wp ->
+            settings.account.map { it.wallpaper to it.redditMinWidth }.distinctUntilChanged().collectLatest { (wp, minWidth) ->
                 if (wp.type != Wallpaper.TYPE_REDDIT) {
                     _reddit.value = null
                     return@collectLatest
                 }
                 var next = false
                 while (true) {
-                    showReddit(wp.value, next)
+                    showReddit(wp.value, next, minWidth)
                     delay(c.reddit.msUntilRotation(wp.value))
                     next = true
                 }
             }
         }
+        viewModelScope.launch { autostartAfterBoot() }
         viewModelScope.launch {
             // YouTube: quando já se sabe que apps há, e de 30 em 30 minutos.
             installed.first { it != null }
@@ -248,10 +272,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun onResume() {
+        resumed = true
         reloadApps()
         reloadWatchNext()
         if (SystemClock.elapsedRealtime() - youtubeLoadedAt > YOUTUBE_STALE_MS) viewModelScope.launch { refreshYouTube() }
         viewModelScope.launch { settings.syncIfStale() }
+    }
+
+    fun onPause() {
+        resumed = false
     }
 
     fun onHomePressed() {
@@ -267,16 +296,21 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         watchNextRequests.trySend(Unit)
     }
 
-    /** Escolhe a imagem do subreddit e só a mostra depois de carregada (deitada); senão tenta outra. */
-    private suspend fun showReddit(subreddit: String, next: Boolean) {
-        repeat(5) { attempt ->
-            val image = c.reddit.current(subreddit, next = next || attempt > 0, skip = badReddit) ?: return
-            if (image.url == _reddit.value?.url) return
-            if (preloadWallpaper(image.url)) {
-                _reddit.value = image
-                return
+    /**
+     * Escolhe a imagem do subreddit e só a mostra depois de carregada (deitada e com pelo menos [minWidth] px);
+     * senão tenta outra. A atual também é verificada: a resolução mínima pode ter subido.
+     */
+    private suspend fun showReddit(subreddit: String, next: Boolean, minWidth: Int) {
+        repeat(8) { attempt ->
+            val small = redditWidths.filterValues { it < minWidth }.keys
+            val image = c.reddit.current(subreddit, next = next || attempt > 0, skip = badReddit + small) ?: return
+            if (!preloadWallpaper(image.url)) {
+                badReddit += image.url
+                return@repeat
             }
-            badReddit += image.url
+            if ((redditWidths[image.url] ?: Int.MAX_VALUE) < minWidth) return@repeat
+            _reddit.value = image
+            return
         }
     }
 
@@ -291,7 +325,36 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 .build(),
         )
         val image = (result as? SuccessResult)?.image ?: return false
+        if (url !in redditWidths) originalWidth(url)?.let { redditWidths[url] = it }
         return image.width > image.height
+    }
+
+    /** A largura da foto original (a da cache em disco do Coil), sem a descodificar. */
+    private suspend fun originalWidth(url: String): Int? = withContext(Dispatchers.IO) {
+        runCatching {
+            SingletonImageLoader.get(context).diskCache?.openSnapshot(url)?.use { snapshot ->
+                val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeFile(snapshot.data.toFile().path, options)
+                options.outWidth.takeIf { it > 0 }
+            }
+        }.getOrNull()
+    }
+
+    /**
+     * Arranque automático: logo depois de a TV ligar, abre a app escolhida (uma vez por arranque, e só se a
+     * pessoa ainda estiver no ecrã inicial quando o tempo de espera acabar).
+     */
+    private suspend fun autostartAfterBoot() {
+        settings.ready.first { it }
+        val boot = AndroidSettings.Global.getInt(context.contentResolver, AndroidSettings.Global.BOOT_COUNT, -1)
+        val prefs = context.getSharedPreferences("autostart", Context.MODE_PRIVATE)
+        if (boot < 0 || prefs.getInt("boot", -1) == boot) return
+        prefs.edit { putInt("boot", boot) }
+        if (SystemClock.elapsedRealtime() > BOOT_WINDOW_MS) return
+        val device = settings.device.value
+        val pkg = device.autostart ?: return
+        delay(device.autostartDelay * 1000L)
+        if (resumed && _screen.value == Screen.Home) AutoStart.open(context, pkg)
     }
 
     /**
@@ -464,15 +527,90 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     // ---- Abrir ----
 
-    fun launchApp(activity: Context, pkg: String) {
+    fun launchApp(activity: Context, pkg: String) = unlocked(pkg) {
         if (!SystemIntents.start(activity, c.apps.launchIntent(pkg))) toast(strings.cantOpen)
     }
 
     /** Abre o conteúdo; se o `intent_uri` falhar, abre pelo menos a app. */
-    fun openWatchNext(activity: Context, item: WatchNextItem) {
-        if (SystemIntents.start(activity, item.intent())) return
+    fun openWatchNext(activity: Context, item: WatchNextItem) = unlocked(item.packageName) {
+        if (SystemIntents.start(activity, item.intent())) return@unlocked
         if (!SystemIntents.start(activity, c.apps.launchIntent(item.packageName))) toast(strings.cantOpen)
     }
+
+    // ---- Controlo parental ----
+
+    /** Uma app bloqueada abriu por outro caminho: volta-se ao Início a pedir o código, e depois abre-se. */
+    fun requestUnlock(activity: Context, pkg: String) {
+        _screen.value = Screen.Home
+        launchApp(activity, pkg)
+    }
+
+    /** Corre [action] já, ou depois de acertar o código se [pkg] estiver bloqueada agora. */
+    private fun unlocked(pkg: String, action: () -> Unit) {
+        if (!ParentalLock.appLocked(settings.device.value, pkg)) return action()
+        val label = allApps.value?.firstOrNull { it.packageName == pkg }?.label ?: pkg
+        _pinPrompt.value = PinPrompt(strings.unlockApp(label), action)
+    }
+
+    /** Corre [action] já, ou depois do código se as Definições e a organização estiverem protegidas. */
+    fun withSettingsUnlocked(action: () -> Unit) {
+        if (!ParentalLock.settingsLocked(settings.device.value)) return action()
+        _pinPrompt.value = PinPrompt(strings.unlockSettings, action)
+    }
+
+    /** Corre [action] depois do código (se houver): para entrar nas definições do controlo parental. */
+    fun withParentalUnlocked(action: () -> Unit) {
+        if (!ParentalLock.parentalLocked(settings.device.value)) return action()
+        _pinPrompt.value = PinPrompt(strings.unlockSettings, action)
+    }
+
+    fun settingsLocked(): Boolean = ParentalLock.settingsLocked(settings.device.value)
+
+    /** true se o código estiver certo (e aí corre o que estava à espera dele). */
+    fun submitPin(pin: String): Boolean {
+        val prompt = _pinPrompt.value ?: return false
+        if (!ParentalLock.matches(settings.device.value.pin, pin)) return false
+        ParentalLock.grant()
+        _unlocks.value++
+        _pinPrompt.value = null
+        prompt.onSuccess()
+        return true
+    }
+
+    fun cancelPin() {
+        _pinPrompt.value = null
+    }
+
+    /** Novo código (o primeiro liga o controlo parental); null desliga tudo. */
+    fun setPin(pin: String?) = settings.updateDevice {
+        if (pin == null) {
+            it.copy(pin = null, locked = emptySet(), lockSettings = false, lockFrom = null, lockTo = null)
+        } else {
+            it.copy(pin = ParentalLock.encode(pin))
+        }
+    }
+
+    fun setLocked(pkg: String, on: Boolean) = settings.updateDevice {
+        it.copy(locked = if (on) it.locked + pkg else it.locked - pkg)
+    }
+
+    fun setLockSettings(on: Boolean) = settings.updateDevice { it.copy(lockSettings = on) }
+
+    fun setLockHours(from: Int?, to: Int?) = settings.updateDevice { it.copy(lockFrom = from, lockTo = to) }
+
+    // ---- Arranque automático e modo ambiente ----
+
+    fun setAutostart(pkg: String?) = settings.updateDevice { it.copy(autostart = pkg) }
+
+    fun setAutostartWake(on: Boolean) = settings.updateDevice { it.copy(autostartWake = on) }
+
+    fun setAutostartDelay(seconds: Int) = settings.updateDevice { it.copy(autostartDelay = seconds) }
+
+    fun setIdleMinutes(minutes: Int) = settings.updateAccount { it.copy(idleMinutes = minutes) }
+
+    fun setIdleKeepAwake(on: Boolean) = settings.updateAccount { it.copy(idleKeepAwake = on) }
+
+    fun setRedditMinWidth(px: Int) = settings.updateAccount { it.copy(redditMinWidth = px) }
 
     // ---- Navegação ----
 
@@ -623,6 +761,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         const val WEATHER_MS = 30 * 60_000L
         const val YOUTUBE_MS = 30 * 60_000L
         const val YOUTUBE_STALE_MS = 10 * 60_000L
+
+        /** O arranque automático só conta nos primeiros minutos depois de ligar (não depois de atualizar a app). */
+        const val BOOT_WINDOW_MS = 10 * 60_000L
 
         /** Apps que abrem links do YouTube, por ordem de preferência. */
         val YOUTUBE_APPS = listOf(

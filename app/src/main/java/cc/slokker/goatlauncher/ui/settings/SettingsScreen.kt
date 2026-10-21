@@ -1,5 +1,15 @@
 package cc.slokker.goatlauncher.ui.settings
 
+import cc.slokker.goatlauncher.ui.Strings
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.Key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.key
+import androidx.compose.ui.text.style.TextAlign
+import cc.slokker.goatlauncher.ui.common.PinPad
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -73,7 +83,7 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
 
-private enum class Page { Main, Wallpaper, WallpaperFiles, HiddenApps, YouTube }
+private enum class Page { Main, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Parental, PinSetup, LockedApps }
 
 /** Definições do launcher: um painel de vidro à direita, por cima do fundo. Voltar sobe um nível. */
 @Composable
@@ -95,6 +105,20 @@ fun SettingsScreen(
     LaunchedEffect(page) {
         if (page != Page.WallpaperFiles && (autoFocus || !firstPage)) focusSoon(first)
         firstPage = false
+    }
+
+    // Controlo parental: com as definições protegidas, primeiro só aparece o pedido do código.
+    val device by vm.device.collectAsStateWithLifecycle()
+    val unlocks by vm.unlocks.collectAsStateWithLifecycle()
+    val locked = remember(device, unlocks) { vm.settingsLocked() }
+    // Fechado o pedido do código (certo ou cancelado), o foco volta para dentro das Definições.
+    val pinOpen by vm.pinPrompt.collectAsStateWithLifecycle()
+    var hadPin by remember { mutableStateOf(false) }
+    LaunchedEffect(pinOpen) {
+        if (pinOpen != null) hadPin = true else if (hadPin) {
+            hadPin = false
+            focusSoon(first)
+        }
     }
 
     Box(
@@ -123,11 +147,16 @@ fun SettingsScreen(
                     Page.WallpaperFiles -> s.boxImages
                     Page.HiddenApps -> s.hiddenApps
                     Page.YouTube -> s.youtube
+                    Page.Autostart -> s.autostart
+                    Page.Parental, Page.PinSetup -> s.parental
+                    Page.LockedApps -> s.lockedApps
                 },
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
             )
-            when (page) {
+            if (locked) {
+                ProtectedPage(vm, first)
+            } else when (page) {
                 Page.Main -> MainPage(vm, first, onPage = { page = it })
                 Page.Wallpaper -> WallpaperPage(vm, first, onBoxImages = {
                     dir = null
@@ -144,6 +173,10 @@ fun SettingsScreen(
                 )
                 Page.HiddenApps -> HiddenAppsPage(vm, first)
                 Page.YouTube -> YouTubePage(vm, first, onDone = { page = Page.Main })
+                Page.Autostart -> AutostartPage(vm, first, onDone = { page = Page.Main })
+                Page.Parental -> ParentalPage(vm, first, onPage = { page = it })
+                Page.PinSetup -> PinSetupPage(vm, onDone = { page = Page.Parental })
+                Page.LockedApps -> LockedAppsPage(vm, first)
             }
         }
     }
@@ -203,6 +236,26 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
                 trailing = { Chevron() },
             )
         }
+        item {
+            // OK passa ao tempo seguinte: desligado → 1 → 2 → 5 → 10 → 30 min → desligado.
+            val next = IDLE_MINUTES.getOrElse(IDLE_MINUTES.indexOf(account.idleMinutes) + 1) { IDLE_MINUTES.first() }
+            GlassRow(
+                title = s.idleMode,
+                subtitle = if (account.idleMinutes > 0) s.idleAfter(account.idleMinutes) else s.idleOff,
+                onClick = { vm.setIdleMinutes(next) },
+                trailing = { Chevron() },
+            )
+        }
+        if (account.idleMinutes > 0) {
+            item {
+                GlassRow(
+                    title = s.idleKeepAwake,
+                    subtitle = s.idleKeepAwakeHint,
+                    onClick = { vm.setIdleKeepAwake(!account.idleKeepAwake) },
+                    trailing = { Toggle(account.idleKeepAwake) },
+                )
+            }
+        }
 
         item { SectionLabel(s.apps) }
         item {
@@ -226,6 +279,46 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
                 subtitle = if (guard) s.homeGuardOn else s.homeGuardOff,
                 onClick = { SystemIntents.start(context, SystemIntents.accessibilitySettings()) },
                 trailing = { Toggle(guard) },
+            )
+        }
+
+        item { SectionLabel(s.startup) }
+        item {
+            val apps by vm.allApps.collectAsStateWithLifecycle()
+            GlassRow(
+                title = s.autostart,
+                subtitle = device.autostart?.let { pkg -> apps?.firstOrNull { it.packageName == pkg }?.label ?: pkg } ?: s.autostartNone,
+                onClick = { onPage(Page.Autostart) },
+                trailing = { Chevron() },
+            )
+        }
+        if (device.autostart != null) {
+            item {
+                GlassRow(
+                    title = s.autostartWake,
+                    subtitle = s.autostartWakeHint,
+                    onClick = { vm.setAutostartWake(!device.autostartWake) },
+                    trailing = { Toggle(device.autostartWake) },
+                )
+            }
+            item {
+                val next = AUTOSTART_DELAYS.getOrElse(AUTOSTART_DELAYS.indexOf(device.autostartDelay) + 1) { AUTOSTART_DELAYS.first() }
+                GlassRow(
+                    title = s.autostartDelay,
+                    subtitle = s.seconds(device.autostartDelay),
+                    onClick = { vm.setAutostartDelay(next) },
+                    trailing = { Chevron() },
+                )
+            }
+        }
+
+        item { SectionLabel(s.parental) }
+        item {
+            GlassRow(
+                title = s.parental,
+                subtitle = if (device.pin == null) s.parentalOff else s.parentalOn(device.locked.size),
+                onClick = { if (device.pin == null) onPage(Page.PinSetup) else vm.withParentalUnlocked { onPage(Page.Parental) } },
+                trailing = { Chevron() },
             )
         }
 
@@ -361,6 +454,16 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
         item {
             Text(s.redditHint, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 4.dp))
         }
+        item {
+            // OK passa à seguinte: qualquer → Full HD → 2K → 4K → qualquer.
+            val next = REDDIT_MIN_WIDTHS.getOrElse(REDDIT_MIN_WIDTHS.indexOf(account.redditMinWidth) + 1) { REDDIT_MIN_WIDTHS.first() }
+            GlassRow(
+                title = s.minWidth,
+                subtitle = resolutionName(account.redditMinWidth, s),
+                onClick = { vm.setRedditMinWidth(next) },
+                trailing = { Chevron() },
+            )
+        }
         val isReddit = current.type == Wallpaper.TYPE_REDDIT
         items(RedditWallpapers.SUGGESTED, key = { "r-$it" }) { sub ->
             GlassRow(
@@ -469,4 +572,211 @@ private fun wallpaperName(w: Wallpaper, s: cc.slokker.goatlauncher.ui.Strings): 
     Wallpaper.TYPE_BUILTIN -> Wallpapers.byId(w.value).name(s)
     Wallpaper.TYPE_REDDIT -> "r/${w.value}"
     else -> s.wallpaperImage
+}
+
+private val IDLE_MINUTES = listOf(0, 1, 2, 5, 10, 30)
+private val AUTOSTART_DELAYS = listOf(0, 3, 5, 10, 20)
+private val REDDIT_MIN_WIDTHS = listOf(0, 1920, 2560, 3840)
+
+private fun resolutionName(px: Int, s: Strings): String = when (px) {
+    0 -> s.anyResolution
+    1920 -> "Full HD (1920 px)"
+    2560 -> "2K (2560 px)"
+    3840 -> "4K (3840 px)"
+    else -> "$px px"
+}
+
+/** Com as definições protegidas pelo controlo parental: só o botão que pede o código. */
+@Composable
+private fun ProtectedPage(vm: LauncherViewModel, first: FocusRequester) {
+    val s = LocalStrings.current
+    Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Text(s.settingsProtected, style = MaterialTheme.typography.titleMedium)
+        Text(s.settingsProtectedHint, style = MaterialTheme.typography.bodyMedium, color = GoatColors.TextDim)
+        Spacer(Modifier.height(18.dp))
+        GlassButton(s.unlock, onClick = { vm.withSettingsUnlocked { } }, modifier = Modifier.focusRequester(first))
+    }
+}
+
+/** A app que abre ao ligar a TV (ou nenhuma). */
+@Composable
+private fun AutostartPage(vm: LauncherViewModel, first: FocusRequester, onDone: () -> Unit) {
+    val s = LocalStrings.current
+    val apps by vm.allApps.collectAsStateWithLifecycle()
+    val device by vm.device.collectAsStateWithLifecycle()
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        item {
+            GlassRow(
+                title = s.autostartNone,
+                onClick = {
+                    vm.setAutostart(null)
+                    onDone()
+                },
+                trailing = { if (device.autostart == null) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                modifier = Modifier.focusRequester(first),
+            )
+        }
+        items(apps.orEmpty(), key = { it.packageName }) { app ->
+            GlassRow(
+                title = app.label,
+                onClick = {
+                    vm.setAutostart(app.packageName)
+                    onDone()
+                },
+                leading = { AppThumb(app) },
+                trailing = { if (device.autostart == app.packageName) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
+            )
+        }
+    }
+}
+
+/** Controlo parental ligado: código, apps bloqueadas, proteção das definições e horário. */
+@Composable
+private fun ParentalPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
+    val s = LocalStrings.current
+    val device by vm.device.collectAsStateWithLifecycle()
+    var confirmOff by remember { mutableStateOf(false) }
+    val from = device.lockFrom
+    val to = device.lockTo
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        item {
+            GlassRow(
+                title = s.lockedApps,
+                subtitle = s.lockedCount(device.locked.size),
+                onClick = { onPage(Page.LockedApps) },
+                trailing = { Chevron() },
+                modifier = Modifier.focusRequester(first),
+            )
+        }
+        item {
+            GlassRow(
+                title = s.lockSettings,
+                subtitle = s.lockSettingsHint,
+                onClick = { vm.setLockSettings(!device.lockSettings) },
+                trailing = { Toggle(device.lockSettings) },
+            )
+        }
+        item {
+            GlassRow(
+                title = s.lockHours,
+                subtitle = if (from != null && to != null) s.lockBetween(from, to) else s.lockAlways,
+                onClick = { if (from != null) vm.setLockHours(null, null) else vm.setLockHours(20, 8) },
+                trailing = { Toggle(from != null) },
+            )
+        }
+        if (from != null && to != null) {
+            item { HourRow(s.lockFrom, from) { vm.setLockHours(it, to) } }
+            item { HourRow(s.lockTo, to) { vm.setLockHours(from, it) } }
+        }
+        item { GlassRow(title = s.changePin, onClick = { onPage(Page.PinSetup) }, trailing = { Chevron() }) }
+        item {
+            GlassRow(
+                title = s.parentalDisable,
+                subtitle = if (confirmOff) s.pressAgainToConfirm else s.parentalDisableHint,
+                onClick = {
+                    if (confirmOff) {
+                        vm.setPin(null)
+                        onPage(Page.Main)
+                    }
+                    confirmOff = !confirmOff
+                },
+            )
+        }
+    }
+}
+
+/** Uma hora (0–23) que muda com ← →. A hora de início e a de fim nunca ficam iguais. */
+@Composable
+private fun HourRow(title: String, hour: Int, onChange: (Int) -> Unit) {
+    val s = LocalStrings.current
+    GlassRow(
+        title = title,
+        subtitle = s.hourHint,
+        onClick = { onChange((hour + 1) % 24) },
+        trailing = { Text("%02d:00".format(hour), style = MaterialTheme.typography.titleMedium) },
+        modifier = Modifier.onPreviewKeyEvent { e ->
+            val delta = when (e.key) {
+                Key.DirectionLeft -> -1
+                Key.DirectionRight -> 1
+                else -> return@onPreviewKeyEvent false
+            }
+            if (e.type == KeyEventType.KeyDown) onChange((hour + delta + 24) % 24)
+            true
+        },
+    )
+}
+
+/** Novo código: escreve-se duas vezes. O primeiro liga o controlo parental. */
+@Composable
+private fun PinSetupPage(vm: LauncherViewModel, onDone: () -> Unit) {
+    val s = LocalStrings.current
+    var firstPin by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var attempt by remember { mutableIntStateOf(0) }
+    Column(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        key(attempt) {
+            PinPad(
+                title = if (firstPin == null) s.newPin else s.repeatPin,
+                message = error,
+                onDone = { pin ->
+                    val pending = firstPin
+                    when {
+                        pending == null -> {
+                            firstPin = pin
+                            error = null
+                        }
+                        pending == pin -> {
+                            vm.setPin(pin)
+                            vm.toast(s.pinSaved)
+                            onDone()
+                        }
+                        else -> {
+                            firstPin = null
+                            error = s.pinMismatch
+                        }
+                    }
+                    attempt++
+                },
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(s.forgotPin, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, textAlign = TextAlign.Center)
+    }
+}
+
+@Composable
+private fun LockedAppsPage(vm: LauncherViewModel, first: FocusRequester) {
+    val s = LocalStrings.current
+    val apps by vm.allApps.collectAsStateWithLifecycle()
+    val device by vm.device.collectAsStateWithLifecycle()
+    val list = apps.orEmpty()
+    Column {
+        Text(s.lockedAppsHint, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 6.dp))
+        LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+            items(list, key = { it.packageName }) { app ->
+                val locked = app.packageName in device.locked
+                GlassRow(
+                    title = app.label,
+                    onClick = { vm.setLocked(app.packageName, !locked) },
+                    leading = { AppThumb(app) },
+                    trailing = { Toggle(locked) },
+                    modifier = if (app == list.first()) Modifier.focusRequester(first) else Modifier,
+                )
+            }
+        }
+    }
+}
+
+/** O banner (ou o ícone) pequeno à esquerda das listas de apps. */
+@Composable
+private fun AppThumb(app: cc.slokker.goatlauncher.data.LauncherApp) {
+    Box(
+        Modifier.size(64.dp, 36.dp).clip(GoatShapes.Small).background(app.color),
+        contentAlignment = Alignment.Center,
+    ) {
+        when {
+            app.banner != null -> Image(app.banner, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            app.icon != null -> Image(app.icon, null, modifier = Modifier.size(24.dp))
+        }
+    }
 }

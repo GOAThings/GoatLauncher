@@ -9,6 +9,7 @@ import android.provider.Settings
 import android.util.Log
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
+import cc.slokker.goatlauncher.data.ParentalLock
 
 /**
  * Mantém o GoatLauncher como ecrã inicial, como o "Override current launcher" do Projectivy. Opcional: a pessoa
@@ -18,8 +19,20 @@ import android.view.accessibility.AccessibilityEvent
  * esquece-o quando muda o conjunto de launchers instalados (ex.: instalar ou atualizar o Projectivy). Aí o Home
  * do comando abre o GoatLauncher, e outro launcher que chegue a abrir como ecrã inicial é logo substituído.
  * (As teclas enviadas por `adb shell input` não passam por aqui: só as do comando.)
+ *
+ * Também reforça o controlo parental: uma app bloqueada que abra por outro caminho (Assistente, Recentes…)
+ * dá lugar ao launcher a pedir o código. E é por aqui que o AutoStart abre apps a partir do fundo.
  */
 class HomeGuardService : AccessibilityService() {
+
+    override fun onServiceConnected() {
+        instance = this
+    }
+
+    override fun onDestroy() {
+        if (instance === this) instance = null
+        super.onDestroy()
+    }
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
         if (event.keyCode != KeyEvent.KEYCODE_HOME || isDefaultHome(this)) return false
@@ -31,6 +44,11 @@ class HomeGuardService : AccessibilityService() {
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val pkg = event.packageName?.toString() ?: return
         if (pkg == packageName) return
+        val device = (application as LauncherApp).container.settings.device.value
+        if (ParentalLock.appLocked(device, pkg)) {
+            AutoStart.start(this, AutoStart.unlockIntent(this, pkg))
+            return
+        }
         val activity = ComponentName(pkg, event.className?.toString() ?: return)
         if (activity in homeActivities() && !isDefaultHome(this)) openLauncher()
     }
@@ -66,6 +84,11 @@ class HomeGuardService : AccessibilityService() {
         private const val TAG = "HomeGuard"
 
         private const val HOMES_TTL_MS = 60_000L
+
+        /** O serviço ligado agora (null se a pessoa não o ligou nas definições de Acessibilidade). */
+        @Volatile
+        var instance: HomeGuardService? = null
+            private set
 
         fun isDefaultHome(context: Context): Boolean {
             val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)

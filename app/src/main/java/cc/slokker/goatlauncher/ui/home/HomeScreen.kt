@@ -1,5 +1,14 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.common.PinPad
+import cc.slokker.goatlauncher.ui.PinPrompt
+import android.os.SystemClock
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.ui.platform.LocalView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -238,6 +247,11 @@ fun HomeScreen(vm: LauncherViewModel) {
         menuFor = null
     }
 
+    // Pedido do código (controlo parental). Ao fechar (certo ou cancelado), o foco volta à app onde estava,
+    // a menos que o código tenha aberto o menu ou as Definições (esses tratam do seu foco).
+    val pinPrompt by vm.pinPrompt.collectAsStateWithLifecycle()
+    var hadPin by remember { mutableStateOf(false) }
+
     fun lastFavorite() = favorites.firstOrNull { it.packageName == focusedPkg }?.packageName ?: favorites.firstOrNull()?.packageName
 
     fun endMove() {
@@ -281,7 +295,8 @@ fun HomeScreen(vm: LauncherViewModel) {
                 vm.focusedPackage = app.packageName
             },
             onClick = { vm.launchApp(context, app.packageName) },
-            onLongClick = { menuFor = app },
+            // Com as definições protegidas, o menu (mover, esconder, mudar nome…) pede o código.
+            onLongClick = { vm.withSettingsUnlocked { menuFor = app } },
             bannerModifier = modifier.then(if (app.packageName == targetPkg) Modifier.focusRequester(target) else Modifier),
         )
     }
@@ -347,275 +362,335 @@ fun HomeScreen(vm: LauncherViewModel) {
     val shelfFullBleed = shelfItem != null && !shelfItem.isChannel && shelfItem.imageUri != null && shelfSize != null && shelfSize.height > 0f &&
         abs(shelfSize.width / shelfSize.height - 16f / 9f) < 0.25f
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .onPreviewKeyEvent { e ->
-                val pkg = moving
-                val up = e.type == KeyEventType.KeyUp
-                when {
-                    // A mover: no Início só ‹ › (a app fica nos favoritos); nas Apps também ↑ ↓ (uma linha inteira).
-                    pkg != null -> when (e.key) {
-                        Key.DirectionLeft, Key.DirectionRight, Key.DirectionUp, Key.DirectionDown -> {
-                            if (e.type == KeyEventType.KeyDown) {
-                                val delta = when (e.key) {
-                                    Key.DirectionLeft -> -1
-                                    Key.DirectionRight -> 1
-                                    Key.DirectionUp -> -AppsColumns
-                                    else -> AppsColumns
+    // Modo ambiente: sem tocar no comando durante account.idleMinutes (com o launcher à frente), fica só o fundo
+    // e as horas. Ao voltar de uma app, a contagem recomeça.
+    var lastInput by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    var idle by remember { mutableStateOf(false) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(lastInput, account.idleMinutes) {
+        idle = false
+        if (account.idleMinutes <= 0) return@LaunchedEffect
+        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            idle = false
+            delay(account.idleMinutes * 60_000L)
+            idle = true
+        }
+    }
+    val uiAlpha by animateFloatAsState(if (idle) 0f else 1f, tween(if (idle) AMBIENT_FADE_MS else 250), label = "ambient")
+    val reddit by vm.redditImage.collectAsStateWithLifecycle()
+    // "Não deixar a TV adormecer": só conta enquanto a janela do launcher está visível.
+    val view = LocalView.current
+    val keepAwake = account.idleMinutes > 0 && account.idleKeepAwake
+    DisposableEffect(keepAwake) {
+        view.keepScreenOn = keepAwake
+        onDispose { view.keepScreenOn = false }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = uiAlpha }
+                .onPreviewKeyEvent { e ->
+                    // Modo ambiente: qualquer tecla acorda o ecrã e não faz mais nada.
+                    if (e.type == KeyEventType.KeyDown) lastInput = SystemClock.elapsedRealtime()
+                    if (idle || uiAlpha < 1f) return@onPreviewKeyEvent true
+                    val pkg = moving
+                    val up = e.type == KeyEventType.KeyUp
+                    when {
+                        // A mover: no Início só ‹ › (a app fica nos favoritos); nas Apps também ↑ ↓ (uma linha inteira).
+                        pkg != null -> when (e.key) {
+                            Key.DirectionLeft, Key.DirectionRight, Key.DirectionUp, Key.DirectionDown -> {
+                                if (e.type == KeyEventType.KeyDown) {
+                                    val delta = when (e.key) {
+                                        Key.DirectionLeft -> -1
+                                        Key.DirectionRight -> 1
+                                        Key.DirectionUp -> -AppsColumns
+                                        else -> AppsColumns
+                                    }
+                                    val idx = list.indexOfFirst { it.packageName == pkg }
+                                    val allowed = onApps || (abs(delta) == 1 && idx + delta in 0 until minOf(FavoriteCount, list.size))
+                                    if (allowed) vm.moveApp(pkg, delta)
+                                    focusApp(pkg)
                                 }
-                                val idx = list.indexOfFirst { it.packageName == pkg }
-                                val allowed = onApps || (abs(delta) == 1 && idx + delta in 0 until minOf(FavoriteCount, list.size))
-                                if (allowed) vm.moveApp(pkg, delta)
-                                focusApp(pkg)
+                                true
                             }
+                            Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.Back -> {
+                                if (up) endMove()
+                                true
+                            }
+                            else -> false
+                        }
+                        pinPrompt != null && e.key == Key.Back -> {
+                            if (up) vm.cancelPin()
                             true
                         }
-                        Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.Back -> {
-                            if (up) endMove()
+                        menuFor != null && e.key == Key.Back -> {
+                            if (up) closeMenu()
+                            true
+                        }
+                        // As Definições tratam o seu Voltar (páginas); se o foco estiver nos separadores, ver onKeyEvent.
+                        e.key == Key.Back && onSettings -> false
+                        // É o ecrã inicial: Voltar não sai daqui. Nas Apps, volta ao Início.
+                        e.key == Key.Back -> {
+                            if (up && onApps) {
+                                vm.openHome()
+                                focusApp(lastFavorite())
+                            }
                             true
                         }
                         else -> false
                     }
-                    menuFor != null && e.key == Key.Back -> {
-                        if (up) closeMenu()
-                        true
-                    }
-                    // As Definições tratam o seu Voltar (páginas); se o foco estiver nos separadores, ver onKeyEvent.
-                    e.key == Key.Back && onSettings -> false
-                    // É o ecrã inicial: Voltar não sai daqui. Nas Apps, volta ao Início.
-                    e.key == Key.Back -> {
-                        if (up && onApps) {
-                            vm.openHome()
-                            focusApp(lastFavorite())
-                        }
-                        true
-                    }
-                    else -> false
                 }
+                // Voltar nas Definições que ninguém tratou (o foco está nos separadores): volta ao Início.
+                .onKeyEvent { e ->
+                    if (e.key != Key.Back || !onSettings) return@onKeyEvent false
+                    if (e.type == KeyEventType.KeyUp) {
+                        vm.openHome()
+                        focusApp(lastFavorite())
+                    }
+                    true
+                },
+        ) {
+            AnimatedVisibility(visible = shelfFullBleed && !onApps, enter = fadeIn(tween(400)), exit = fadeOut(tween(300))) {
+                Image(shelfPainter, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             }
-            // Voltar nas Definições que ninguém tratou (o foco está nos separadores): volta ao Início.
-            .onKeyEvent { e ->
-                if (e.key != Key.Back || !onSettings) return@onKeyEvent false
-                if (e.type == KeyEventType.KeyUp) {
-                    vm.openHome()
-                    focusApp(lastFavorite())
-                }
-                true
-            },
-    ) {
-        AnimatedVisibility(visible = shelfFullBleed && !onApps, enter = fadeIn(tween(400)), exit = fadeOut(tween(300))) {
-            Image(shelfPainter, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-        }
-        // Escurece o topo e o fundo (e a esquerda, com o destaque) para o texto se ler sobre qualquer imagem.
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        0f to Color.Black.copy(alpha = 0.45f),
-                        0.25f to Color.Transparent,
-                        0.45f to Color.Transparent,
-                        1f to Color.Black.copy(alpha = 0.78f),
+            // Escurece o topo e o fundo (e a esquerda, com o destaque) para o texto se ler sobre qualquer imagem.
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Black.copy(alpha = 0.45f),
+                            0.25f to Color.Transparent,
+                            0.45f to Color.Transparent,
+                            1f to Color.Black.copy(alpha = 0.78f),
+                        ),
                     ),
-                ),
-        )
-        // Sempre que há destaque (com a imagem do conteúdo ou sobre o fundo normal), para o texto grande se ler.
-        val sideScrim by animateFloatAsState(if (shelfItem != null && !onApps) 1f else 0f, tween(400), label = "side")
-        Box(
-            Modifier
-                .fillMaxSize()
-                .graphicsLayer { alpha = sideScrim }
-                .background(Brush.horizontalGradient(0f to Color.Black.copy(alpha = 0.7f), 0.45f to Color.Black.copy(alpha = 0.35f), 0.75f to Color.Transparent)),
-        )
-        val appsDim by animateFloatAsState(if (onApps || onSettings) 1f else 0f, tween(250), label = "dim")
-        Box(Modifier.fillMaxSize().graphicsLayer { alpha = appsDim }.background(Color.Black.copy(alpha = 0.6f)))
-
-        Column(Modifier.fillMaxSize().padding(TvSafePadding)) {
-            TopBar(
-                selected = when {
-                    onApps -> 1
-                    onSettings -> 2
-                    else -> 0
-                },
-                clock24h = account.clock24h,
-                showGreeting = account.showGreeting,
-                weather = weather?.takeIf { account.showWeather },
-                network = network,
-                onHome = vm::openHome,
-                onApps = vm::openApps,
-                onSettings = vm::openSettings,
-                onNetwork = { SystemIntents.openNetworkSettings(context) },
-                onFocusChanged = { tabBarFocused = it },
             )
+            // Sempre que há destaque (com a imagem do conteúdo ou sobre o fundo normal), para o texto grande se ler.
+            val sideScrim by animateFloatAsState(if (shelfItem != null && !onApps) 1f else 0f, tween(400), label = "side")
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = sideScrim }
+                    .background(Brush.horizontalGradient(0f to Color.Black.copy(alpha = 0.7f), 0.45f to Color.Black.copy(alpha = 0.35f), 0.75f to Color.Transparent)),
+            )
+            val appsDim by animateFloatAsState(if (onApps || onSettings) 1f else 0f, tween(250), label = "dim")
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = appsDim }.background(Color.Black.copy(alpha = 0.6f)))
 
-            AnimatedContent(
-                targetState = screen,
-                transitionSpec = { fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(150)) },
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                label = "tab",
-            ) { tab ->
-                if (tab == Screen.Settings) {
-                    // Definições no próprio separador. Escolhidas pelo foco nos separadores, não tiram de lá o foco.
-                    SettingsScreen(
-                        vm,
-                        embedded = true,
-                        autoFocus = !tabBarFocused,
-                        onExit = {
-                            vm.openHome()
-                            focusApp(lastFavorite())
-                        },
-                    )
-                } else if (tab == Screen.Apps) {
-                    // ---- Apps: todas as apps, os favoritos na primeira linha ----
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-                        if (list.isEmpty()) {
-                            Text(s.noApps, Modifier.padding(top = 60.dp), color = GoatColors.TextDim)
-                        } else {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(AppsColumns),
-                                state = gridState,
-                                modifier = Modifier.width(TilesRowWidth + 24.dp).fillMaxHeight(),
-                                horizontalArrangement = Arrangement.spacedBy(TileGap),
-                                verticalArrangement = Arrangement.spacedBy(20.dp),
-                                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 20.dp, bottom = 24.dp),
-                            ) {
-                                item(key = "h-fav", span = { GridItemSpan(maxLineSpan) }) { SectionHeader(s.favorites, hint = true) }
-                                items(favorites, key = { it.packageName }) { app -> Tile(app, home = false) }
-                                if (moreApps.isNotEmpty()) {
-                                    item(key = "h-more", span = { GridItemSpan(maxLineSpan) }) {
-                                        SectionHeader(s.moreApps, hint = false, modifier = Modifier.padding(top = 8.dp))
+            Column(Modifier.fillMaxSize().padding(TvSafePadding)) {
+                TopBar(
+                    selected = when {
+                        onApps -> 1
+                        onSettings -> 2
+                        else -> 0
+                    },
+                    clock24h = account.clock24h,
+                    showGreeting = account.showGreeting,
+                    weather = weather?.takeIf { account.showWeather },
+                    network = network,
+                    onHome = vm::openHome,
+                    onApps = vm::openApps,
+                    onSettings = vm::openSettings,
+                    onNetwork = { SystemIntents.openNetworkSettings(context) },
+                    onFocusChanged = { tabBarFocused = it },
+                )
+
+                AnimatedContent(
+                    targetState = screen,
+                    transitionSpec = { fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(150)) },
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    label = "tab",
+                ) { tab ->
+                    if (tab == Screen.Settings) {
+                        // Definições no próprio separador. Escolhidas pelo foco nos separadores, não tiram de lá o foco.
+                        SettingsScreen(
+                            vm,
+                            embedded = true,
+                            autoFocus = !tabBarFocused,
+                            onExit = {
+                                vm.openHome()
+                                focusApp(lastFavorite())
+                            },
+                        )
+                    } else if (tab == Screen.Apps) {
+                        // ---- Apps: todas as apps, os favoritos na primeira linha ----
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                            if (list.isEmpty()) {
+                                Text(s.noApps, Modifier.padding(top = 60.dp), color = GoatColors.TextDim)
+                            } else {
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(AppsColumns),
+                                    state = gridState,
+                                    modifier = Modifier.width(TilesRowWidth + 24.dp).fillMaxHeight(),
+                                    horizontalArrangement = Arrangement.spacedBy(TileGap),
+                                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                                    contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 20.dp, bottom = 24.dp),
+                                ) {
+                                    item(key = "h-fav", span = { GridItemSpan(maxLineSpan) }) { SectionHeader(s.favorites, hint = true) }
+                                    items(favorites, key = { it.packageName }) { app -> Tile(app, home = false) }
+                                    if (moreApps.isNotEmpty()) {
+                                        item(key = "h-more", span = { GridItemSpan(maxLineSpan) }) {
+                                            SectionHeader(s.moreApps, hint = false, modifier = Modifier.padding(top = 8.dp))
+                                        }
+                                        items(moreApps, key = { it.packageName }) { app -> Tile(app, home = false) }
                                     }
-                                    items(moreApps, key = { it.packageName }) { app -> Tile(app, home = false) }
                                 }
                             }
                         }
-                    }
-                } else {
-                    // ---- Início ----
-                    Column(Modifier.fillMaxSize()) {
-                        if (shelfStyle) {
-                            Spacer(Modifier.weight(1f))
-                            AnimatedContent(
-                                targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() },
-                                contentKey = { it?.packageName },
-                                transitionSpec = { fadeIn(tween(260, delayMillis = 80)) togetherWith fadeOut(tween(140)) },
-                                label = "shelf",
-                            ) { app ->
-                                val item = shelfItem
-                                if (app != null && item != null && item.packageName == app.packageName) {
-                                    ShelfHero(
-                                        app = app,
-                                        item = item,
-                                        count = sectionItems.size,
-                                        showLogo = !shelfFullBleed,
-                                        onPrev = { if (shelfIndex > 0) shelfIndex-- },
-                                        onNext = { if (shelfIndex < sectionItems.size - 1) shelfIndex++ },
-                                        onOpen = { vm.openWatchNext(context, item) },
-                                    )
-                                } else {
-                                    Spacer(Modifier.fillMaxWidth())
+                    } else {
+                        // ---- Início ----
+                        Column(Modifier.fillMaxSize()) {
+                            if (shelfStyle) {
+                                Spacer(Modifier.weight(1f))
+                                AnimatedContent(
+                                    targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() },
+                                    contentKey = { it?.packageName },
+                                    transitionSpec = { fadeIn(tween(260, delayMillis = 80)) togetherWith fadeOut(tween(140)) },
+                                    label = "shelf",
+                                ) { app ->
+                                    val item = shelfItem
+                                    if (app != null && item != null && item.packageName == app.packageName) {
+                                        ShelfHero(
+                                            app = app,
+                                            item = item,
+                                            count = sectionItems.size,
+                                            showLogo = !shelfFullBleed,
+                                            onPrev = { if (shelfIndex > 0) shelfIndex-- },
+                                            onNext = { if (shelfIndex < sectionItems.size - 1) shelfIndex++ },
+                                            onOpen = { vm.openWatchNext(context, item) },
+                                        )
+                                    } else {
+                                        Spacer(Modifier.fillMaxWidth())
+                                    }
                                 }
-                            }
-                            Spacer(Modifier.height(28.dp))
-                        } else if (downUnder) {
-                            Spacer(Modifier.weight(1f))
-                        } else {
-                            Spacer(Modifier.weight(1f))
-                            // Entre favoritos, a secção troca com um fade (e a altura acompanha), em vez de saltar.
-                            AnimatedContent(
-                                targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() }?.let { it to sectionItems },
-                                contentKey = { it?.first?.packageName },
-                                transitionSpec = {
-                                    (fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(120)))
-                                        .using(SizeTransform(clip = false) { _, _ -> tween(220, easing = FastOutSlowInEasing) })
-                                },
-                                label = "continue",
-                            ) { section ->
-                                if (section != null) {
-                                    ContinueWatchingRow(section.first, section.second, onOpen = { vm.openWatchNext(context, it) })
-                                } else {
-                                    Spacer(Modifier.fillMaxWidth())
+                                Spacer(Modifier.height(28.dp))
+                            } else if (downUnder) {
+                                Spacer(Modifier.weight(1f))
+                            } else {
+                                Spacer(Modifier.weight(1f))
+                                // Entre favoritos, a secção troca com um fade (e a altura acompanha), em vez de saltar.
+                                AnimatedContent(
+                                    targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() }?.let { it to sectionItems },
+                                    contentKey = { it?.first?.packageName },
+                                    transitionSpec = {
+                                        (fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(120)))
+                                            .using(SizeTransform(clip = false) { _, _ -> tween(220, easing = FastOutSlowInEasing) })
+                                    },
+                                    label = "continue",
+                                ) { section ->
+                                    if (section != null) {
+                                        ContinueWatchingRow(section.first, section.second, onOpen = { vm.openWatchNext(context, it) })
+                                    } else {
+                                        Spacer(Modifier.fillMaxWidth())
+                                    }
                                 }
+                                Spacer(Modifier.height(12.dp))
                             }
-                            Spacer(Modifier.height(12.dp))
-                        }
-                        FavoritesBlock()
-                        if (downUnder && account.showContinueWatching) {
-                            // Tudo o que há para continuar, de todas as apps, o mais recente primeiro.
-                            val all = remember(list, watchNext) {
-                                list.flatMap { watchNext[it.packageName].orEmpty() }.sortedByDescending { it.lastEngagement }.take(DOWN_UNDER_MAX)
-                            }
-                            if (all.isNotEmpty()) {
-                                Spacer(Modifier.height(14.dp))
-                                DownUnderRow(all, list.associateBy { it.packageName }, onOpen = { vm.openWatchNext(context, it) })
+                            FavoritesBlock()
+                            if (downUnder && account.showContinueWatching) {
+                                // Tudo o que há para continuar, de todas as apps, o mais recente primeiro.
+                                val all = remember(list, watchNext) {
+                                    list.flatMap { watchNext[it.packageName].orEmpty() }.sortedByDescending { it.lastEngagement }.take(DOWN_UNDER_MAX)
+                                }
+                                if (all.isNotEmpty()) {
+                                    Spacer(Modifier.height(14.dp))
+                                    DownUnderRow(all, list.associateBy { it.packageName }, onOpen = { vm.openWatchNext(context, it) })
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        // O menu desenha-se por cima do ecrã, não numa janela à parte (Dialog): abre sem criar janela nova.
-        // Guarda a última app para o fade de saída não ficar vazio.
-        var menuShown by remember { mutableStateOf<LauncherApp?>(null) }
-        if (menuFor != null) menuShown = menuFor
-        AnimatedVisibility(visible = menuFor != null, enter = fadeIn(tween(MENU_MS)), exit = fadeOut(tween(MENU_MS))) {
-            val app = menuShown ?: return@AnimatedVisibility
-            AppMenu(
-                app = app,
-                onMove = {
-                    closeMenu()
-                    moving = app.packageName
-                },
-                onChangeIcon = {
-                    closeMenu()
-                    iconFor = app
-                },
-                onRename = {
-                    closeMenu()
-                    renameFor = app
-                },
-                hidden = app.packageName in device.hidden,
-                continueOff = app.packageName in device.noContinue,
-                onToggleContinue = {
-                    closeMenu()
-                    vm.setShowContinue(app.packageName, app.packageName in device.noContinue)
-                },
-                onHide = {
-                    closeMenu()
-                    if (app.packageName in device.hidden) {
-                        vm.setHidden(app.packageName, false)
-                    } else {
-                        // No Início a app sai da fila: o foco passa para a vizinha. Nas Apps continua lá.
-                        if (!onApps) {
-                            val i = favorites.indexOfFirst { it.packageName == app.packageName }
-                            focusApp((favorites.getOrNull(i + 1) ?: favorites.getOrNull(i - 1))?.packageName)
+            // O menu desenha-se por cima do ecrã, não numa janela à parte (Dialog): abre sem criar janela nova.
+            // Guarda a última app para o fade de saída não ficar vazio.
+            var menuShown by remember { mutableStateOf<LauncherApp?>(null) }
+            if (menuFor != null) menuShown = menuFor
+            AnimatedVisibility(visible = menuFor != null, enter = fadeIn(tween(MENU_MS)), exit = fadeOut(tween(MENU_MS))) {
+                val app = menuShown ?: return@AnimatedVisibility
+                AppMenu(
+                    app = app,
+                    onMove = {
+                        closeMenu()
+                        moving = app.packageName
+                    },
+                    onChangeIcon = {
+                        closeMenu()
+                        iconFor = app
+                    },
+                    onRename = {
+                        closeMenu()
+                        renameFor = app
+                    },
+                    hidden = app.packageName in device.hidden,
+                    continueOff = app.packageName in device.noContinue,
+                    onToggleContinue = {
+                        closeMenu()
+                        vm.setShowContinue(app.packageName, app.packageName in device.noContinue)
+                    },
+                    onHide = {
+                        closeMenu()
+                        if (app.packageName in device.hidden) {
+                            vm.setHidden(app.packageName, false)
+                        } else {
+                            // No Início a app sai da fila: o foco passa para a vizinha. Nas Apps continua lá.
+                            if (!onApps) {
+                                val i = favorites.indexOfFirst { it.packageName == app.packageName }
+                                focusApp((favorites.getOrNull(i + 1) ?: favorites.getOrNull(i - 1))?.packageName)
+                            }
+                            vm.setHidden(app.packageName, true)
                         }
-                        vm.setHidden(app.packageName, true)
-                    }
-                },
-                onInfo = {
-                    closeMenu()
-                    SystemIntents.start(context, SystemIntents.appInfo(app.packageName))
-                },
-            )
-        }
+                    },
+                    onInfo = {
+                        closeMenu()
+                        SystemIntents.start(context, SystemIntents.appInfo(app.packageName))
+                    },
+                    // Só com o controlo parental ligado (há código).
+                    lock = if (device.pin != null) app.packageName in device.locked else null,
+                    onToggleLock = {
+                        closeMenu()
+                        vm.setLocked(app.packageName, app.packageName !in device.locked)
+                    },
+                )
+            }
 
-        renameFor?.let { app ->
-            RenameDialog(
-                app = app,
-                custom = device.names[app.packageName] != null,
-                onSave = {
-                    renameFor = null
-                    vm.setCustomName(app.packageName, it)
-                },
-                onDismiss = { renameFor = null },
-            )
-        }
+            var pinShown by remember { mutableStateOf<PinPrompt?>(null) }
+            if (pinPrompt != null) pinShown = pinPrompt
+            AnimatedVisibility(visible = pinPrompt != null, enter = fadeIn(tween(MENU_MS)), exit = fadeOut(tween(MENU_MS))) {
+                val prompt = pinShown ?: return@AnimatedVisibility
+                PinOverlay(prompt.title, onPin = vm::submitPin)
+            }
+            LaunchedEffect(pinPrompt) {
+                if (pinPrompt != null) {
+                    hadPin = true
+                    return@LaunchedEffect
+                }
+                if (!hadPin) return@LaunchedEffect
+                hadPin = false
+                withFrameNanos { }
+                if (menuFor == null && !onSettings) focusApp(focusedPkg ?: lastFavorite())
+            }
 
-        iconFor?.let { app ->
-            IconPicker(app, current = device.icons[app.packageName], vm = vm, onDone = { iconFor = null })
+            renameFor?.let { app ->
+                RenameDialog(
+                    app = app,
+                    custom = device.names[app.packageName] != null,
+                    onSave = {
+                        renameFor = null
+                        vm.setCustomName(app.packageName, it)
+                    },
+                    onDismiss = { renameFor = null },
+                )
+            }
+
+            iconFor?.let { app ->
+                IconPicker(app, current = device.icons[app.packageName], vm = vm, onDone = { iconFor = null })
+            }
+        }
+        AnimatedVisibility(visible = idle, enter = fadeIn(tween(AMBIENT_FADE_MS)), exit = fadeOut(tween(250))) {
+            AmbientClock(clock24h = account.clock24h, caption = reddit?.title?.let(::cleanRedditTitle))
         }
     }
 }
@@ -954,6 +1029,8 @@ private fun AppMenu(
     continueOff: Boolean,
     onToggleContinue: () -> Unit,
     onInfo: () -> Unit,
+    lock: Boolean?,
+    onToggleLock: () -> Unit,
 ) {
     val s = LocalStrings.current
     val first = remember { FocusRequester() }
@@ -973,6 +1050,7 @@ private fun AppMenu(
             GlassRow(title = s.rename, onClick = onRename)
             GlassRow(title = if (hidden) s.showOnHome else s.hide, onClick = onHide)
             GlassRow(title = if (continueOff) s.showContinue else s.hideContinue, onClick = onToggleContinue)
+            if (lock != null) GlassRow(title = if (lock) s.unlockAppMenu else s.lockApp, onClick = onToggleLock)
             GlassRow(title = s.appInfo, onClick = onInfo)
         }
         LaunchedEffect(Unit) {
@@ -983,3 +1061,41 @@ private fun AppMenu(
 }
 
 private const val MENU_MS = 120
+
+private const val AMBIENT_FADE_MS = 1500
+
+/** "Lago ao amanhecer [OC] [4032x3024]" → "Lago ao amanhecer". */
+private fun cleanRedditTitle(title: String): String =
+    title.replace(Regex("""[\[(][^\])]*[\])]"""), "").replace(Regex("""\s+"""), " ").trim()
+
+/** O teclado do código por cima do ecrã (Voltar cancela: ver o ecrã). [onPin] devolve false se estiver errado. */
+@Composable
+private fun PinOverlay(title: String, onPin: (String) -> Boolean) {
+    val s = LocalStrings.current
+    var error by remember { mutableStateOf<String?>(null) }
+    var attempt by remember { mutableIntStateOf(0) }
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)), contentAlignment = Alignment.Center) {
+        Column(
+            Modifier
+                .width(440.dp)
+                .glass(GoatShapes.Panel, tint = Color(0xF0111522))
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            // A cada tentativa errada o teclado recomeça (e volta a mostrar o erro, mesmo que seja o mesmo texto).
+            key(attempt) {
+                PinPad(
+                    title = title,
+                    message = error,
+                    onDone = { pin ->
+                        if (!onPin(pin)) {
+                            error = s.wrongPin
+                            attempt++
+                        }
+                    },
+                )
+            }
+            Text(s.forgotPin, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, textAlign = TextAlign.Center)
+        }
+    }
+}

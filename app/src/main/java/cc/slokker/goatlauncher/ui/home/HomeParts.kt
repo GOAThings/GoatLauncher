@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -62,6 +63,7 @@ import cc.slokker.goatlauncher.data.WeatherNow
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.Strings
 import cc.slokker.goatlauncher.ui.common.GoatIcons
+import cc.slokker.goatlauncher.ui.theme.TvSafePadding
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import coil3.compose.AsyncImagePainter
@@ -102,6 +104,35 @@ fun TopClock(clock24h: Boolean, modifier: Modifier = Modifier) {
         modifier,
         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
     )
+}
+
+/**
+ * Modo ambiente: as horas em grande, a data e (com o fundo do Reddit) o título da foto, em baixo à esquerda,
+ * por cima de um escurecer suave só nessa zona.
+ */
+@Composable
+fun AmbientClock(clock24h: Boolean, caption: String?, modifier: Modifier = Modifier) {
+    val s = LocalStrings.current
+    val now = rememberMinute()
+    Box(
+        modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(0.55f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.55f)))
+            .padding(TvSafePadding),
+        contentAlignment = Alignment.BottomStart,
+    ) {
+        Column {
+            Text(
+                SimpleDateFormat(if (clock24h) "HH:mm" else "h:mm", s.locale).format(now),
+                style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Light),
+            )
+            Text(formatDate(now, s), style = MaterialTheme.typography.titleMedium, color = GoatColors.TextDim)
+            if (caption != null) {
+                Spacer(Modifier.height(6.dp))
+                Text(caption, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
 }
 
 /**
