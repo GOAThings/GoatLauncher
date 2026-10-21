@@ -6,7 +6,7 @@ set -euo pipefail
 
 VERSION="${1:?Uso: scripts/release.sh <versão> [notas]}"
 NOTES="${2:-}"
-RELEASES_REPO="GOAThings/GoatLauncher-releases"
+RELEASES_REPO="GOAThings/GoatLauncher-Releases"
 cd "$(dirname "$0")/.."
 
 if [ -n "$(git status --porcelain)" ]; then

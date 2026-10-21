@@ -139,7 +139,7 @@ class Updater(private val context: Context, private val http: OkHttpClient, priv
     )
 
     companion object {
-        const val RELEASES_REPO = "GOAThings/GoatLauncher-releases"
+        const val RELEASES_REPO = "GOAThings/GoatLauncher-Releases"
 
         /** "0.10.1" > "0.9.3": compara número a número (o que não é número conta como 0). */
         fun isNewer(remote: String, current: String): Boolean {
