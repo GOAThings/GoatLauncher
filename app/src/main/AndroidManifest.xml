@@ -27,6 +27,11 @@
 
     <!-- Android 11+: sem isto, o sistema esconde as outras apps instaladas e o TvProvider. -->
     <queries>
+        <!-- Os outros launchers (ecrã inicial): ver HomeGuardService. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
+        </intent>
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
@@ -81,6 +86,20 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Opcional: mantém o launcher como ecrã inicial se o Android o perder (ver HomeGuardService). -->
+        <service
+            android:name=".HomeGuardService"
+            android:exported="false"
+            android:label="@string/home_guard_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/home_guard" />
+        </service>
 
         <receiver
             android:name=".InstallResultReceiver"

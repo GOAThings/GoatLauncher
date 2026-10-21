@@ -22,6 +22,8 @@ object SystemIntents {
         listOf(Settings.ACTION_WIFI_SETTINGS, Settings.ACTION_WIRELESS_SETTINGS, Settings.ACTION_SETTINGS)
             .any { start(context, Intent(it).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 
+    fun accessibilitySettings(): Intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
     fun androidSettings(): Intent = Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
     fun appInfo(pkg: String): Intent =

@@ -1,0 +1,4 @@
+<resources>
+    <string name="home_guard_label">GoatLauncher: manter como ecrã inicial</string>
+    <string name="home_guard_description">Mantém o GoatLauncher como ecrã inicial. Se o Android o deixar de ter como predefinido, o botão Home abre o GoatLauncher em vez do launcher de origem ou da escolha de app. Só vê que app abre e o botão Home; não lê nada do ecrã.</string>
+</resources>

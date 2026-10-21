@@ -233,6 +233,11 @@ fun AppBanner(
                 }
             }
             .onPreviewKeyEvent { e ->
+                // Botão Menu do comando: abre logo o menu da app (o mesmo que manter OK).
+                if (e.key == Key.Menu) {
+                    if (e.type == KeyEventType.KeyUp) onLongClick()
+                    return@onPreviewKeyEvent true
+                }
                 if (e.key != Key.DirectionCenter && e.key != Key.Enter && e.key != Key.NumPadEnter) return@onPreviewKeyEvent false
                 val native = e.nativeKeyEvent
                 when (e.type) {

@@ -12,6 +12,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
@@ -63,6 +64,7 @@ import cc.slokker.goatlauncher.ui.common.GlassButton
 import cc.slokker.goatlauncher.ui.settings.SettingsScreen
 import cc.slokker.goatlauncher.data.WeatherNow
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Brush
@@ -230,6 +232,12 @@ fun HomeScreen(vm: LauncherViewModel) {
         focusRequest++
     }
 
+    // Ao fechar o menu de uma app, o foco volta ao banner dela (o menu está por cima, no mesmo ecrã).
+    fun closeMenu() {
+        menuFor?.let { focusApp(it.packageName) }
+        menuFor = null
+    }
+
     fun lastFavorite() = favorites.firstOrNull { it.packageName == focusedPkg }?.packageName ?: favorites.firstOrNull()?.packageName
 
     fun endMove() {
@@ -368,6 +376,10 @@ fun HomeScreen(vm: LauncherViewModel) {
                             true
                         }
                         else -> false
+                    }
+                    menuFor != null && e.key == Key.Back -> {
+                        if (up) closeMenu()
+                        true
                     }
                     // As Definições tratam o seu Voltar (páginas); se o foco estiver nos separadores, ver onKeyEvent.
                     e.key == Key.Back && onSettings -> false
@@ -544,29 +556,34 @@ fun HomeScreen(vm: LauncherViewModel) {
             }
         }
 
-        menuFor?.let { app ->
+        // O menu desenha-se por cima do ecrã, não numa janela à parte (Dialog): abre sem criar janela nova.
+        // Guarda a última app para o fade de saída não ficar vazio.
+        var menuShown by remember { mutableStateOf<LauncherApp?>(null) }
+        if (menuFor != null) menuShown = menuFor
+        AnimatedVisibility(visible = menuFor != null, enter = fadeIn(tween(MENU_MS)), exit = fadeOut(tween(MENU_MS))) {
+            val app = menuShown ?: return@AnimatedVisibility
             AppMenu(
                 app = app,
                 onMove = {
-                    menuFor = null
+                    closeMenu()
                     moving = app.packageName
                 },
                 onChangeIcon = {
-                    menuFor = null
+                    closeMenu()
                     iconFor = app
                 },
                 onRename = {
-                    menuFor = null
+                    closeMenu()
                     renameFor = app
                 },
                 hidden = app.packageName in device.hidden,
                 continueOff = app.packageName in device.noContinue,
                 onToggleContinue = {
-                    menuFor = null
+                    closeMenu()
                     vm.setShowContinue(app.packageName, app.packageName in device.noContinue)
                 },
                 onHide = {
-                    menuFor = null
+                    closeMenu()
                     if (app.packageName in device.hidden) {
                         vm.setHidden(app.packageName, false)
                     } else {
@@ -579,10 +596,9 @@ fun HomeScreen(vm: LauncherViewModel) {
                     }
                 },
                 onInfo = {
-                    menuFor = null
+                    closeMenu()
                     SystemIntents.start(context, SystemIntents.appInfo(app.packageName))
                 },
-                onDismiss = { menuFor = null },
             )
         }
 
@@ -938,16 +954,18 @@ private fun AppMenu(
     continueOff: Boolean,
     onToggleContinue: () -> Unit,
     onInfo: () -> Unit,
-    onDismiss: () -> Unit,
 ) {
     val s = LocalStrings.current
     val first = remember { FocusRequester() }
-    Dialog(onDismissRequest = onDismiss) {
+    // Voltar é tratado no ecrã (fecha o menu); aqui só se escurece o fundo e se prende o foco ao menu.
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
         Column(
             Modifier
                 .width(380.dp)
                 .glass(GoatShapes.Panel, tint = Color(0xF0111522))
-                .padding(16.dp),
+                .padding(16.dp)
+                .focusProperties { onExit = { cancelFocusChange() } }
+                .focusGroup(),
         ) {
             Text(app.label, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 12.dp, bottom = 10.dp))
             GlassRow(title = s.move, onClick = onMove, modifier = Modifier.focusRequester(first))
@@ -963,3 +981,5 @@ private fun AppMenu(
         }
     }
 }
+
+private const val MENU_MS = 120

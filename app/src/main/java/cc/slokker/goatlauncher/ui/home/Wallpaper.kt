@@ -6,6 +6,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
@@ -21,6 +25,7 @@ import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.ui.Strings
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
+import coil3.size.Precision
 
 /** Fundos que vêm com a app, desenhados em código (nítidos em qualquer ecrã e sem pesar no APK). */
 class BuiltinWallpaper(val id: String, private val pt: String, private val en: String, val draw: DrawScope.() -> Unit) {
@@ -46,7 +51,6 @@ object Wallpapers {
 fun WallpaperView(wallpaper: Wallpaper, redditUrl: String?, modifier: Modifier = Modifier) {
     val builtin = if (wallpaper.type == Wallpaper.TYPE_BUILTIN) Wallpapers.byId(wallpaper.value) else Wallpapers.ALL.first()
     Box(modifier.fillMaxSize()) {
-        Spacer(Modifier.fillMaxSize().drawWithCache { onDrawBehind { builtin.draw(this) } })
         val context = LocalContext.current
         val image: Any? = when (wallpaper.type) {
             Wallpaper.TYPE_URL -> wallpaper.value
@@ -55,13 +59,19 @@ fun WallpaperView(wallpaper: Wallpaper, redditUrl: String?, modifier: Modifier =
             Wallpaper.TYPE_REDDIT -> redditUrl
             else -> null
         }
+        // O desenho por defeito só aparece enquanto não há imagem por cima: são caminhos em ecrã inteiro que a
+        // GPU da box desenha mal, e escondidos por baixo da foto custavam isso em cada frame.
+        var covered by remember(image == null) { mutableStateOf(false) }
+        if (!covered) Spacer(Modifier.fillMaxSize().drawWithCache { onDrawBehind { builtin.draw(this) } })
         // O Crossfade mantém a imagem anterior enquanto a nova aparece (a nova já vem carregada da cache).
         Crossfade(targetState = image, animationSpec = tween(1200), label = "wallpaper") { model ->
             if (model != null) {
                 AsyncImage(
-                    model = ImageRequest.Builder(context).data(model).build(),
+                    // Do tamanho do ecrã, não maior: as fotos do Reddit vêm com 4000+ px.
+                    model = ImageRequest.Builder(context).data(model).precision(Precision.EXACT).build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
+                    onSuccess = { covered = true },
                     modifier = Modifier.fillMaxSize(),
                 )
             }

@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
@@ -50,6 +51,7 @@ import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.BuildConfig
 import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.RedditWallpapers
+import cc.slokker.goatlauncher.HomeGuardService
 import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.ui.LauncherViewModel
@@ -209,6 +211,21 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
                 subtitle = s.hiddenCount(device.hidden.size),
                 onClick = { onPage(Page.HiddenApps) },
                 trailing = { Chevron() },
+            )
+        }
+        item {
+            // Liga-se nas definições de Acessibilidade do Android (uma app não o pode ligar sozinha).
+            val context = LocalContext.current
+            var guard by remember { mutableStateOf(HomeGuardService.isEnabled(context)) }
+            LifecycleResumeEffect(Unit) {
+                guard = HomeGuardService.isEnabled(context)
+                onPauseOrDispose { }
+            }
+            GlassRow(
+                title = s.homeGuard,
+                subtitle = if (guard) s.homeGuardOn else s.homeGuardOff,
+                onClick = { SystemIntents.start(context, SystemIntents.accessibilitySettings()) },
+                trailing = { Toggle(guard) },
             )
         }
 

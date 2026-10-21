@@ -101,6 +101,9 @@ class Strings(val english: Boolean) {
     val continueWatchingHint get() = t("O que cada app publica no \"A seguir\" do Android TV", "What each app publishes to Android TV's \"Play next\"")
     val apps get() = t("Apps", "Apps")
     val hiddenApps get() = t("Apps escondidas", "Hidden apps")
+    val homeGuard get() = t("Manter como ecrã inicial", "Keep as home screen")
+    val homeGuardOn get() = t("Ligado: o Home abre sempre o GoatLauncher", "On: Home always opens GoatLauncher")
+    val homeGuardOff get() = t("Desligado: liga \"GoatLauncher\" na Acessibilidade", "Off: turn on \"GoatLauncher\" in Accessibility")
     fun hiddenCount(n: Int) = when (n) {
         0 -> t("Nenhuma", "None")
         1 -> t("1 app", "1 app")

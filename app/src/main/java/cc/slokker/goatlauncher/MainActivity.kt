@@ -37,6 +37,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             GoatTheme { LauncherRoot(vm) }
         }
+        // O fundo (desenho ou foto) enche sempre o ecrã: o fundo da janela por baixo era só mais uma camada a pintar.
+        window.setBackgroundDrawable(null)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
