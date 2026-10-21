@@ -25,6 +25,7 @@ import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.ui.Strings
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
+import coil3.request.crossfade
 import coil3.size.Precision
 
 /** Fundos que vêm com a app, desenhados em código (nítidos em qualquer ecrã e sem pesar no APK). */
@@ -59,19 +60,20 @@ fun WallpaperView(wallpaper: Wallpaper, redditUrl: String?, modifier: Modifier =
             Wallpaper.TYPE_REDDIT -> redditUrl
             else -> null
         }
-        // O desenho por defeito só aparece enquanto não há imagem por cima: são caminhos em ecrã inteiro que a
-        // GPU da box desenha mal, e escondidos por baixo da foto custavam isso em cada frame.
-        var covered by remember(image == null) { mutableStateOf(false) }
-        if (!covered) Spacer(Modifier.fillMaxSize().drawWithCache { onDrawBehind { builtin.draw(this) } })
+        // O desenho por defeito só aparece sem foto (ou se a foto falhar): enquanto ela carrega fica o fundo
+        // escuro do ecrã (não pisca o desenho antes da foto). Por baixo da foto também não se desenha: são
+        // caminhos em ecrã inteiro que a GPU da box desenha mal, e custavam isso em cada frame.
+        var failed by remember(image) { mutableStateOf(false) }
+        if (image == null || failed) Spacer(Modifier.fillMaxSize().drawWithCache { onDrawBehind { builtin.draw(this) } })
         // O Crossfade mantém a imagem anterior enquanto a nova aparece (a nova já vem carregada da cache).
         Crossfade(targetState = image, animationSpec = tween(1200), label = "wallpaper") { model ->
             if (model != null) {
                 AsyncImage(
                     // Do tamanho do ecrã, não maior: as fotos do Reddit vêm com 4000+ px.
-                    model = ImageRequest.Builder(context).data(model).precision(Precision.EXACT).build(),
+                    model = ImageRequest.Builder(context).data(model).precision(Precision.EXACT).crossfade(400).build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    onSuccess = { covered = true },
+                    onError = { if (model == image) failed = true },
                     modifier = Modifier.fillMaxSize(),
                 )
             }

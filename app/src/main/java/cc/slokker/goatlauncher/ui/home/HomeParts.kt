@@ -191,6 +191,7 @@ fun AppTile(
     app: LauncherApp,
     width: Dp,
     custom: ImageBitmap?,
+    customPending: Boolean,
     showLabel: Boolean,
     hasContinue: Boolean,
     moving: Boolean,
@@ -206,6 +207,7 @@ fun AppTile(
             app = app,
             width = width,
             custom = custom,
+            customPending = customPending,
             hasContinue = hasContinue,
             moving = moving,
             onFocused = onFocused,
@@ -236,6 +238,8 @@ fun AppBanner(
     width: Dp,
     /** Ícone escolhido pela pessoa (icon pack ou imagem da box), em vez do banner da app. */
     custom: ImageBitmap?,
+    /** O ícone escolhido ainda está a carregar: só a cor da app, sem o banner original. */
+    customPending: Boolean = false,
     hasContinue: Boolean,
     moving: Boolean,
     onFocused: () -> Unit,
@@ -310,6 +314,7 @@ fun AppBanner(
         Box(Modifier.fillMaxSize()) {
             when {
                 custom != null -> CustomIconImage(custom, background = app.color)
+                customPending -> Unit
                 app.banner != null -> Image(app.banner, contentDescription = app.label, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                 app.icon != null -> Image(app.icon, contentDescription = app.label, modifier = Modifier.align(Alignment.Center).size(52.dp))
                 else -> Text(app.label, Modifier.align(Alignment.Center).padding(8.dp), maxLines = 2, overflow = TextOverflow.Ellipsis)

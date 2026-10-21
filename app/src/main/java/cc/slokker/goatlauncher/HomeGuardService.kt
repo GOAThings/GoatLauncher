@@ -35,6 +35,30 @@ class HomeGuardService : AccessibilityService() {
     }
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
+        if (ButtonCapture.allowed(event.keyCode)) {
+            // Definições → "Adicionar botão": o primeiro botão que se possa usar fica escolhido (e não faz mais nada).
+            val capture = ButtonCapture.listener
+            if (capture != null) {
+                if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+                    ButtonCapture.listener = null
+                    swallowUp = event.keyCode
+                    capture(event.keyCode, event.scanCode)
+                }
+                return true
+            }
+            if (event.action == KeyEvent.ACTION_UP && swallowUp == event.keyCode) {
+                swallowUp = null
+                return true
+            }
+            // Um botão com app escolhida: abre-a ao largar. O sistema só trata estes botões depois daqui (ex.: o
+            // Netflix da Shield), por isso consumi-los chega para não abrirem também o que abriam antes.
+            val button = (application as LauncherApp).container.settings.device.value.buttons
+                .firstOrNull { it.matches(event.keyCode, event.scanCode) }
+            if (button != null) {
+                if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) AutoStart.open(this, button.app)
+                return true
+            }
+        }
         if (event.keyCode != KeyEvent.KEYCODE_HOME || isDefaultHome(this)) return false
         if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) openLauncher()
         return true
@@ -66,6 +90,9 @@ class HomeGuardService : AccessibilityService() {
         }
         return homes
     }
+
+    /** O largar do botão acabado de capturar também não passa. */
+    private var swallowUp: Int? = null
 
     private var homes = emptySet<ComponentName>()
     private var homesAt = 0L

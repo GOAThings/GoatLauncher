@@ -1,5 +1,8 @@
 package cc.slokker.goatlauncher.ui.settings
 
+import androidx.compose.runtime.rememberUpdatedState
+import cc.slokker.goatlauncher.data.ButtonMap
+import cc.slokker.goatlauncher.ButtonCapture
 import cc.slokker.goatlauncher.ui.Strings
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -83,7 +86,7 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
 
-private enum class Page { Main, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Parental, PinSetup, LockedApps }
+private enum class Page { Main, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Buttons, ButtonCapture, ButtonApp, Parental, PinSetup, LockedApps }
 
 /** Definições do launcher: um painel de vidro à direita, por cima do fundo. Voltar sobe um nível. */
 @Composable
@@ -97,6 +100,8 @@ fun SettingsScreen(
     var page by remember { mutableStateOf(Page.Main) }
     // Pasta aberta em "Imagem da box" (null = lista de discos).
     var dir by remember { mutableStateOf<File?>(null) }
+    // Botão do comando a configurar (keyCode, scanCode), entre "carrega no botão" e escolher a app.
+    var buttonKey by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     val first = remember { FocusRequester() }
 
     // O navegador de imagens trata do seu foco (muda a cada pasta). A primeira página só leva o foco se
@@ -148,6 +153,9 @@ fun SettingsScreen(
                     Page.HiddenApps -> s.hiddenApps
                     Page.YouTube -> s.youtube
                     Page.Autostart -> s.autostart
+                    Page.Buttons -> s.buttons
+                    Page.ButtonCapture -> s.addButton
+                    Page.ButtonApp -> buttonKey?.let { (k, sc) -> s.buttonOpens(buttonName(k, sc, s)) } ?: s.buttons
                     Page.Parental, Page.PinSetup -> s.parental
                     Page.LockedApps -> s.lockedApps
                 },
@@ -173,7 +181,38 @@ fun SettingsScreen(
                 )
                 Page.HiddenApps -> HiddenAppsPage(vm, first)
                 Page.YouTube -> YouTubePage(vm, first, onDone = { page = Page.Main })
-                Page.Autostart -> AutostartPage(vm, first, onDone = { page = Page.Main })
+                Page.Autostart -> {
+                    val device by vm.device.collectAsStateWithLifecycle()
+                    AppPickerPage(vm, first, current = device.autostart, none = s.autostartNone) {
+                        vm.setAutostart(it)
+                        page = Page.Main
+                    }
+                }
+                Page.Buttons -> ButtonsPage(
+                    vm,
+                    first,
+                    onEdit = {
+                        buttonKey = it
+                        page = Page.ButtonApp
+                    },
+                    onAdd = { page = Page.ButtonCapture },
+                )
+                Page.ButtonCapture -> ButtonCapturePage(
+                    first,
+                    onCaptured = {
+                        buttonKey = it
+                        page = Page.ButtonApp
+                    },
+                    onCancel = { page = Page.Buttons },
+                )
+                Page.ButtonApp -> {
+                    val device by vm.device.collectAsStateWithLifecycle()
+                    val (k, sc) = buttonKey ?: (0 to 0)
+                    AppPickerPage(vm, first, current = device.buttons.firstOrNull { it.keyCode == k && it.scanCode == sc }?.app, none = s.removeButton) {
+                        vm.setButton(k, sc, it)
+                        page = Page.Buttons
+                    }
+                }
                 Page.Parental -> ParentalPage(vm, first, onPage = { page = it })
                 Page.PinSetup -> PinSetupPage(vm, onDone = { page = Page.Parental })
                 Page.LockedApps -> LockedAppsPage(vm, first)
@@ -310,6 +349,23 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
                     trailing = { Chevron() },
                 )
             }
+        }
+
+        item { SectionLabel(s.remote) }
+        item {
+            val context = LocalContext.current
+            val n = device.buttons.size
+            GlassRow(
+                title = s.buttons,
+                // Sem o serviço de acessibilidade os botões não chegam ao launcher: diz-se logo.
+                subtitle = when {
+                    n == 0 -> s.buttonsNone
+                    !HomeGuardService.isEnabled(context) -> "${s.buttonsCount(n)} · ${s.needsGuard}"
+                    else -> s.buttonsCount(n)
+                },
+                onClick = { onPage(Page.Buttons) },
+                trailing = { Chevron() },
+            )
         }
 
         item { SectionLabel(s.parental) }
@@ -598,33 +654,25 @@ private fun ProtectedPage(vm: LauncherViewModel, first: FocusRequester) {
     }
 }
 
-/** A app que abre ao ligar a TV (ou nenhuma). */
+/** Escolher uma app (ou [none], que dá null): para abrir ao ligar e para o botão Netflix. */
 @Composable
-private fun AutostartPage(vm: LauncherViewModel, first: FocusRequester, onDone: () -> Unit) {
-    val s = LocalStrings.current
+private fun AppPickerPage(vm: LauncherViewModel, first: FocusRequester, current: String?, none: String, onPick: (String?) -> Unit) {
     val apps by vm.allApps.collectAsStateWithLifecycle()
-    val device by vm.device.collectAsStateWithLifecycle()
     LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
         item {
             GlassRow(
-                title = s.autostartNone,
-                onClick = {
-                    vm.setAutostart(null)
-                    onDone()
-                },
-                trailing = { if (device.autostart == null) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                title = none,
+                onClick = { onPick(null) },
+                trailing = { if (current == null) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
                 modifier = Modifier.focusRequester(first),
             )
         }
         items(apps.orEmpty(), key = { it.packageName }) { app ->
             GlassRow(
                 title = app.label,
-                onClick = {
-                    vm.setAutostart(app.packageName)
-                    onDone()
-                },
+                onClick = { onPick(app.packageName) },
                 leading = { AppThumb(app) },
-                trailing = { if (device.autostart == app.packageName) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                trailing = { if (current == app.packageName) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
             )
         }
     }
@@ -778,5 +826,76 @@ private fun AppThumb(app: cc.slokker.goatlauncher.data.LauncherApp) {
             app.banner != null -> Image(app.banner, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             app.icon != null -> Image(app.icon, null, modifier = Modifier.size(24.dp))
         }
+    }
+}
+
+/** "Botão Netflix" para o da Shield; os outros pelo nome do Android ("Button 12", "Settings", "Guide"…). */
+private fun buttonName(keyCode: Int, scanCode: Int, s: Strings): String =
+    if (keyCode == ButtonMap.SHIELD_NETFLIX_KEY && scanCode == ButtonMap.SHIELD_NETFLIX_SCAN) {
+        s.buttonNetflix
+    } else {
+        android.view.KeyEvent.keyCodeToString(keyCode).removePrefix("KEYCODE_").replace('_', ' ')
+            .lowercase().replaceFirstChar { it.uppercase() }
+    }
+
+/** Os botões do comando com app (até 5) e "Adicionar botão". */
+@Composable
+private fun ButtonsPage(vm: LauncherViewModel, first: FocusRequester, onEdit: (Pair<Int, Int>) -> Unit, onAdd: () -> Unit) {
+    val s = LocalStrings.current
+    val context = LocalContext.current
+    val device by vm.device.collectAsStateWithLifecycle()
+    val apps by vm.allApps.collectAsStateWithLifecycle()
+    var guard by remember { mutableStateOf(HomeGuardService.isEnabled(context)) }
+    LifecycleResumeEffect(Unit) {
+        guard = HomeGuardService.isEnabled(context)
+        onPauseOrDispose { }
+    }
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        items(device.buttons, key = { "${it.keyCode}:${it.scanCode}" }) { b ->
+            GlassRow(
+                title = buttonName(b.keyCode, b.scanCode, s),
+                subtitle = apps?.firstOrNull { it.packageName == b.app }?.label ?: b.app,
+                onClick = { onEdit(b.keyCode to b.scanCode) },
+                trailing = { Chevron() },
+                modifier = if (b == device.buttons.first()) Modifier.focusRequester(first) else Modifier,
+            )
+        }
+        item {
+            val full = device.buttons.size >= ButtonMap.MAX
+            GlassRow(
+                title = if (guard) s.addButton else s.accessibilityOpen,
+                subtitle = when {
+                    !guard -> s.needsGuard
+                    full -> s.buttonsFull
+                    else -> null
+                },
+                onClick = {
+                    when {
+                        // Só o serviço de acessibilidade vê os botões (e os abre depois): sem ele, vai-se ligá-lo.
+                        !guard -> SystemIntents.start(context, SystemIntents.accessibilitySettings())
+                        !full -> onAdd()
+                    }
+                },
+                modifier = if (device.buttons.isEmpty()) Modifier.focusRequester(first) else Modifier,
+            )
+        }
+    }
+}
+
+/** "Carrega no botão": o HomeGuardService apanha o próximo botão que se possa usar. */
+@Composable
+private fun ButtonCapturePage(first: FocusRequester, onCaptured: (Pair<Int, Int>) -> Unit, onCancel: () -> Unit) {
+    val s = LocalStrings.current
+    val captured by rememberUpdatedState(onCaptured)
+    DisposableEffect(Unit) {
+        ButtonCapture.listener = { key, scan -> captured(key to scan) }
+        onDispose { ButtonCapture.listener = null }
+    }
+    Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Text(s.pressButton, style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(6.dp))
+        Text(s.pressButtonHint, style = MaterialTheme.typography.bodyMedium, color = GoatColors.TextDim)
+        Spacer(Modifier.height(18.dp))
+        GlassButton(s.cancel, onClick = onCancel, modifier = Modifier.focusRequester(first))
     }
 }

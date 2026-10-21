@@ -11,6 +11,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cc.slokker.goatlauncher.BuildConfig
 import cc.slokker.goatlauncher.LauncherApp
+import cc.slokker.goatlauncher.data.ButtonMap
 import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.DeviceSettings
 import cc.slokker.goatlauncher.data.AppRelease
@@ -214,6 +215,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                     _reddit.value = null
                     return@collectLatest
                 }
+                // Ao abrir: a mesma foto da última vez, já (está na cache); a escolha e as verificações vêm depois.
+                if (_reddit.value == null) _reddit.value = c.reddit.lastShown(wp.value)
                 var next = false
                 while (true) {
                     showReddit(wp.value, next, minWidth)
@@ -601,6 +604,19 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     // ---- Arranque automático e modo ambiente ----
 
     fun setAutostart(pkg: String?) = settings.updateDevice { it.copy(autostart = pkg) }
+
+    /** O botão ([keyCode], [scanCode]) passa a abrir [app]; null tira-o. No máximo ButtonMap.MAX. */
+    fun setButton(keyCode: Int, scanCode: Int, app: String?) = settings.updateDevice { d ->
+        val rest = d.buttons.filterNot { it.keyCode == keyCode && it.scanCode == scanCode }
+        val index = d.buttons.indexOfFirst { it.keyCode == keyCode && it.scanCode == scanCode }
+        val buttons = when {
+            app == null -> rest
+            index >= 0 -> d.buttons.toMutableList().also { it[index] = ButtonMap(keyCode, scanCode, app) }
+            d.buttons.size >= ButtonMap.MAX -> d.buttons
+            else -> d.buttons + ButtonMap(keyCode, scanCode, app)
+        }
+        d.copy(buttons = buttons)
+    }
 
     fun setAutostartWake(on: Boolean) = settings.updateDevice { it.copy(autostartWake = on) }
 

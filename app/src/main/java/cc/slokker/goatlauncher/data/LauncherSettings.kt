@@ -15,6 +15,7 @@ import com.google.gson.JsonObject
  *                "icons": {"com.netflix.ninja": "pack:dev.pack/netflix" | "file:com.netflix.ninja-123.png"},
  *                "names": {"io.gh.reisxd.tizentube.cobalt": "YouTube"}, "no_continue": ["com.netflix.ninja"],
  *                "autostart": "cc.slokker.itv", "autostart_wake": false, "autostart_delay": 5,
+ *                "buttons": [{"key": 199, "scan": 393, "app": "com.nuvio.tv"}],
  *                "pin": "<sal>:<sha-256>", "locked": ["com.netflix.ninja"], "lock_settings": true, "lock_hours": [20, 8] }
  *
  * Um fundo "file" só existe na TV onde foi escolhido; as outras mostram o fundo por defeito.
@@ -35,6 +36,21 @@ data class Wallpaper(val type: String, val value: String) {
         const val TYPE_REDDIT = "reddit"
         /** Fotos do r/EarthPorn; sem rede (ou antes de chegarem) vê-se o fundo "Lago" desenhado. */
         val DEFAULT = Wallpaper(TYPE_REDDIT, "EarthPorn")
+    }
+}
+
+/**
+ * Um botão do comando que abre [app]. Identifica-se pelo código Android ([keyCode]) e pelo da tecla física
+ * ([scanCode]; 0 = qualquer): o botão Netflix da Shield, por exemplo, é o BUTTON_12 com o scan 393, e assim o
+ * botão 12 de um comando de jogos fica de fora.
+ */
+data class ButtonMap(val keyCode: Int, val scanCode: Int, val app: String) {
+    fun matches(keyCode: Int, scanCode: Int) = this.keyCode == keyCode && (this.scanCode == 0 || this.scanCode == scanCode)
+
+    companion object {
+        const val MAX = 5
+        const val SHIELD_NETFLIX_KEY = 188 + 11 // KEYCODE_BUTTON_12
+        const val SHIELD_NETFLIX_SCAN = 393 // KEY_VIDEO
     }
 }
 
@@ -118,6 +134,8 @@ data class DeviceSettings(
     val autostart: String? = null,
     val autostartWake: Boolean = false,
     val autostartDelay: Int = 5,
+    /** Botões do comando que abrem uma app (pelo HomeGuardService), no máximo [ButtonMap.MAX]. */
+    val buttons: List<ButtonMap> = emptyList(),
     /** Controlo parental (ver ParentalLock): o código guardado com sal e hash; null = desligado. */
     val pin: String? = null,
     /** Apps que pedem o código para abrir. */
@@ -138,6 +156,16 @@ data class DeviceSettings(
         if (autostart != null) addProperty("autostart", autostart) else remove("autostart")
         addProperty("autostart_wake", autostartWake)
         addProperty("autostart_delay", autostartDelay)
+        remove("netflix_button")
+        add("buttons", JsonArray().apply {
+            buttons.forEach { b ->
+                add(JsonObject().apply {
+                    addProperty("key", b.keyCode)
+                    addProperty("scan", b.scanCode)
+                    addProperty("app", b.app)
+                })
+            }
+        })
         if (pin != null) addProperty("pin", pin) else remove("pin")
         add("locked", JsonArray().apply { locked.sorted().forEach(::add) })
         addProperty("lock_settings", lockSettings)
@@ -156,6 +184,7 @@ data class DeviceSettings(
                 autostart = json.str("autostart")?.takeIf { it.isNotBlank() },
                 autostartWake = json.bool("autostart_wake") ?: false,
                 autostartDelay = json.int("autostart_delay")?.coerceIn(0, 120) ?: 5,
+                buttons = json.buttons(),
                 pin = json.str("pin")?.takeIf { it.contains(':') },
                 locked = json.strings("locked").toSet(),
                 lockSettings = json.bool("lock_settings") ?: false,
@@ -178,6 +207,21 @@ private fun JsonObject.str(name: String): String? =
 
 private fun JsonObject.bool(name: String): Boolean? =
     get(name)?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isBoolean }?.asBoolean
+
+/** Os botões; o antigo "netflix_button" (só o botão Netflix da Shield) passa a ser o primeiro. */
+private fun JsonObject.buttons(): List<ButtonMap> {
+    val list = get("buttons")?.takeIf { it.isJsonArray }?.asJsonArray
+        ?.mapNotNull { e ->
+            val o = e.takeIf { it.isJsonObject }?.asJsonObject ?: return@mapNotNull null
+            val key = o.int("key") ?: return@mapNotNull null
+            val app = o.str("app")?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            ButtonMap(key, o.int("scan") ?: 0, app)
+        }
+        .orEmpty()
+    if (list.isNotEmpty() || has("buttons")) return list.take(ButtonMap.MAX)
+    val netflix = str("netflix_button")?.takeIf { it.isNotBlank() } ?: return emptyList()
+    return listOf(ButtonMap(ButtonMap.SHIELD_NETFLIX_KEY, ButtonMap.SHIELD_NETFLIX_SCAN, netflix))
+}
 
 private fun JsonObject.int(name: String): Int? =
     get(name)?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.asInt

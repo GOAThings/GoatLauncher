@@ -51,19 +51,26 @@ class RedditWallpapers(private val context: Context, private val http: OkHttpCli
             pick
         }
 
+    /** A última imagem mostrada de [subreddit] (ao abrir o launcher aparece logo, já está na cache). */
+    suspend fun lastShown(subreddit: String): RedditImage? = withContext(Dispatchers.IO) {
+        val sub = subreddit.lowercase()
+        val url = prefs.getString(key(sub, "shown_url"), null) ?: return@withContext null
+        images(sub, allowFetch = false).firstOrNull { it.url == url } ?: RedditImage(url, "")
+    }
+
     /** Milissegundos até a imagem atual de [subreddit] dever mudar. */
     fun msUntilRotation(subreddit: String): Long {
         val shownAt = prefs.getLong(key(subreddit.lowercase(), "shown_at"), 0)
         return (shownAt + ROTATE_MS - System.currentTimeMillis()).coerceIn(MIN_WAIT_MS, ROTATE_MS)
     }
 
-    private fun images(sub: String): List<RedditImage> {
+    private fun images(sub: String, allowFetch: Boolean = true): List<RedditImage> {
         val cached: List<RedditImage> = prefs.getString(key(sub, "list"), null)
             ?.let { runCatching { gson.fromJson<List<RedditImage>>(it, listType) }.getOrNull() }
             .orEmpty()
         val fetchedAt = prefs.getLong(key(sub, "fetched_at"), 0)
         if (cached.isNotEmpty() && System.currentTimeMillis() - fetchedAt < REFRESH_MS) return cached
-        if (!online()) return cached
+        if (!allowFetch || !online()) return cached
         val fresh = runCatching { fetch(sub) }
             .onFailure { Log.w(TAG, "r/$sub: ${it.message}") }
             .getOrNull()

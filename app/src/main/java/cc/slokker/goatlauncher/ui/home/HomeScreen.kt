@@ -282,11 +282,16 @@ fun HomeScreen(vm: LauncherViewModel) {
     @Composable
     fun Tile(app: LauncherApp, home: Boolean, modifier: Modifier = Modifier) {
         val spec = device.icons[app.packageName]
-        val custom by produceState<ImageBitmap?>(null, spec) { value = spec?.let { vm.icons.load(it) } }
+        // (ícone, já se sabe?): com um ícone escolhido, até ele carregar fica só a cor da app, para não piscar
+        // o banner original antes. Se não carregar (ex.: icon pack desinstalado), aparece o original.
+        val custom by produceState(spec?.let { vm.icons.cached(it) } to (spec == null), spec) {
+            value = spec?.let { vm.icons.load(it) } to true
+        }
         AppTile(
             app = app,
             width = TileWidth,
-            custom = custom,
+            custom = custom.first,
+            customPending = !custom.second,
             showLabel = account.showAppName,
             hasContinue = home && !downUnder && account.showContinueWatching && !watchNext[app.packageName].isNullOrEmpty(),
             moving = moving == app.packageName,

@@ -73,6 +73,9 @@ class CustomIcons(private val context: Context) {
         }
     }
 
+    /** O desenho de [spec] se já estiver em memória (para o banner aparecer logo com ele, sem esperar). */
+    fun cached(spec: String): ImageBitmap? = cache.get(spec)
+
     /** O desenho de um spec (`pack:` ou `file:`), ou null se já não existir (pack desinstalado, ficheiro apagado). */
     suspend fun load(spec: String): ImageBitmap? {
         cache.get(spec)?.let { return it }

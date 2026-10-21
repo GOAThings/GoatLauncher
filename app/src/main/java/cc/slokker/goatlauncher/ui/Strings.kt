@@ -148,6 +148,24 @@ class Strings(val english: Boolean) {
     val autostartDelay get() = t("Esperar antes de abrir", "Wait before opening")
     fun seconds(n: Int) = t(if (n == 0) "Logo" else "$n s", if (n == 0) "Right away" else "$n s")
 
+    // Comando
+    val remote get() = t("Comando", "Remote")
+    val buttons get() = t("Botões do comando", "Remote buttons")
+    val buttonsNone get() = t("Nenhum: um botão do comando pode abrir uma app", "None: a remote button can open an app")
+    fun buttonsCount(n: Int) = t("$n de 5", "$n of 5")
+    val addButton get() = t("Adicionar botão", "Add button")
+    val pressButton get() = t("Carrega no botão do comando que queres usar", "Press the remote button you want to use")
+    val pressButtonHint get() = t(
+        "Home, Voltar, as setas, OK, ligar, o volume, play/pausa, os canais e os números não mudam. Voltar cancela.",
+        "Home, Back, the arrows, OK, power, volume, play/pause, channels and numbers can't be changed. Back cancels.",
+    )
+    val buttonsFull get() = t("Já tens 5 botões: tira um para adicionar outro", "You already have 5 buttons: remove one to add another")
+    fun buttonOpens(button: String) = t("$button abre", "$button opens")
+    val removeButton get() = t("Nada (tirar o botão)", "Nothing (remove the button)")
+    val buttonNetflix get() = t("Botão Netflix", "Netflix button")
+    val accessibilityOpen get() = t("Abrir Acessibilidade", "Open Accessibility")
+    val needsGuard get() = t("Precisa de \"Manter como ecrã inicial\" ligado", "Needs \"Keep as home screen\" on")
+
     // Modo ambiente
     val idleMode get() = t("Modo ambiente", "Ambient mode")
     val idleOff get() = t("Desligado", "Off")
