@@ -458,8 +458,17 @@ fun HomeScreen(vm: LauncherViewModel) {
                     true
                 },
         ) {
+            // O fundo mostra o último conteúdo que enche o ecrã: ao sair (fade), fica nessa imagem, em vez de mostrar
+            // por um instante, em ecrã inteiro, o logo do canal para onde se foi (o shelfPainter já mudou para ele).
+            var backdropUrl by remember { mutableStateOf<String?>(null) }
+            if (shelfFullBleed) backdropUrl = shelfItem?.imageUri
             AnimatedVisibility(visible = shelfFullBleed && !onApps, enter = fadeIn(tween(400)), exit = fadeOut(tween(300))) {
-                Image(shelfPainter, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                AsyncImage(
+                    model = ImageRequest.Builder(context).data(backdropUrl).crossfade(400).build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
             // Escurece o topo e o fundo (e a esquerda, com o destaque) para o texto se ler sobre qualquer imagem.
             Box(
