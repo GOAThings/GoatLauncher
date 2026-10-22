@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.settings
 
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.runtime.rememberUpdatedState
 import cc.slokker.goatlauncher.data.ButtonMap
 import cc.slokker.goatlauncher.ButtonCapture
@@ -86,7 +87,7 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
 
-private enum class Page { Main, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Buttons, ButtonCapture, ButtonApp, Parental, PinSetup, LockedApps }
+private enum class Page { Main, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Buttons, ButtonCapture, ButtonApp, Language, Parental, PinSetup, LockedApps }
 
 /** Definições do launcher: um painel de vidro à direita, por cima do fundo. Voltar sobe um nível. */
 @Composable
@@ -154,6 +155,7 @@ fun SettingsScreen(
                     Page.YouTube -> s.youtube
                     Page.Autostart -> s.autostart
                     Page.Buttons -> s.buttons
+                    Page.Language -> s.language
                     Page.ButtonCapture -> s.addButton
                     Page.ButtonApp -> buttonKey?.let { (k, sc) -> s.buttonOpens(buttonName(k, sc, s)) } ?: s.buttons
                     Page.Parental, Page.PinSetup -> s.parental
@@ -188,6 +190,7 @@ fun SettingsScreen(
                         page = Page.Main
                     }
                 }
+                Page.Language -> LanguagePage(vm, first)
                 Page.Buttons -> ButtonsPage(
                     vm,
                     first,
@@ -233,12 +236,29 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
     LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
         item { SectionLabel(s.appearance) }
         item {
+            val code = Strings.normalize(account.language)
+            GlassRow(
+                title = s.language,
+                subtitle = Strings.LANGUAGES.firstOrNull { it.first == code }?.second ?: s.languageAuto,
+                onClick = { onPage(Page.Language) },
+                trailing = { Chevron() },
+            )
+        }
+        item {
             GlassRow(
                 title = s.wallpaper,
                 subtitle = wallpaperName(account.wallpaper, s),
                 onClick = { onPage(Page.Wallpaper) },
                 trailing = { Chevron() },
                 modifier = Modifier.focusRequester(first),
+            )
+        }
+        item {
+            GlassRow(
+                title = s.nightAuto,
+                subtitle = s.nightAutoHint,
+                onClick = { vm.setNightAuto(!account.nightAuto) },
+                trailing = { Toggle(account.nightAuto) },
             )
         }
         item {
@@ -585,7 +605,7 @@ private fun YouTubePage(vm: LauncherViewModel, first: FocusRequester, onDone: ()
         Text(s.youtubeEnterCode, style = MaterialTheme.typography.titleSmall, color = GoatColors.TextDim)
         Text(
             login?.userCode ?: "· · ·",
-            style = MaterialTheme.typography.displayMedium.copy(letterSpacing = 4.sp),
+            style = MaterialTheme.typography.displayMedium.copy(letterSpacing = 4.sp, textDirection = TextDirection.Ltr),
         )
         Spacer(Modifier.height(14.dp))
         Text(
@@ -909,5 +929,24 @@ private fun ButtonCapturePage(first: FocusRequester, onCaptured: (Pair<Int, Int>
         Text(s.pressButtonHint, style = MaterialTheme.typography.bodyMedium, color = GoatColors.TextDim)
         Spacer(Modifier.height(18.dp))
         GlassButton(s.cancel, onClick = onCancel, modifier = Modifier.focusRequester(first))
+    }
+}
+
+/** "Automático" e as 15 línguas, cada uma com o nome na própria língua. Ao escolher, o ecrã muda logo. */
+@Composable
+private fun LanguagePage(vm: LauncherViewModel, first: FocusRequester) {
+    val s = LocalStrings.current
+    val account by vm.account.collectAsStateWithLifecycle()
+    val current = Strings.normalize(account.language)
+    val options = listOf("auto" to s.languageAuto) + Strings.LANGUAGES
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        items(options, key = { it.first }) { (code, name) ->
+            GlassRow(
+                title = name,
+                onClick = { vm.setLanguage(code) },
+                trailing = { if (code == current) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                modifier = if (code == current) Modifier.focusRequester(first) else Modifier,
+            )
+        }
     }
 }

@@ -1,5 +1,7 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.theme.tracking
+import android.text.format.DateFormat
 import android.view.ViewConfiguration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -100,7 +102,7 @@ fun TopClock(clock24h: Boolean, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
     val now = rememberMinute()
     Text(
-        SimpleDateFormat(if (clock24h) "HH:mm" else "h:mm a", s.locale).format(now),
+        SimpleDateFormat(timePattern(s, clock24h), s.locale).format(now),
         modifier,
         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
     )
@@ -123,7 +125,7 @@ fun AmbientClock(clock24h: Boolean, caption: String?, modifier: Modifier = Modif
     ) {
         Column {
             Text(
-                SimpleDateFormat(if (clock24h) "HH:mm" else "h:mm", s.locale).format(now),
+                SimpleDateFormat(timePattern(s, clock24h, amPm = false), s.locale).format(now),
                 style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Light),
             )
             Text(formatDate(now, s), style = MaterialTheme.typography.titleMedium, color = GoatColors.TextDim)
@@ -151,7 +153,7 @@ fun TopGreeting(showGreeting: Boolean, weather: WeatherNow?, modifier: Modifier 
     }
     Column(modifier) {
         if (showGreeting) {
-            Text(greeting.uppercase(s.locale), style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.6.sp), color = GoatColors.TextDim)
+            Text(greeting.uppercase(s.locale), style = MaterialTheme.typography.labelMedium.copy(letterSpacing = tracking(1.6f)), color = GoatColors.TextDim)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(formatDate(now, s), style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1)
@@ -173,15 +175,17 @@ private fun weatherIcon(w: WeatherNow) = when (w.kind) {
     else -> GoatIcons.Cloud
 }
 
-/** "Segunda, 20 de outubro" / "Monday, 20 October". */
-private fun formatDate(time: Long, s: Strings): String =
-    if (s.english) {
-        SimpleDateFormat("EEEE, d MMMM", s.locale).format(time)
-    } else {
-        SimpleDateFormat("EEEE, d 'de' MMMM", s.locale).format(time)
-            .replace("-feira", "")
-            .replaceFirstChar { it.titlecase(s.locale) }
-    }
+/** "Segunda, 20 de outubro" / "Monday, 20 October" / "10月20日星期一": o formato de cada língua. */
+private fun formatDate(time: Long, s: Strings): String {
+    val pattern = DateFormat.getBestDateTimePattern(s.locale, "EEEEdMMMM")
+    val text = SimpleDateFormat(pattern, s.locale).format(time)
+    // Em português, "segunda" chega (sem o "-feira"), e com maiúscula.
+    return if (s.locale.language == "pt") text.replace("-feira", "").replaceFirstChar { it.titlecase(s.locale) } else text
+}
+
+/** As horas no formato da língua ("21:05", "9:05 PM", "午後9:05"…). */
+private fun timePattern(s: Strings, clock24h: Boolean, amPm: Boolean = true): String =
+    if (clock24h) "HH:mm" else DateFormat.getBestDateTimePattern(s.locale, if (amPm) "hm" else "h:mm").let { if (amPm) it else it.replace(Regex("\\s*a\\s*"), "") }
 
 // ---- Banners das apps ----
 

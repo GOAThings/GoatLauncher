@@ -5,7 +5,7 @@ import android.content.pm.PackageManager
 import android.content.pm.PermissionInfo
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,7 +18,7 @@ import cc.slokker.goatlauncher.ui.LauncherRoot
 import cc.slokker.goatlauncher.ui.LauncherViewModel
 import cc.slokker.goatlauncher.ui.theme.GoatTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private val vm: LauncherViewModel by viewModels()
 
     private val permissionRequest = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {

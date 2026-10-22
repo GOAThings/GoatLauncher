@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.activation
 
+import androidx.compose.ui.text.style.TextDirection
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import androidx.compose.ui.platform.LocalContext
 import cc.slokker.goatlauncher.ui.Strings
@@ -59,7 +60,7 @@ import java.io.IOException
 private class ActivationState {
     var code by mutableStateOf<String?>(null)
     var qr by mutableStateOf<ImageBitmap?>(null)
-    /** O endereço vem do servidor (ex.: sys.slokker.cc/ativar); vazio até chegar. */
+    /** O endereço vem do servidor (ex.: thegoat.systems/ativar); vazio até chegar. */
     var verificationUrl by mutableStateOf("")
     var expiresAt by mutableLongStateOf(0L)
     var error by mutableStateOf<String?>(null)
@@ -114,7 +115,7 @@ fun ActivationScreen(api: BackendApi, onApproved: (token: String, user: BackendU
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = state.code ?: "· · ·",
-                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 76.sp, letterSpacing = 6.sp),
+                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 76.sp, letterSpacing = 6.sp, textDirection = TextDirection.Ltr),
                 )
                 Spacer(Modifier.height(20.dp))
                 val remaining = ((state.expiresAt - now) / 1000).coerceAtLeast(0)

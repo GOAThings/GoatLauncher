@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.theme.tracking
 import cc.slokker.goatlauncher.ui.common.PinPad
 import cc.slokker.goatlauncher.ui.PinPrompt
 import android.os.SystemClock
@@ -499,6 +500,8 @@ fun HomeScreen(vm: LauncherViewModel) {
                     onApps = vm::openApps,
                     onSettings = vm::openSettings,
                     onNetwork = { SystemIntents.openNetworkSettings(context) },
+                    night = vm.night.collectAsStateWithLifecycle().value,
+                    onNight = vm::toggleNight,
                     onFocusChanged = { tabBarFocused = it },
                 )
 
@@ -715,6 +718,8 @@ private fun TopBar(
     onApps: () -> Unit,
     onSettings: () -> Unit,
     onNetwork: () -> Unit,
+    night: Boolean,
+    onNight: () -> Unit,
     onFocusChanged: (Boolean) -> Unit,
 ) {
     val s = LocalStrings.current
@@ -773,34 +778,21 @@ private fun TopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // Dia/noite: OK troca entre fundo claro e fundo escurecido (e fotos do tom certo).
+            RoundButton(onClick = onNight) {
+                Icon(if (night) GoatIcons.Moon else GoatIcons.Sun, contentDescription = s.dayNight, modifier = Modifier.size(18.dp))
+            }
             // Estado da rede (Wi-Fi, cabo ou sem rede); OK abre as definições de rede.
-            run {
-                Surface(
-                    onClick = onNetwork,
-                    modifier = Modifier.size(40.dp),
-                    shape = ClickableSurfaceDefaults.shape(CircleShape),
-                    colors = ClickableSurfaceDefaults.colors(
-                        containerColor = Color.White.copy(alpha = 0.14f),
-                        contentColor = GoatColors.Text,
-                        focusedContainerColor = Color.White,
-                        focusedContentColor = Color.Black,
-                        pressedContainerColor = Color.White.copy(alpha = 0.8f),
-                        pressedContentColor = Color.Black,
-                    ),
-                    scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
-                ) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(
-                            when (network) {
-                                NetworkKind.ETHERNET -> GoatIcons.Ethernet
-                                NetworkKind.WIFI -> GoatIcons.Wifi
-                                NetworkKind.NONE -> GoatIcons.WifiOff
-                            },
-                            contentDescription = s.network,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
-                }
+            RoundButton(onClick = onNetwork) {
+                Icon(
+                    when (network) {
+                        NetworkKind.ETHERNET -> GoatIcons.Ethernet
+                        NetworkKind.WIFI -> GoatIcons.Wifi
+                        NetworkKind.NONE -> GoatIcons.WifiOff
+                    },
+                    contentDescription = s.network,
+                    modifier = Modifier.size(18.dp),
+                )
             }
             TopClock(clock24h)
         }
@@ -862,11 +854,11 @@ private fun ShelfHero(
         }
         Text(
             (if (item.type == WatchNextItem.TYPE_RECOMMENDED) s.shelfRecommended(app.label) else s.shelfLabel(app.label)).uppercase(s.locale),
-            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 2.sp),
+            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = tracking(2f)),
             color = GoatColors.TextDim,
         )
         Spacer(Modifier.height(6.dp))
-        Text(item.title, style = ShelfTitleStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(item.title, style = ShelfTitleStyle.copy(letterSpacing = tracking(-1.2f)), maxLines = 1, overflow = TextOverflow.Ellipsis)
         val details = listOfNotNull(
             s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
             item.episodeTitle?.takeIf { it != item.title },
@@ -1102,5 +1094,26 @@ private fun PinOverlay(title: String, onPin: (String) -> Boolean) {
             }
             Text(s.forgotPin, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, textAlign = TextAlign.Center)
         }
+    }
+}
+
+/** Botão redondo da barra de cima (vidro; branco com foco), como o da rede. */
+@Composable
+private fun RoundButton(onClick: () -> Unit, content: @Composable () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.size(40.dp),
+        shape = ClickableSurfaceDefaults.shape(CircleShape),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = Color.White.copy(alpha = 0.14f),
+            contentColor = GoatColors.Text,
+            focusedContainerColor = Color.White,
+            focusedContentColor = Color.Black,
+            pressedContainerColor = Color.White.copy(alpha = 0.8f),
+            pressedContentColor = Color.Black,
+        ),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
+    ) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { content() }
     }
 }

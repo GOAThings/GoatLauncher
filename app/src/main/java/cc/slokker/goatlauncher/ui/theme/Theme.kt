@@ -1,5 +1,8 @@
 package cc.slokker.goatlauncher.ui.theme
 
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -84,6 +87,9 @@ val ShelfTitleStyle = TextStyle(fontFamily = GoatFont, fontWeight = FontWeight(7
 
 @Composable
 fun GoatTheme(content: @Composable () -> Unit) {
+    // Em árabe, o espaçamento entre letras parte as ligações da escrita: tira-se de toda a tipografia.
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val typography = if (rtl) GoatTypography.withoutTracking() else GoatTypography
     MaterialTheme(
         colorScheme = darkColorScheme(
             primary = GoatColors.Sky,
@@ -101,13 +107,26 @@ fun GoatTheme(content: @Composable () -> Unit) {
             error = GoatColors.Error,
             border = Color(0x33FFFFFF),
         ),
-        typography = GoatTypography,
+        typography = typography,
     ) {
         // Sem isto, o Text do tv-material fora de um Surface fica preto.
         CompositionLocalProvider(
             LocalContentColor provides GoatColors.Text,
-            LocalTextStyle provides GoatTypography.bodyLarge,
+            LocalTextStyle provides typography.bodyLarge,
             content = content,
         )
     }
 }
+
+private fun Typography.withoutTracking() = copy(
+    displayLarge = displayLarge.copy(letterSpacing = 0.sp), displayMedium = displayMedium.copy(letterSpacing = 0.sp),
+    displaySmall = displaySmall.copy(letterSpacing = 0.sp), headlineLarge = headlineLarge.copy(letterSpacing = 0.sp),
+    headlineMedium = headlineMedium.copy(letterSpacing = 0.sp), headlineSmall = headlineSmall.copy(letterSpacing = 0.sp),
+    titleLarge = titleLarge.copy(letterSpacing = 0.sp), titleMedium = titleMedium.copy(letterSpacing = 0.sp),
+    titleSmall = titleSmall.copy(letterSpacing = 0.sp), labelLarge = labelLarge.copy(letterSpacing = 0.sp),
+    labelMedium = labelMedium.copy(letterSpacing = 0.sp), labelSmall = labelSmall.copy(letterSpacing = 0.sp),
+)
+
+/** Espaçamento entre letras, mas nenhum nas línguas da direita para a esquerda (árabe). */
+@Composable
+fun tracking(sp: Float): TextUnit = if (LocalLayoutDirection.current == LayoutDirection.Rtl) 0.sp else sp.sp

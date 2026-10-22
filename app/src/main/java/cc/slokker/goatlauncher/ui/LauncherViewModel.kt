@@ -1,5 +1,10 @@
 package cc.slokker.goatlauncher.ui
 
+import java.util.Calendar
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.Flow
+import coil3.toBitmap
+import coil3.request.allowHardware
 import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -87,7 +92,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val context: Application = application
     private val c = (application as LauncherApp).container
     private val settings = c.settings
-    val strings = Strings.forSystem()
+    /** Textos na língua da app, para fora do ecrã (avisos); o ecrã usa os do contexto da Activity. */
+    val strings: Strings get() = Strings.of(context)
 
     private val _screen = MutableStateFlow<Screen>(Screen.Home)
     val screen: StateFlow<Screen> = _screen.asStateFlow()
@@ -200,6 +206,19 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
     private val stopObservingWatchNext: () -> Unit
 
+    /** A hora atual, de minuto a minuto (para o dia/noite automático). */
+    private val hour: Flow<Int> = flow {
+        while (true) {
+            emit(Calendar.getInstance().get(Calendar.HOUR_OF_DAY))
+            delay(60_000L - System.currentTimeMillis() % 60_000L)
+        }
+    }
+
+    /** Modo noite em vigor: o escolhido no botão, ou pela hora com o automático ligado. */
+    val night: StateFlow<Boolean> = combine(settings.account, hour) { a, h ->
+        if (a.nightAuto) h >= AccountSettings.NIGHT_FROM || h < AccountSettings.NIGHT_TO else a.nightMode
+    }.distinctUntilChanged().stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     init {
         viewModelScope.launch {
             settings.init()
@@ -219,22 +238,31 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
         viewModelScope.launch {
             // Fundo do Reddit: mostra uma imagem e troca-a a cada RedditWallpapers.ROTATE_MS.
-            settings.account.map { it.wallpaper to it.redditMinWidth }.distinctUntilChanged().collectLatest { (wp, minWidth) ->
+            var lastNight: Boolean? = null
+            combine(settings.account, night) { a, n -> Triple(a.wallpaper, a.redditMinWidth, n) }.distinctUntilChanged().collectLatest { (wp, minWidth, night) ->
                 if (wp.type != Wallpaper.TYPE_REDDIT) {
                     _reddit.value = null
                     return@collectLatest
                 }
                 // Ao abrir: a mesma foto da última vez, já (está na cache); a escolha e as verificações vêm depois.
                 if (_reddit.value == null) _reddit.value = c.reddit.lastShown(wp.value)
-                var next = false
+                // Trocar dia/noite pede logo uma foto do tom certo.
+                var next = lastNight != null && lastNight != night
+                lastNight = night
                 while (true) {
-                    showReddit(wp.value, next, minWidth)
+                    showReddit(wp.value, next, minWidth, night)
                     delay(c.reddit.msUntilRotation(wp.value))
                     next = true
                 }
             }
         }
         viewModelScope.launch { autostartAfterBoot() }
+        viewModelScope.launch {
+            // A língua guardada na conta (ou só nesta TV): aplica-se quando as definições já foram lidas, para
+            // um "auto" provisório do arranque não desfazer a escolha. Vinda de outra TV, aplica-se aqui também.
+            settings.ready.first { it }
+            settings.account.map { it.language }.distinctUntilChanged().collect { Strings.apply(it) }
+        }
         viewModelScope.launch {
             // YouTube: quando já se sabe que apps há, e de 30 em 30 minutos.
             installed.first { it != null }
@@ -295,7 +323,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Ver [guardStuck]. Só passado um bocado do arranque: ligar o serviço demora uns segundos. */
     private fun checkGuard() {
         viewModelScope.launch {
-            val sinceStart = SystemClock.elapsedRealtime() - android.os.Process.getStartElapsedRealtime()
+            val sinceStart = if (android.os.Build.VERSION.SDK_INT >= 24) {
+                SystemClock.elapsedRealtime() - android.os.Process.getStartElapsedRealtime()
+            } else {
+                GUARD_GRACE_MS
+            }
             if (sinceStart < GUARD_GRACE_MS) delay(GUARD_GRACE_MS - sinceStart)
             val stuck = HomeGuardService.isEnabled(context) && HomeGuardService.instance == null
             _guardStuck.value = stuck
@@ -329,6 +361,16 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    /** "auto" ou um código de Strings.LANGUAGES; fica na conta e chega às outras TVs. */
+    fun setLanguage(code: String) {
+        // Mudar a língua recria o ecrã: espera que o OK acabe de ser largado, senão o "largar" chega ao ecrã
+        // novo como um clique noutra linha.
+        viewModelScope.launch {
+            delay(LANGUAGE_DELAY_MS)
+            settings.updateAccount { it.copy(language = Strings.normalize(code)) }
+        }
+    }
+
     fun setYoutubeFeed(feed: String) {
         settings.updateAccount { it.copy(youtubeFeed = feed) }
         viewModelScope.launch { refreshYouTube() }
@@ -355,19 +397,54 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
      * Escolhe a imagem do subreddit e só a mostra depois de carregada (deitada e com pelo menos [minWidth] px);
      * senão tenta outra. A atual também é verificada: a resolução mínima pode ter subido.
      */
-    private suspend fun showReddit(subreddit: String, next: Boolean, minWidth: Int) {
-        repeat(8) { attempt ->
+    private suspend fun showReddit(subreddit: String, next: Boolean, minWidth: Int, night: Boolean) {
+        // Uma que sirva mas seja do tom errado (dia/noite) fica de reserva, se não aparecer nenhuma do certo.
+        var fallback: RedditImage? = null
+        repeat(10) { attempt ->
             val small = redditWidths.filterValues { it < minWidth }.keys
-            val image = c.reddit.current(subreddit, next = next || attempt > 0, skip = badReddit + small) ?: return
+            val wrongTone = redditLight.filterValues { light -> light == night }.keys
+            val image = c.reddit.current(subreddit, next = next || attempt > 0, skip = badReddit + small + wrongTone)
+                ?: return@repeat
             if (!preloadWallpaper(image.url)) {
                 badReddit += image.url
                 return@repeat
             }
             if ((redditWidths[image.url] ?: Int.MAX_VALUE) < minWidth) return@repeat
+            val light = isLight(image.url)
+            if (light != null && light == night) {
+                if (fallback == null) fallback = image
+                return@repeat
+            }
             _reddit.value = image
             return
         }
+        fallback?.let { if (it.url != _reddit.value?.url) _reddit.value = it }
     }
+
+    /** Se cada foto é clara (true) ou escura (false), para o modo dia/noite. */
+    private val redditLight = mutableMapOf<String, Boolean>()
+
+    /** Mede a luminosidade média numa cópia de 32×18 (barata); acima de 35% conta como clara. */
+    private suspend fun isLight(url: String): Boolean? = redditLight[url] ?: withContext(Dispatchers.IO) {
+        val result = SingletonImageLoader.get(context).execute(
+            ImageRequest.Builder(context).data(url).size(32, 18).allowHardware(false).build(),
+        )
+        val bmp = (result as? SuccessResult)?.image?.toBitmap() ?: return@withContext null
+        val px = IntArray(bmp.width * bmp.height).also { bmp.getPixels(it, 0, bmp.width, 0, 0, bmp.width, bmp.height) }
+        val luma = px.sumOf { c ->
+            0.2126 * ((c shr 16) and 0xFF) + 0.7152 * ((c shr 8) and 0xFF) + 0.0722 * (c and 0xFF)
+        } / (px.size * 255.0)
+        luma > LIGHT_LUMA
+    }?.also { redditLight[url] = it }
+
+    /** O botão dia/noite: troca o que está agora e desliga o automático. */
+    fun toggleNight() {
+        val on = !night.value
+        settings.updateAccount { it.copy(nightMode = on, nightAuto = false) }
+        toast(if (on) strings.nightOn else strings.nightOff)
+    }
+
+    fun setNightAuto(on: Boolean) = settings.updateAccount { it.copy(nightAuto = on) }
 
     /** Carrega a imagem para a cache no tamanho do ecrã; false se falhar ou for ao alto. */
     private suspend fun preloadWallpaper(url: String): Boolean {
@@ -834,6 +911,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         const val BOOT_WINDOW_MS = 10 * 60_000L
 
         const val GUARD_GRACE_MS = 20_000L
+
+        const val LIGHT_LUMA = 0.35
+
+        const val LANGUAGE_DELAY_MS = 400L
 
         const val REPAIR_PROMPT_GAP_MS = 60 * 60_000L
 

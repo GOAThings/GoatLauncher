@@ -11,7 +11,8 @@ import com.google.gson.JsonObject
  *                "clock_24h": true, "show_greeting": true, "show_continue_watching": true, "show_app_name": true,
  *                "continue_style": "row" | "shelf" | "downunder", "show_weather": true,
  *                "reddit_min_width": 1920, "idle_minutes": 0, "idle_keep_awake": false,
- *                "youtube_feed": "both" | "continue" | "recommended" }
+ *                "youtube_feed": "both" | "continue" | "recommended", "language": "auto" | "pt-PT" | …,
+ *                "night_mode": false, "night_auto": false }
  *   "device":  { "apps": ["com.netflix.ninja", …], "hidden": ["com.android.vending"],
  *                "icons": {"com.netflix.ninja": "pack:dev.pack/netflix" | "file:com.netflix.ninja-123.png"},
  *                "names": {"io.gh.reisxd.tizentube.cobalt": "YouTube"}, "no_continue": ["com.netflix.ninja"],
@@ -78,6 +79,12 @@ data class AccountSettings(
     val idleKeepAwake: Boolean = false,
     /** O que a app do YouTube mostra no "Continuar a ver" (com a conta ligada): YT_BOTH, YT_CONTINUE ou YT_RECOMMENDED. */
     val youtubeFeed: String = YT_BOTH,
+    /** Língua da app: "auto" (a do sistema) ou um código BCP 47 das 15 do site (ver Strings.LANGUAGES). */
+    val language: String = "auto",
+    /** Modo noite (botão ao lado da rede): fundo escurecido e, no Reddit, fotos escuras; de dia, fotos claras. */
+    val nightMode: Boolean = false,
+    /** Dia/noite pela hora da TV (noite das [NIGHT_FROM] às [NIGHT_TO]); carregar no botão desliga-o. */
+    val nightAuto: Boolean = false,
     val raw: JsonObject = JsonObject(),
 ) {
     fun toJson(): JsonObject = raw.deepCopy().apply {
@@ -95,12 +102,19 @@ data class AccountSettings(
         addProperty("idle_minutes", idleMinutes)
         addProperty("idle_keep_awake", idleKeepAwake)
         addProperty("youtube_feed", youtubeFeed)
+        addProperty("language", language)
+        addProperty("night_mode", nightMode)
+        addProperty("night_auto", nightAuto)
     }
 
     companion object {
         const val STYLE_ROW = "row"
         const val STYLE_SHELF = "shelf"
         const val STYLE_DOWN_UNDER = "downunder"
+
+        /** Modo noite automático: das 20h às 7h. */
+        const val NIGHT_FROM = 20
+        const val NIGHT_TO = 7
 
         const val YT_BOTH = "both"
         const val YT_CONTINUE = "continue"
@@ -123,6 +137,9 @@ data class AccountSettings(
                 idleMinutes = json.int("idle_minutes")?.coerceAtLeast(0) ?: 0,
                 idleKeepAwake = json.bool("idle_keep_awake") ?: false,
                 youtubeFeed = json.str("youtube_feed")?.takeIf { it == YT_CONTINUE || it == YT_RECOMMENDED } ?: YT_BOTH,
+                language = json.str("language") ?: "auto",
+                nightMode = json.bool("night_mode") ?: false,
+                nightAuto = json.bool("night_auto") ?: false,
                 raw = json,
             )
         }

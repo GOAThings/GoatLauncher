@@ -9,7 +9,7 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 
-const val BACKEND_URL = "https://sys.slokker.cc/"
+const val BACKEND_URL = "https://thegoat.systems/"
 
 /** Nome desta app na conta Slokker (cada TV fica registada como um dispositivo do Launcher). */
 const val BACKEND_APP = "launcher"
@@ -54,7 +54,7 @@ data class DevicePollRequest(@SerializedName("device_secret") val deviceSecret: 
 
 data class DevicePollResponse(val status: String?, val token: String?, val device: BackendDevice?, val user: BackendUser?)
 
-/** Esta TV, tal como aparece em sys.slokker.cc/conta → Dispositivos. */
+/** Esta TV, tal como aparece em thegoat.systems/conta → Dispositivos. */
 data class BackendDevice(val id: String?, val name: String?, val app: String?)
 
 data class BackendUser(val id: String?, val email: String?)

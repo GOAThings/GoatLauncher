@@ -39,9 +39,9 @@ object GoatIcons {
 
     val Check: ImageVector by lazy { icon("Check", "M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41,-1.41z") }
 
-    val ChevronRight: ImageVector by lazy { icon("ChevronRight", "M10,6L8.59,7.41 13.17,12l-4.58,4.59L10,18l6,-6z") }
+    val ChevronRight: ImageVector by lazy { icon("ChevronRight", "M10,6L8.59,7.41 13.17,12l-4.58,4.59L10,18l6,-6z", autoMirror = true) }
 
-    val ChevronLeft: ImageVector by lazy { icon("ChevronLeft", "M15.41,7.41L14,6l-6,6 6,6 1.41,-1.41L10.83,12z") }
+    val ChevronLeft: ImageVector by lazy { icon("ChevronLeft", "M15.41,7.41L14,6l-6,6 6,6 1.41,-1.41L10.83,12z", autoMirror = true) }
 
     val Play: ImageVector by lazy { icon("Play", "M8,5v14l11,-7z") }
 
@@ -134,8 +134,9 @@ object GoatIcons {
         )
     }
 
-    private fun icon(name: String, path: String) = ImageVector.Builder(
+    private fun icon(name: String, path: String, autoMirror: Boolean = false) = ImageVector.Builder(
         name = name,
+        autoMirror = autoMirror,
         defaultWidth = 24.dp,
         defaultHeight = 24.dp,
         viewportWidth = 24f,

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GoatLauncher</string>
+    <string name="app_name" translatable="false">GoatLauncher</string>
     <string name="home_guard_label">GoatLauncher: keep as home screen</string>
     <string name="home_guard_description">Keeps GoatLauncher as the home screen. If Android loses it as the default, the Home button opens GoatLauncher instead of the stock launcher or the app chooser. It only looks at which app opens and at the Home button; it reads nothing on screen.</string>
 </resources>

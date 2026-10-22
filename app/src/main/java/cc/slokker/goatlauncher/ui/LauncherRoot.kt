@@ -1,5 +1,11 @@
 package cc.slokker.goatlauncher.ui
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,11 +34,19 @@ fun LauncherRoot(vm: LauncherViewModel) {
     val reddit by vm.redditImage.collectAsStateWithLifecycle()
     val api = (LocalContext.current.applicationContext as LauncherApp).container.backend
 
-    CompositionLocalProvider(LocalStrings provides vm.strings) {
+    // O contexto da Activity já vem na língua escolhida (AppCompat); ao mudar, a Activity é recriada.
+    val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val strings = remember(configuration) { Strings(context) }
+    CompositionLocalProvider(LocalStrings provides strings) {
         Box(Modifier.fillMaxSize().background(GoatColors.Background)) {
             // Até ler a cópia local das definições (milissegundos), só o fundo escuro: evita piscar o fundo por defeito.
             if (!ready) return@Box
             WallpaperView(account.wallpaper, reddit?.url)
+            // Modo noite: o fundo escurece (a interface por cima fica igual).
+            val night by vm.night.collectAsStateWithLifecycle()
+            val dim by animateFloatAsState(if (night) NIGHT_DIM else 0f, tween(600), label = "night")
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = dim }.background(Color.Black))
             when (screen) {
                 // Início, Apps e Definições são separadores do mesmo ecrã (a barra fica, só o conteúdo muda).
                 Screen.Home, Screen.Apps, Screen.Settings -> HomeScreen(vm)
@@ -48,3 +62,5 @@ fun LauncherRoot(vm: LauncherViewModel) {
         }
     }
 }
+
+private const val NIGHT_DIM = 0.35f

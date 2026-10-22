@@ -29,7 +29,7 @@ class InstallResultReceiver : BroadcastReceiver() {
                 // Cancelada pela pessoa: não é erro. O resto aparece por extenso nas Definições.
                 if (status != PackageInstaller.STATUS_FAILURE_ABORTED) {
                     (context.applicationContext as LauncherApp).container.updater.reportInstallFailure(message ?: status.toString())
-                    Toast.makeText(context, Strings.forSystem().updateFailed(message ?: status.toString()), Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, Strings.of(context).updateFailed(message ?: status.toString()), Toast.LENGTH_LONG).show()
                 }
             }
         }

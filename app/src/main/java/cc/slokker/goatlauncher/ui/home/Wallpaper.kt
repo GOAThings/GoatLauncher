@@ -29,16 +29,16 @@ import coil3.request.crossfade
 import coil3.size.Precision
 
 /** Fundos que vêm com a app, desenhados em código (nítidos em qualquer ecrã e sem pesar no APK). */
-class BuiltinWallpaper(val id: String, private val pt: String, private val en: String, val draw: DrawScope.() -> Unit) {
-    fun name(s: Strings) = if (s.english) en else pt
+class BuiltinWallpaper(val id: String, val draw: DrawScope.() -> Unit) {
+    fun name(s: Strings) = s.wallpaperName(id)
 }
 
 object Wallpapers {
     val ALL = listOf(
-        BuiltinWallpaper("lake", "Lago", "Lake") { drawLake() },
-        BuiltinWallpaper("aurora", "Aurora", "Aurora") { drawAurora() },
-        BuiltinWallpaper("sunset", "Pôr do sol", "Sunset") { drawSunset() },
-        BuiltinWallpaper("graphite", "Grafite", "Graphite") { drawGraphite() },
+        BuiltinWallpaper("lake") { drawLake() },
+        BuiltinWallpaper("aurora") { drawAurora() },
+        BuiltinWallpaper("sunset") { drawSunset() },
+        BuiltinWallpaper("graphite") { drawGraphite() },
     )
 
     fun byId(id: String) = ALL.firstOrNull { it.id == id } ?: ALL.first()
