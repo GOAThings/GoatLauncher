@@ -258,6 +258,8 @@ fun AppBanner(
     var armed by remember { mutableStateOf(false) }
     var focused by remember { mutableStateOf(false) }
     val armedScale by animateFloatAsState(if (armed) 0.94f else 1f, tween(120), label = "armed")
+    // Ícone transparente com o fundo "transparente" (Aparência): o cartão não tem cor, vê-se o fundo do ecrã.
+    val container = if (isSeeThrough(custom)) Color.Transparent else app.color
     // A escala do foco é feita aqui (não pelo Surface) para o efeito de foco crescer com o cartão.
     val focusScale by animateFloatAsState(if (focused) FocusScale else 1f, tween(150), label = "focusScale")
     Surface(
@@ -307,9 +309,9 @@ fun AppBanner(
             },
         shape = ClickableSurfaceDefaults.shape(BannerShape),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = app.color,
-            focusedContainerColor = app.color,
-            pressedContainerColor = app.color,
+            containerColor = container,
+            focusedContainerColor = container,
+            pressedContainerColor = container,
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
     ) {

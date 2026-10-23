@@ -29,6 +29,8 @@ import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Surface
 import cc.slokker.goatlauncher.ui.home.FocusColors
+import cc.slokker.goatlauncher.ui.home.GraphiteBackground
+import androidx.compose.ui.geometry.Offset
 import cc.slokker.goatlauncher.ui.home.colorSpec
 import cc.slokker.goatlauncher.ui.home.parseColor
 import androidx.compose.foundation.background
@@ -569,6 +571,7 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
         item {
             GlassRow(title = s.showAppName, onClick = { vm.setShowAppName(!account.showAppName) }, trailing = { Toggle(account.showAppName) })
         }
+        item { IconBackgroundRow(account.iconBackground, onPick = vm::setIconBackground) }
         item {
             GlassRow(
                 title = s.continueWatching,
@@ -605,18 +608,47 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
 private fun FocusColorRow(current: String, onPick: (String) -> Unit) {
     val s = LocalStrings.current
     val selected = parseColor(current)
+    SwatchRow(
+        title = s.focusColor,
+        subtitle = if (selected == null) s.colorAuto else current.uppercase(),
+        swatches = FocusColors.map { colorSpec(it) to (it?.let(::SolidColor) ?: AutoSwatch) },
+        selected = colorSpec(selected),
+        onPick = onPick,
+    )
+}
+
+/** O fundo dos ícones transparentes: nenhum (vê-se o fundo do ecrã), grafite, ou uma cor da paleta. */
+@Composable
+private fun IconBackgroundRow(current: String, onPick: (String) -> Unit) {
+    val s = LocalStrings.current
+    SwatchRow(
+        title = s.iconBackground,
+        subtitle = when (current) {
+            AccountSettings.BG_NONE -> s.bgNone
+            AccountSettings.BG_GRAPHITE -> s.bgGraphite
+            else -> current.uppercase()
+        },
+        swatches = listOf(AccountSettings.BG_NONE to null, AccountSettings.BG_GRAPHITE to GraphiteBackground) +
+            FocusColors.filterNotNull().map { colorSpec(it) to SolidColor(it) },
+        selected = current,
+        onPick = onPick,
+    )
+}
+
+/**
+ * Uma linha de amostras redondas (← → escolhe, OK fica com ela). Cada amostra é (valor, pintura); sem pintura
+ * é "nenhuma": um círculo vazio cortado.
+ */
+@Composable
+private fun SwatchRow(title: String, subtitle: String, swatches: List<Pair<String, Brush?>>, selected: String, onPick: (String) -> Unit) {
     Column(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
-        Text(s.focusColor, style = MaterialTheme.typography.titleSmall)
-        Text(
-            if (selected == null) s.colorAuto else current.uppercase(),
-            style = MaterialTheme.typography.bodySmall,
-            color = GoatColors.TextDim,
-        )
+        Text(title, style = MaterialTheme.typography.titleSmall)
+        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim)
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FocusColors.forEach { color ->
+            swatches.forEach { (spec, brush) ->
                 Surface(
-                    onClick = { onPick(colorSpec(color)) },
+                    onClick = { onPick(spec) },
                     modifier = Modifier.size(26.dp),
                     shape = ClickableSurfaceDefaults.shape(CircleShape),
                     colors = ClickableSurfaceDefaults.colors(
@@ -633,16 +665,16 @@ private fun FocusColorRow(current: String, onPick: (String) -> Unit) {
                         Modifier
                             .fillMaxSize()
                             .clip(CircleShape)
-                            .background(if (color != null) SolidColor(color) else AutoSwatch),
+                            .then(if (brush != null) Modifier.background(brush) else Modifier.border(1.5.dp, Color.White.copy(alpha = 0.6f), CircleShape).drawWithCache {
+                                onDrawBehind {
+                                    drawLine(Color.White.copy(alpha = 0.6f), Offset(size.width * 0.2f, size.height * 0.8f), Offset(size.width * 0.8f, size.height * 0.2f), 1.5.dp.toPx())
+                                }
+                            }),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (color == selected) {
-                            Icon(
-                                GoatIcons.Check,
-                                contentDescription = null,
-                                tint = if (color != null && color.luminance() > 0.5f) Color.Black else Color.White,
-                                modifier = Modifier.size(14.dp),
-                            )
+                        if (spec.equals(selected, ignoreCase = true)) {
+                            val light = (brush as? SolidColor)?.value?.let { it.luminance() > 0.5f } == true
+                            Icon(GoatIcons.Check, contentDescription = null, tint = if (light) Color.Black else Color.White, modifier = Modifier.size(14.dp))
                         }
                     }
                 }

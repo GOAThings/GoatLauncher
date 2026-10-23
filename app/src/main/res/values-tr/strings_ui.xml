@@ -92,6 +92,9 @@
     <string name="anim_shine">Işıltı</string>
     <string name="focus_color">Renk</string>
     <string name="color_auto">Otomatik (uygulama rengi)</string>
+    <string name="icon_background">Saydam simgelerin arka planı</string>
+    <string name="bg_none">Saydam</string>
+    <string name="bg_graphite">Grafit</string>
     <string name="continue_watching">İzlemeye devam et</string>
     <string name="continue_watching_hint">Her uygulamanın Android TV\'nin \"Sıradaki\" bölümüne gönderdikleri</string>
     <string name="apps">Uygulamalar</string>

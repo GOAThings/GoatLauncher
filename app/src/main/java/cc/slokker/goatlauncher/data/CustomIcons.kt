@@ -47,8 +47,12 @@ class CustomIcons(private val context: Context) {
             .map { IconPack(it.activityInfo.packageName, it.activityInfo.applicationInfo.loadLabel(pm).toString()) }
             .sortedBy { it.label.lowercase() }
 
-    /** Lê o `appfilter.xml` (o mapa app → ícone) e o `drawable.xml` (a lista de ícones) do pack. */
-    suspend fun packIcons(pack: String, forPackage: String): PackIcons = withContext(Dispatchers.IO) {
+    /**
+     * Lê o `appfilter.xml` (o mapa app → ícone) e o `drawable.xml` (a lista de ícones) do pack. Sugere os ícones
+     * feitos para [forPackage] e também os que têm o nome da app ([label]): apps com outro pacote (ex.: o
+     * TizenTube, com o nome "YouTube") não estão no mapa do pack.
+     */
+    suspend fun packIcons(pack: String, forPackage: String, label: String): PackIcons = withContext(Dispatchers.IO) {
         runCatching {
             val res = pm.getResourcesForApplication(pack)
             val suggested = LinkedHashSet<String>()
@@ -66,6 +70,9 @@ class CustomIcons(private val context: Context) {
                 if (p.name == "item") p.getAttributeValue(null, "drawable")?.let { listed += it }
             }
             val all = (listed.ifEmpty { mapped }).filter { res.getIdentifier(it, "drawable", pack) != 0 }
+            // "YouTube" → "youtube": youtube, youtube_tv, youtube_music…
+            val name = label.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
+            if (name.length >= 3) suggested += all.filter { it.startsWith(name) }
             PackIcons(suggested.filter { res.getIdentifier(it, "drawable", pack) != 0 }, all)
         }.getOrElse {
             Log.w(TAG, "Ler o icon pack $pack", it)

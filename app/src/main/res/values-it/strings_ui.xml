@@ -92,6 +92,9 @@
     <string name="anim_shine">Riflesso</string>
     <string name="focus_color">Colore</string>
     <string name="color_auto">Automatico (colore dell’app)</string>
+    <string name="icon_background">Sfondo delle icone trasparenti</string>
+    <string name="bg_none">Trasparente</string>
+    <string name="bg_graphite">Grafite</string>
     <string name="continue_watching">Continua a guardare</string>
     <string name="continue_watching_hint">Ciò che ogni app pubblica in \"Play next\" di Android TV</string>
     <string name="apps">App</string>

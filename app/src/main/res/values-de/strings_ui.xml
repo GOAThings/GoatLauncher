@@ -92,6 +92,9 @@
     <string name="anim_shine">Glanz</string>
     <string name="focus_color">Farbe</string>
     <string name="color_auto">Automatisch (App-Farbe)</string>
+    <string name="icon_background">Hintergrund transparenter Symbole</string>
+    <string name="bg_none">Transparent</string>
+    <string name="bg_graphite">Graphit</string>
     <string name="continue_watching">Weiterschauen</string>
     <string name="continue_watching_hint">Was jede App in „Als Nächstes ansehen“ von Android TV veröffentlicht</string>
     <string name="apps">Apps</string>

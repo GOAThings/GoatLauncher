@@ -92,6 +92,9 @@
     <string name="anim_shine">シャイン</string>
     <string name="focus_color">色</string>
     <string name="color_auto">自動（アプリの色）</string>
+    <string name="icon_background">透明なアイコンの背景</string>
+    <string name="bg_none">透明</string>
+    <string name="bg_graphite">グラファイト</string>
     <string name="continue_watching">続きを見る</string>
     <string name="continue_watching_hint">各アプリが Android TV の「次に再生」に公開している内容</string>
     <string name="apps">アプリ</string>

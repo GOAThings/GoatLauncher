@@ -92,6 +92,9 @@
     <string name="anim_shine">Kilau</string>
     <string name="focus_color">Warna</string>
     <string name="color_auto">Otomatis (warna aplikasi)</string>
+    <string name="icon_background">Latar ikon transparan</string>
+    <string name="bg_none">Transparan</string>
+    <string name="bg_graphite">Grafit</string>
     <string name="continue_watching">Lanjutkan menonton</string>
     <string name="continue_watching_hint">Yang dipublikasikan tiap aplikasi ke \"Play next\" Android TV</string>
     <string name="apps">Aplikasi</string>

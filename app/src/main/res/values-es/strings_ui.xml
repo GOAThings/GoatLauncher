@@ -92,6 +92,9 @@
     <string name="anim_shine">Destello</string>
     <string name="focus_color">Color</string>
     <string name="color_auto">Automático (color de la app)</string>
+    <string name="icon_background">Fondo de los iconos transparentes</string>
+    <string name="bg_none">Transparente</string>
+    <string name="bg_graphite">Grafito</string>
     <string name="continue_watching">Seguir viendo</string>
     <string name="continue_watching_hint">Lo que cada app publica en \"Play next\" de Android TV</string>
     <string name="apps">Apps</string>

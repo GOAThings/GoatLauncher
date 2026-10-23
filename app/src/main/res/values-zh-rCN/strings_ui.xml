@@ -92,6 +92,9 @@
     <string name="anim_shine">流光</string>
     <string name="focus_color">颜色</string>
     <string name="color_auto">自动（应用颜色）</string>
+    <string name="icon_background">透明图标的背景</string>
+    <string name="bg_none">透明</string>
+    <string name="bg_graphite">石墨色</string>
     <string name="continue_watching">继续观看</string>
     <string name="continue_watching_hint">各应用发布到 Android TV“接下来播放”中的内容</string>
     <string name="apps">应用</string>

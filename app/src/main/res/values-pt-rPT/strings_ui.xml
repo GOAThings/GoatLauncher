@@ -92,6 +92,9 @@
     <string name="anim_shine">Luz a rodar</string>
     <string name="focus_color">Cor</string>
     <string name="color_auto">Automática (cor da app)</string>
+    <string name="icon_background">Fundo dos ícones transparentes</string>
+    <string name="bg_none">Transparente</string>
+    <string name="bg_graphite">Grafite</string>
     <string name="continue_watching">Continuar a ver</string>
     <string name="continue_watching_hint">O que cada app publica no \"A seguir\" do Android TV</string>
     <string name="apps">Apps</string>

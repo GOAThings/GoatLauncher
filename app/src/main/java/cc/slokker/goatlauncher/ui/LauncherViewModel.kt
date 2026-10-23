@@ -845,6 +845,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** AccountSettings.COLOR_AUTO ou "#RRGGBB". */
     fun setFocusColor(color: String) = settings.updateAccount { it.copy(focusColor = color) }
 
+    /** AccountSettings.BG_GRAPHITE, BG_NONE ou "#RRGGBB". */
+    fun setIconBackground(spec: String) = settings.updateAccount { it.copy(iconBackground = spec) }
+
     /** Disposição do ecrã inicial (AccountSettings.LAYOUT_*). A Apple TV não tem separador Apps. */
     fun setLayout(layout: String) = settings.updateAccount { it.copy(layout = layout) }
 

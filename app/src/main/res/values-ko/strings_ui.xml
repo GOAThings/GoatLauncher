@@ -92,6 +92,9 @@
     <string name="anim_shine">반짝임</string>
     <string name="focus_color">색상</string>
     <string name="color_auto">자동 (앱 색상)</string>
+    <string name="icon_background">투명 아이콘 배경</string>
+    <string name="bg_none">투명</string>
+    <string name="bg_graphite">그래파이트</string>
     <string name="continue_watching">이어서 보기</string>
     <string name="continue_watching_hint">각 앱이 Android TV의 \'Play next\'에 게시하는 콘텐츠</string>
     <string name="apps">앱</string>

@@ -92,6 +92,9 @@
     <string name="anim_shine">لمعان</string>
     <string name="focus_color">اللون</string>
     <string name="color_auto">تلقائي (لون التطبيق)</string>
+    <string name="icon_background">خلفية الأيقونات الشفافة</string>
+    <string name="bg_none">شفافة</string>
+    <string name="bg_graphite">رمادي داكن</string>
     <string name="continue_watching">متابعة المشاهدة</string>
     <string name="continue_watching_hint">ما ينشره كل تطبيق في «Play next» على Android TV</string>
     <string name="apps">التطبيقات</string>

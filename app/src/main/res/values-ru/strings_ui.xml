@@ -92,6 +92,9 @@
     <string name="anim_shine">Блик</string>
     <string name="focus_color">Цвет</string>
     <string name="color_auto">Автоматически (цвет приложения)</string>
+    <string name="icon_background">Фон прозрачных значков</string>
+    <string name="bg_none">Прозрачный</string>
+    <string name="bg_graphite">Графит</string>
     <string name="continue_watching">Продолжить просмотр</string>
     <string name="continue_watching_hint">Что каждое приложение публикует в «Play next» Android TV</string>
     <string name="apps">Приложения</string>

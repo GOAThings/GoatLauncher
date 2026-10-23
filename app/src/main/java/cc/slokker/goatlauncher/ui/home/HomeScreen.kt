@@ -418,7 +418,7 @@ fun HomeScreen(vm: LauncherViewModel) {
 
     // O efeito de foco dos cartões das apps (Definições → Aparência).
     val focusStyle = remember(account) { FocusStyle.of(account) }
-    CompositionLocalProvider(LocalFocusStyle provides focusStyle) {
+    CompositionLocalProvider(LocalFocusStyle provides focusStyle, LocalIconBackground provides account.iconBackground) {
         Box(Modifier.fillMaxSize()) {
             Box(
                 Modifier

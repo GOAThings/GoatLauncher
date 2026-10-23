@@ -92,6 +92,9 @@
     <string name="anim_shine">Reflet</string>
     <string name="focus_color">Couleur</string>
     <string name="color_auto">Automatique (couleur de l’app)</string>
+    <string name="icon_background">Fond des icônes transparentes</string>
+    <string name="bg_none">Transparent</string>
+    <string name="bg_graphite">Graphite</string>
     <string name="continue_watching">Reprendre la lecture</string>
     <string name="continue_watching_hint">Ce que chaque app publie dans \"À suivre\" d\'Android TV</string>
     <string name="apps">Apps</string>

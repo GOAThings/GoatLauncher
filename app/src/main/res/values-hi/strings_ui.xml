@@ -92,6 +92,9 @@
     <string name="anim_shine">चमकती रोशनी</string>
     <string name="focus_color">रंग</string>
     <string name="color_auto">अपने-आप (ऐप का रंग)</string>
+    <string name="icon_background">पारदर्शी आइकन का बैकग्राउंड</string>
+    <string name="bg_none">पारदर्शी</string>
+    <string name="bg_graphite">ग्रेफ़ाइट</string>
     <string name="continue_watching">देखना जारी रखें</string>
     <string name="continue_watching_hint">हर ऐप Android TV के \"Play next\" में जो भेजता है</string>
     <string name="apps">ऐप</string>

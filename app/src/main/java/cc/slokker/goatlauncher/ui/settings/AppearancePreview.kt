@@ -55,6 +55,8 @@ import cc.slokker.goatlauncher.ui.home.FavoriteCount
 import cc.slokker.goatlauncher.ui.home.FocusScale
 import cc.slokker.goatlauncher.ui.home.FocusStyle
 import cc.slokker.goatlauncher.ui.home.LocalFocusStyle
+import cc.slokker.goatlauncher.ui.home.LocalIconBackground
+import cc.slokker.goatlauncher.ui.home.isSeeThrough
 import cc.slokker.goatlauncher.ui.home.TopClock
 import cc.slokker.goatlauncher.ui.home.TopGreeting
 import cc.slokker.goatlauncher.ui.home.WallpaperView
@@ -129,7 +131,7 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
                     ),
                 )
             }
-            CompositionLocalProvider(LocalFocusStyle provides focusStyle) {
+            CompositionLocalProvider(LocalFocusStyle provides focusStyle, LocalIconBackground provides account.iconBackground) {
                 Column(Modifier.fillMaxSize().padding(TvSafePadding)) {
                     PreviewTopBar(account, weather?.takeIf { account.showWeather }, showApps = !appleTv)
                     Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -238,7 +240,7 @@ private fun PreviewTile(vm: LauncherViewModel, app: LauncherApp, iconSpec: Strin
                 }
                 .focusEffect(focused, app.color)
                 .clip(GoatShapes.Control)
-                .background(app.color),
+                .background(if (isSeeThrough(custom)) Color.Transparent else app.color),
         ) {
             BannerImage(app, custom, customPending = iconSpec != null && custom == null)
         }

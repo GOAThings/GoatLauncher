@@ -92,6 +92,9 @@
     <string name="anim_shine">Shine</string>
     <string name="focus_color">Color</string>
     <string name="color_auto">Automatic (app color)</string>
+    <string name="icon_background">Transparent icon background</string>
+    <string name="bg_none">Transparent</string>
+    <string name="bg_graphite">Graphite</string>
     <string name="continue_watching">Continue watching</string>
     <string name="continue_watching_hint">What each app publishes to Android TV\'s \"Play next\"</string>
     <string name="apps">Apps</string>

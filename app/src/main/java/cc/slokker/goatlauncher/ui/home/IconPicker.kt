@@ -40,6 +40,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.staticCompositionLocalOf
+import cc.slokker.goatlauncher.data.AccountSettings
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -201,6 +205,7 @@ fun IconPicker(app: LauncherApp, current: String?, vm: LauncherViewModel, onDone
                     is PickerPage.Pack -> PackGrid(
                         pack = p.pack,
                         forPackage = pkg,
+                        label = app.label,
                         vm = vm,
                         first = first,
                         onPick = {
@@ -231,13 +236,14 @@ fun IconPicker(app: LauncherApp, current: String?, vm: LauncherViewModel, onDone
 private fun PackGrid(
     pack: IconPack,
     forPackage: String,
+    label: String,
     vm: LauncherViewModel,
     first: FocusRequester,
     onPick: (String) -> Unit,
     onOpenPack: () -> Unit,
 ) {
     val s = LocalStrings.current
-    val icons by produceState<PackIcons?>(null, pack) { value = vm.icons.packIcons(pack.packageName, forPackage) }
+    val icons by produceState<PackIcons?>(null, pack) { value = vm.icons.packIcons(pack.packageName, forPackage, label) }
     var filter by remember { mutableStateOf("") }
     val hasIcons = icons?.all?.isNotEmpty() == true
     // O foco vai para o primeiro ícone quando a lista chega (sem ícones, para o botão do pack).
@@ -312,15 +318,54 @@ private fun PackIconCell(spec: String, vm: LauncherViewModel, onClick: () -> Uni
 
 /**
  * Um ícone escolhido pela pessoa dentro de um cartão 16:9: um banner (largo) enche o cartão;
- * um ícone quadrado (packs de telemóvel) fica ao centro sobre [background].
+ * um ícone quadrado (packs de telemóvel) fica ao centro sobre [background]. Um ícone com fundo transparente
+ * (ex.: os logos brancos do Projectivy Icon Pack) fica sobre um fundo escuro, e não sobre a cor da app
+ * (que no YouTube ou na Play Store é branca, e o logo desaparecia).
  */
 @Composable
 fun CustomIconImage(image: ImageBitmap, background: Color) {
+    val transparent = remember(image) { image.hasTransparentEdges() }
+    val backdrop = if (transparent) iconBackdrop(LocalIconBackground.current) else Modifier.background(background)
     if (image.width >= image.height * 1.4f) {
-        Image(image, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        Image(image, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().then(if (transparent) backdrop else Modifier))
     } else {
-        Box(Modifier.fillMaxSize().background(background), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxSize().then(backdrop), contentAlignment = Alignment.Center) {
             Image(image, null, modifier = Modifier.fillMaxHeight(0.7f).aspectRatio(image.width.toFloat() / image.height))
         }
     }
+}
+
+/** O fundo dos ícones transparentes escolhido em Aparência (AccountSettings.iconBackground). */
+val LocalIconBackground = staticCompositionLocalOf { AccountSettings.BG_GRAPHITE }
+
+/** Fundo grafite dos ícones transparentes, um pouco mais claro em cima (como os cartões escuros do tvOS). */
+val GraphiteBackground = Brush.verticalGradient(listOf(Color(0xFF2C2E34), Color(0xFF121317)))
+
+private fun iconBackdrop(spec: String): Modifier = when (spec) {
+    AccountSettings.BG_NONE -> Modifier
+    AccountSettings.BG_GRAPHITE -> Modifier.background(GraphiteBackground)
+    else -> parseColor(spec)?.let { Modifier.background(it) } ?: Modifier.background(GraphiteBackground)
+}
+
+/** Se um cartão com este ícone fica sem fundo nenhum (ícone transparente e fundo "transparente"). */
+@Composable
+fun isSeeThrough(image: ImageBitmap?): Boolean {
+    val transparent = remember(image) { image?.hasTransparentEdges() == true }
+    return transparent && LocalIconBackground.current == AccountSettings.BG_NONE
+}
+
+/** Se as bordas do ícone são (quase todas) transparentes: vê-se uma amostra de pontos à volta. */
+private fun ImageBitmap.hasTransparentEdges(): Boolean {
+    val bitmap = asAndroidBitmap()
+    if (!bitmap.hasAlpha()) return false
+    val w = bitmap.width - 1
+    val h = bitmap.height - 1
+    val points = (0..8).flatMap { i ->
+        val x = w * i / 8
+        val y = h * i / 8
+        listOf(x to 0, x to h, 0 to y, w to y)
+    }
+    // Uma imagem em memória da GPU (HARDWARE) não deixa ler píxeis: fica como opaca.
+    val clear = runCatching { points.count { (x, y) -> android.graphics.Color.alpha(bitmap.getPixel(x, y)) < 128 } }.getOrDefault(0)
+    return clear >= points.size / 2
 }

@@ -14,7 +14,8 @@ import com.google.gson.JsonObject
  *                "youtube_feed": "both" | "continue" | "recommended", "language": "auto" | "pt-PT" | …,
  *                "night_mode": false, "night_auto": false,
  *                "focus_effect": "border" | "glow" | "shadow", "focus_animation": "none" | "pulse" | "breath" | "shine",
- *                "focus_color": "auto" | "#38BDF8" }
+ *                "focus_color": "auto" | "#38BDF8",
+ *                "icon_background": "graphite" | "none" | "#38BDF8" }
  *   "device":  { "apps": ["com.netflix.ninja", …], "hidden": ["com.android.vending"],
  *                "icons": {"com.netflix.ninja": "pack:dev.pack/netflix" | "file:com.netflix.ninja-123.png"},
  *                "names": {"io.gh.reisxd.tizentube.cobalt": "YouTube"}, "no_continue": ["com.netflix.ninja"],
@@ -98,6 +99,8 @@ data class AccountSettings(
     val focusAnimation: String = ANIM_NONE,
     /** Cor do efeito de foco: COLOR_AUTO (contorno branco, brilho da cor da app) ou "#RRGGBB". */
     val focusColor: String = COLOR_AUTO,
+    /** Fundo dos ícones escolhidos com fundo transparente: BG_GRAPHITE, BG_NONE (vê-se o fundo do ecrã) ou "#RRGGBB". */
+    val iconBackground: String = BG_GRAPHITE,
     val raw: JsonObject = JsonObject(),
 ) {
     fun toJson(): JsonObject = raw.deepCopy().apply {
@@ -122,6 +125,7 @@ data class AccountSettings(
         addProperty("focus_effect", focusEffect)
         addProperty("focus_animation", focusAnimation)
         addProperty("focus_color", focusColor)
+        addProperty("icon_background", iconBackground)
     }
 
     companion object {
@@ -143,6 +147,8 @@ data class AccountSettings(
         const val ANIM_BREATH = "breath"
         const val ANIM_SHINE = "shine"
         const val COLOR_AUTO = "auto"
+        const val BG_GRAPHITE = "graphite"
+        const val BG_NONE = "none"
 
         const val YT_BOTH = "both"
         const val YT_CONTINUE = "continue"
@@ -173,6 +179,8 @@ data class AccountSettings(
                 focusEffect = json.str("focus_effect")?.takeIf { it == FOCUS_GLOW || it == FOCUS_SHADOW } ?: FOCUS_BORDER,
                 focusAnimation = json.str("focus_animation")?.takeIf { it == ANIM_PULSE || it == ANIM_BREATH || it == ANIM_SHINE } ?: ANIM_NONE,
                 focusColor = json.str("focus_color")?.takeIf { it.matches(Regex("#[0-9A-Fa-f]{6}")) } ?: COLOR_AUTO,
+                iconBackground = json.str("icon_background")
+                    ?.takeIf { it == BG_NONE || it.matches(Regex("#[0-9A-Fa-f]{6}")) } ?: BG_GRAPHITE,
                 raw = json,
             )
         }
