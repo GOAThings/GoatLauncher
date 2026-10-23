@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Atualizações a partir do repositório público de versões (o Android pede confirmação). -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- "Desinstalar" no menu de uma app (o Android pede confirmação). -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <!--
       "Continuar a ver" de outras apps (Watch Next). O TvProvider só mostra programas de outras apps a quem
       tem READ_TV_LISTINGS; READ_EPG_DATA fica por compatibilidade. As duas são pedidas ao arrancar.

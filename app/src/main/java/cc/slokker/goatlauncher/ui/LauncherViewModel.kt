@@ -764,6 +764,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun openApps() {
+        if (account.value.layout == AccountSettings.LAYOUT_APPLE_TV) return
         _screen.value = Screen.Apps
     }
 
@@ -837,6 +838,16 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun setContinueStyle(style: String) = settings.updateAccount { it.copy(continueStyle = style) }
 
+    fun setFocusEffect(effect: String) = settings.updateAccount { it.copy(focusEffect = effect) }
+
+    fun setFocusAnimation(animation: String) = settings.updateAccount { it.copy(focusAnimation = animation) }
+
+    /** AccountSettings.COLOR_AUTO ou "#RRGGBB". */
+    fun setFocusColor(color: String) = settings.updateAccount { it.copy(focusColor = color) }
+
+    /** Disposição do ecrã inicial (AccountSettings.LAYOUT_*). A Apple TV não tem separador Apps. */
+    fun setLayout(layout: String) = settings.updateAccount { it.copy(layout = layout) }
+
     val icons = c.icons
 
     /** Ícone da app [pkg] (ver CustomIcons); null repõe o banner da app. A cópia antiga, se havia, é apagada. */
@@ -876,23 +887,25 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Move [pkg] [delta] posições na fila visível. Grava a ordem de todas as apps instaladas
-     * (as escondidas mantêm o lugar). Só envia para a conta em [finishMove].
+     * Move [pkg] [delta] lugares na grelha das apps, tal como se vê no separador Apps e na Apple TV: os [favorites]
+     * favoritos e depois todas as outras, também as escondidas. A app vai para o novo lugar e as do meio chegam-se
+     * (descer um favorito traz para os favoritos a primeira app de baixo). Uma app escondida que entre nos
+     * favoritos volta a aparecer no Início. Grava a ordem de todas as apps; só envia para a conta em [finishMove].
      */
-    fun moveApp(pkg: String, delta: Int) {
+    fun moveApp(pkg: String, delta: Int, favorites: Int) {
         val all = installed.value ?: return
         settings.updateDevice(push = false) { d ->
-            val full = ordered(all, d.apps).map { it.packageName }.toMutableList()
-            val visible = full.filterNot { it in d.hidden }
-            val from = visible.indexOf(pkg)
+            val order = ordered(all, d.apps).map { it.packageName }
+            val fav = order.filterNot { it in d.hidden }.take(favorites)
+            val grid = (fav + order.filterNot { it in fav }).toMutableList()
+            val from = grid.indexOf(pkg)
             if (from < 0) return@updateDevice d
-            val to = (from + delta).coerceIn(visible.indices)
-            if (to == from) return@updateDevice d
-            val neighbor = visible[to]
-            full.remove(pkg)
-            val at = full.indexOf(neighbor)
-            full.add(if (delta > 0) at + 1 else at, pkg)
-            d.copy(apps = full)
+            val to = (from + delta).coerceIn(grid.indices)
+            if (to != from) {
+                grid.removeAt(from)
+                grid.add(to, pkg)
+            }
+            d.copy(apps = grid, hidden = d.hidden - grid.take(favorites).toSet())
         }
     }
 

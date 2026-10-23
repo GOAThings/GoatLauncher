@@ -30,6 +30,10 @@ object SystemIntents {
         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", pkg, null))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
+    /** Pedido do sistema para desinstalar [pkg] (o Android pede confirmação). */
+    fun uninstall(pkg: String): Intent =
+        Intent(Intent.ACTION_DELETE, Uri.fromParts("package", pkg, null)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
     /** Abre [intent]; devolve false se não houver quem o abra ou a app recusar. */
     fun start(context: Context, intent: Intent?): Boolean {
         if (intent == null) return false

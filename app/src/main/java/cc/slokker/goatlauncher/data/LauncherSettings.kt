@@ -9,10 +9,12 @@ import com.google.gson.JsonObject
  *
  *   "account": { "wallpaper": {"type": "builtin" | "file" | "url" | "reddit", "value": "lake" | "wall-123.jpg" | "https://…" | "EarthPorn"},
  *                "clock_24h": true, "show_greeting": true, "show_continue_watching": true, "show_app_name": true,
- *                "continue_style": "row" | "shelf" | "downunder", "show_weather": true,
+ *                "layout": "android" | "appletv", "continue_style": "row" | "shelf", "show_weather": true,
  *                "reddit_min_width": 1920, "idle_minutes": 0, "idle_keep_awake": false,
  *                "youtube_feed": "both" | "continue" | "recommended", "language": "auto" | "pt-PT" | …,
- *                "night_mode": false, "night_auto": false }
+ *                "night_mode": false, "night_auto": false,
+ *                "focus_effect": "border" | "glow" | "shadow", "focus_animation": "none" | "pulse" | "breath" | "shine",
+ *                "focus_color": "auto" | "#38BDF8" }
  *   "device":  { "apps": ["com.netflix.ninja", …], "hidden": ["com.android.vending"],
  *                "icons": {"com.netflix.ninja": "pack:dev.pack/netflix" | "file:com.netflix.ninja-123.png"},
  *                "names": {"io.gh.reisxd.tizentube.cobalt": "YouTube"}, "no_continue": ["com.netflix.ninja"],
@@ -65,8 +67,13 @@ data class AccountSettings(
     /** O nome de cada app por baixo do banner. */
     val showAppName: Boolean = true,
     /**
-     * "row": fila de cartões (do favorito com foco) por cima dos favoritos; "shelf": destaque em ecrã inteiro
-     * (como o top shelf do tvOS); "downunder": uma fila com tudo, de todas as apps, por baixo dos favoritos.
+     * Disposição do ecrã inicial. "android": separadores Início/Apps e o "Continuar a ver" em [continueStyle];
+     * "appletv": sem separador Apps (as apps ficam por baixo da doca dos favoritos) e cartões grandes, como no tvOS.
+     */
+    val layout: String = LAYOUT_ANDROID,
+    /**
+     * Só na disposição Android. "row": fila de cartões (do favorito com foco) por cima dos favoritos;
+     * "shelf": destaque em ecrã inteiro (como o top shelf do tvOS).
      */
     val continueStyle: String = STYLE_ROW,
     /** O tempo (ícone e temperatura) ao lado da saudação, em cima à direita. */
@@ -85,6 +92,12 @@ data class AccountSettings(
     val nightMode: Boolean = false,
     /** Dia/noite pela hora da TV (noite das [NIGHT_FROM] às [NIGHT_TO]); carregar no botão desliga-o. */
     val nightAuto: Boolean = false,
+    /** Cartão de uma app com foco: FOCUS_BORDER (contorno), FOCUS_GLOW (brilho à volta) ou FOCUS_SHADOW (só sombra). */
+    val focusEffect: String = FOCUS_BORDER,
+    /** Animação do efeito de foco: ANIM_NONE, ANIM_PULSE, ANIM_BREATH ou ANIM_SHINE (luz a dar a volta ao cartão). */
+    val focusAnimation: String = ANIM_NONE,
+    /** Cor do efeito de foco: COLOR_AUTO (contorno branco, brilho da cor da app) ou "#RRGGBB". */
+    val focusColor: String = COLOR_AUTO,
     val raw: JsonObject = JsonObject(),
 ) {
     fun toJson(): JsonObject = raw.deepCopy().apply {
@@ -96,6 +109,7 @@ data class AccountSettings(
         addProperty("show_greeting", showGreeting)
         addProperty("show_continue_watching", showContinueWatching)
         addProperty("show_app_name", showAppName)
+        addProperty("layout", layout)
         addProperty("continue_style", continueStyle)
         addProperty("show_weather", showWeather)
         addProperty("reddit_min_width", redditMinWidth)
@@ -105,16 +119,30 @@ data class AccountSettings(
         addProperty("language", language)
         addProperty("night_mode", nightMode)
         addProperty("night_auto", nightAuto)
+        addProperty("focus_effect", focusEffect)
+        addProperty("focus_animation", focusAnimation)
+        addProperty("focus_color", focusColor)
     }
 
     companion object {
         const val STYLE_ROW = "row"
         const val STYLE_SHELF = "shelf"
-        const val STYLE_DOWN_UNDER = "downunder"
+
+        const val LAYOUT_ANDROID = "android"
+        const val LAYOUT_APPLE_TV = "appletv"
 
         /** Modo noite automático: das 20h às 7h. */
         const val NIGHT_FROM = 20
         const val NIGHT_TO = 7
+
+        const val FOCUS_BORDER = "border"
+        const val FOCUS_GLOW = "glow"
+        const val FOCUS_SHADOW = "shadow"
+        const val ANIM_NONE = "none"
+        const val ANIM_PULSE = "pulse"
+        const val ANIM_BREATH = "breath"
+        const val ANIM_SHINE = "shine"
+        const val COLOR_AUTO = "auto"
 
         const val YT_BOTH = "both"
         const val YT_CONTINUE = "continue"
@@ -131,7 +159,9 @@ data class AccountSettings(
                 showGreeting = json.bool("show_greeting") ?: true,
                 showContinueWatching = json.bool("show_continue_watching") ?: true,
                 showAppName = json.bool("show_app_name") ?: true,
-                continueStyle = json.str("continue_style")?.takeIf { it == STYLE_SHELF || it == STYLE_DOWN_UNDER } ?: STYLE_ROW,
+                layout = json.str("layout")?.takeIf { it == LAYOUT_APPLE_TV } ?: LAYOUT_ANDROID,
+                // O antigo "downunder" (já não existe) passa a fila de cartões.
+                continueStyle = json.str("continue_style")?.takeIf { it == STYLE_SHELF } ?: STYLE_ROW,
                 showWeather = json.bool("show_weather") ?: true,
                 redditMinWidth = json.int("reddit_min_width")?.coerceAtLeast(0) ?: 1920,
                 idleMinutes = json.int("idle_minutes")?.coerceAtLeast(0) ?: 0,
@@ -140,6 +170,9 @@ data class AccountSettings(
                 language = json.str("language") ?: "auto",
                 nightMode = json.bool("night_mode") ?: false,
                 nightAuto = json.bool("night_auto") ?: false,
+                focusEffect = json.str("focus_effect")?.takeIf { it == FOCUS_GLOW || it == FOCUS_SHADOW } ?: FOCUS_BORDER,
+                focusAnimation = json.str("focus_animation")?.takeIf { it == ANIM_PULSE || it == ANIM_BREATH || it == ANIM_SHINE } ?: ANIM_NONE,
+                focusColor = json.str("focus_color")?.takeIf { it.matches(Regex("#[0-9A-Fa-f]{6}")) } ?: COLOR_AUTO,
                 raw = json,
             )
         }

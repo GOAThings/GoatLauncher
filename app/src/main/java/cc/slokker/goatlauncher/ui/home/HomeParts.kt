@@ -20,6 +20,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -233,8 +234,8 @@ fun AppTile(
 }
 
 /**
- * O cartão 16:9 de uma app. Com foco fica maior e com contorno branco, como no tvOS.
- * Em modo "mover" ([moving]) o contorno passa a ser o gradiente da marca, com setas dos lados.
+ * O cartão 16:9 de uma app. Com foco fica maior e com o efeito de foco escolhido (por defeito o contorno branco,
+ * como no tvOS; ver FocusEffect). Em modo "mover" ([moving]) o contorno passa a ser o gradiente da marca, com setas dos lados.
  */
 @Composable
 fun AppBanner(
@@ -255,17 +256,22 @@ fun AppBanner(
     // não cai no menu (escolhendo "Mover" sem querer) nem deixa o banner preso no estado "carregado".
     var pressedAt by remember { mutableLongStateOf(NOT_PRESSED) }
     var armed by remember { mutableStateOf(false) }
+    var focused by remember { mutableStateOf(false) }
     val armedScale by animateFloatAsState(if (armed) 0.94f else 1f, tween(120), label = "armed")
+    // A escala do foco é feita aqui (não pelo Surface) para o efeito de foco crescer com o cartão.
+    val focusScale by animateFloatAsState(if (focused) FocusScale else 1f, tween(150), label = "focusScale")
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
         modifier = modifier
             .size(width, width * 9 / 16)
             .graphicsLayer {
-                scaleX = armedScale
-                scaleY = armedScale
+                scaleX = armedScale * focusScale
+                scaleY = armedScale * focusScale
             }
+            .focusEffect(focused, app.color, moving)
             .onFocusChanged {
+                focused = it.isFocused
                 if (it.isFocused) onFocused() else {
                     pressedAt = NOT_PRESSED
                     armed = false
@@ -305,24 +311,10 @@ fun AppBanner(
             focusedContainerColor = app.color,
             pressedContainerColor = app.color,
         ),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
-        border = ClickableSurfaceDefaults.border(
-            focusedBorder = Border(
-                if (moving) BorderStroke(3.dp, GoatColors.Accent) else BorderStroke(3.dp, Color.White),
-                inset = 0.dp,
-                shape = BannerShape,
-            ),
-        ),
-        glow = ClickableSurfaceDefaults.glow(focusedGlow = Glow(elevationColor = Color.Black.copy(alpha = 0.6f), elevation = 14.dp)),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
     ) {
         Box(Modifier.fillMaxSize()) {
-            when {
-                custom != null -> CustomIconImage(custom, background = app.color)
-                customPending -> Unit
-                app.banner != null -> Image(app.banner, contentDescription = app.label, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                app.icon != null -> Image(app.icon, contentDescription = app.label, modifier = Modifier.align(Alignment.Center).size(52.dp))
-                else -> Text(app.label, Modifier.align(Alignment.Center).padding(8.dp), maxLines = 2, overflow = TextOverflow.Ellipsis)
-            }
+            BannerImage(app, custom, customPending)
 
             if (hasContinue) {
                 Box(
@@ -339,6 +331,18 @@ fun AppBanner(
                 MoveArrow(Modifier.align(Alignment.CenterEnd), left = false)
             }
         }
+    }
+}
+
+/** O que se vê num cartão de app: o ícone escolhido, o banner, ou o ícone da app sobre a cor dela. */
+@Composable
+fun BoxScope.BannerImage(app: LauncherApp, custom: ImageBitmap?, customPending: Boolean = false) {
+    when {
+        custom != null -> CustomIconImage(custom, background = app.color)
+        customPending -> Unit
+        app.banner != null -> Image(app.banner, contentDescription = app.label, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        app.icon != null -> Image(app.icon, contentDescription = app.label, modifier = Modifier.align(Alignment.Center).size(52.dp))
+        else -> Text(app.label, Modifier.align(Alignment.Center).padding(8.dp), maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -426,27 +430,28 @@ fun WatchNextCard(item: WatchNextItem, onClick: () -> Unit, modifier: Modifier =
 }
 
 /**
- * Cartão do estilo "Down Under": imagem 16:9, a barra de progresso por baixo dela, o título e, numa linha,
- * o ícone da app com "T1 E3 · faltam 32 min".
+ * Cartão grande da disposição Apple TV (como o top shelf do tvOS): a imagem 16:9, com a barra de progresso
+ * por dentro, em baixo. O título só aparece por baixo do cartão com foco.
  */
 @Composable
-fun WideWatchCard(item: WatchNextItem, app: LauncherApp?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun TopShelfCard(item: WatchNextItem, height: Dp, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
-    Column(modifier.width(WideCardWidth)) {
+    var focused by remember { mutableStateOf(false) }
+    Column(modifier.width(height * 16 / 9)) {
         Surface(
             onClick = onClick,
-            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
-            shape = ClickableSurfaceDefaults.shape(CardShape),
+            modifier = Modifier.fillMaxWidth().height(height).onFocusChanged { focused = it.isFocused },
+            shape = ClickableSurfaceDefaults.shape(TopShelfShape),
             colors = ClickableSurfaceDefaults.colors(
                 containerColor = Color(0xFF1C2333),
                 focusedContainerColor = Color(0xFF1C2333),
                 pressedContainerColor = Color(0xFF1C2333),
             ),
-            scale = ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
+            scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
             border = ClickableSurfaceDefaults.border(
-                focusedBorder = Border(BorderStroke(3.dp, Color.White), inset = 0.dp, shape = CardShape),
+                focusedBorder = Border(BorderStroke(3.dp, Color.White), inset = 0.dp, shape = TopShelfShape),
             ),
-            glow = ClickableSurfaceDefaults.glow(focusedGlow = Glow(elevationColor = Color.Black.copy(alpha = 0.6f), elevation = 12.dp)),
+            glow = ClickableSurfaceDefaults.glow(focusedGlow = Glow(elevationColor = Color.Black.copy(alpha = 0.6f), elevation = 16.dp)),
         ) {
             Box(Modifier.fillMaxSize()) {
                 if (item.imageUri != null) {
@@ -461,34 +466,50 @@ fun WideWatchCard(item: WatchNextItem, app: LauncherApp?, onClick: () -> Unit, m
                         painter = painter,
                         contentDescription = item.title,
                         contentScale = if (fill) ContentScale.Crop else ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize().then(if (fill) Modifier else Modifier.padding(12.dp)),
+                        modifier = Modifier.fillMaxSize().then(if (fill) Modifier else Modifier.padding(height / 6)),
                     )
                 } else {
-                    Icon(GoatIcons.Play, contentDescription = null, modifier = Modifier.align(Alignment.Center).size(28.dp))
+                    Icon(GoatIcons.Play, contentDescription = null, modifier = Modifier.align(Alignment.Center).size(40.dp))
+                }
+                item.progress?.let { p ->
+                    // Escurece só o fundo da imagem, para a barra se ver sobre imagens claras.
+                    Box(
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .height(height / 4)
+                            .background(Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.45f))),
+                    )
+                    Box(
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp, vertical = 14.dp)
+                            .height(4.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.35f)),
+                    ) {
+                        Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Color.White))
+                    }
                 }
             }
         }
-        Spacer(Modifier.height(7.dp))
-        Box(Modifier.fillMaxWidth().height(3.dp).background(Color.White.copy(alpha = if (item.progress != null) 0.25f else 0f), GoatShapes.Small)) {
-            item.progress?.let { p -> Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Color.White, GoatShapes.Small)) }
-        }
-        Spacer(Modifier.height(6.dp))
-        Text(item.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            app?.smallIcon?.let {
-                Image(it, contentDescription = app.label, modifier = Modifier.size(13.dp))
-                Spacer(Modifier.width(6.dp))
-            }
-            val details = listOfNotNull(
-                s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() } ?: item.episodeTitle,
-                item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
-            ).joinToString(" · ").ifEmpty { app?.label.orEmpty() }
-            Text(details, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
+        val titleAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(200), label = "title")
+        val details = listOfNotNull(
+            s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() } ?: item.episodeTitle?.takeIf { it != item.title },
+            item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
+        )
+        Text(
+            (listOf(item.title) + details).joinToString(" · "),
+            Modifier.padding(start = 4.dp, top = 12.dp).graphicsLayer { alpha = titleAlpha },
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
-private val WideCardWidth = 168.dp
+private val TopShelfShape = RoundedCornerShape(14.dp)
 
 /** Aviso curto no topo do ecrã. */
 @Composable

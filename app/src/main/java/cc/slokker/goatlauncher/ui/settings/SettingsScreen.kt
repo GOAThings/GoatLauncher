@@ -19,7 +19,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import java.io.File
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.luminance
+import androidx.tv.material3.Border
+import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.tv.material3.Surface
+import cc.slokker.goatlauncher.ui.home.FocusColors
+import cc.slokker.goatlauncher.ui.home.colorSpec
+import cc.slokker.goatlauncher.ui.home.parseColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -87,7 +98,7 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
 
-private enum class Page { Main, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Buttons, ButtonCapture, ButtonApp, Language, Parental, PinSetup, LockedApps }
+private enum class Page { Main, Appearance, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Buttons, ButtonCapture, ButtonApp, Language, Parental, PinSetup, LockedApps }
 
 /** Definições do launcher: um painel de vidro à direita, por cima do fundo. Voltar sobe um nível. */
 @Composable
@@ -127,21 +138,45 @@ fun SettingsScreen(
         }
     }
 
+    // Na Aparência, o ecrã divide-se: à esquerda a pré-visualização do ecrã inicial, à direita as definições.
+    val split = embedded && page == Page.Appearance && !locked
     Box(
         Modifier
             .fillMaxSize()
             .then(if (embedded) Modifier else Modifier.background(Color.Black.copy(alpha = 0.35f)).padding(TvSafePadding))
-            // Voltar sai sempre das Definições para o Início, de qualquer página.
+            // Voltar sobe um nível (ex.: da Aparência para as Definições); na página principal volta ao Início.
             .onBackKey {
-                onExit()
+                val up = parentPage(page, hasPin = device.pin != null)
+                if (up == null || locked) onExit() else page = up
                 true
             },
     ) {
+        if (split) {
+            AppearancePreview(
+                vm,
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(end = SplitPanelWidth + 28.dp)
+                    .fillMaxWidth(),
+            )
+        }
         Column(
             Modifier
-                .align(if (embedded) Alignment.TopCenter else Alignment.CenterEnd)
+                .align(
+                    when {
+                        split -> Alignment.TopEnd
+                        embedded -> Alignment.TopCenter
+                        else -> Alignment.CenterEnd
+                    },
+                )
                 .then(if (embedded) Modifier.padding(top = 16.dp) else Modifier)
-                .width(if (embedded) 640.dp else 520.dp)
+                .width(
+                    when {
+                        split -> SplitPanelWidth
+                        embedded -> 640.dp
+                        else -> 520.dp
+                    },
+                )
                 .fillMaxHeight()
                 .glass(GoatShapes.Panel, tint = Color(0xD9111522))
                 .padding(horizontal = 20.dp, vertical = 18.dp),
@@ -149,6 +184,7 @@ fun SettingsScreen(
             Text(
                 when (page) {
                     Page.Main -> s.settings
+                    Page.Appearance -> s.appearance
                     Page.Wallpaper -> s.wallpaper
                     Page.WallpaperFiles -> s.boxImages
                     Page.HiddenApps -> s.hiddenApps
@@ -168,6 +204,7 @@ fun SettingsScreen(
                 ProtectedPage(vm, first)
             } else when (page) {
                 Page.Main -> MainPage(vm, first, onPage = { page = it })
+                Page.Appearance -> AppearancePage(vm, first, onPage = { page = it })
                 Page.Wallpaper -> WallpaperPage(vm, first, onBoxImages = {
                     dir = null
                     page = Page.WallpaperFiles
@@ -224,6 +261,18 @@ fun SettingsScreen(
     }
 }
 
+/** A página de onde se chega a [page] (para onde Voltar leva); null na página principal. */
+private fun parentPage(page: Page, hasPin: Boolean): Page? = when (page) {
+    Page.Main -> null
+    Page.Appearance, Page.HiddenApps, Page.YouTube, Page.Autostart, Page.Buttons, Page.Parental -> Page.Main
+    Page.Language, Page.Wallpaper -> Page.Appearance
+    Page.WallpaperFiles -> Page.Wallpaper
+    Page.ButtonCapture, Page.ButtonApp -> Page.Buttons
+    Page.LockedApps -> Page.Parental
+    // O primeiro código liga o controlo parental a partir da página principal; mudá-lo, a partir do Controlo parental.
+    Page.PinSetup -> if (hasPin) Page.Parental else Page.Main
+}
+
 @Composable
 private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
     val s = LocalStrings.current
@@ -234,86 +283,14 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
     var confirmUnlink by remember { mutableStateOf(false) }
 
     LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
-        item { SectionLabel(s.appearance) }
-        item {
-            val code = Strings.normalize(account.language)
-            GlassRow(
-                title = s.language,
-                subtitle = Strings.LANGUAGES.firstOrNull { it.first == code }?.second ?: s.languageAuto,
-                onClick = { onPage(Page.Language) },
-                trailing = { Chevron() },
-            )
-        }
         item {
             GlassRow(
-                title = s.wallpaper,
-                subtitle = wallpaperName(account.wallpaper, s),
-                onClick = { onPage(Page.Wallpaper) },
+                title = s.appearance,
+                subtitle = layoutName(account, s),
+                onClick = { onPage(Page.Appearance) },
                 trailing = { Chevron() },
                 modifier = Modifier.focusRequester(first),
             )
-        }
-        item {
-            GlassRow(
-                title = s.nightAuto,
-                subtitle = s.nightAutoHint,
-                onClick = { vm.setNightAuto(!account.nightAuto) },
-                trailing = { Toggle(account.nightAuto) },
-            )
-        }
-        item {
-            GlassRow(title = s.clock24h, onClick = { vm.setClock24h(!account.clock24h) }, trailing = { Toggle(account.clock24h) })
-        }
-        item {
-            GlassRow(title = s.greeting, onClick = { vm.setShowGreeting(!account.showGreeting) }, trailing = { Toggle(account.showGreeting) })
-        }
-        item {
-            GlassRow(title = s.weather, onClick = { vm.setShowWeather(!account.showWeather) }, trailing = { Toggle(account.showWeather) })
-        }
-        item {
-            GlassRow(title = s.showAppName, onClick = { vm.setShowAppName(!account.showAppName) }, trailing = { Toggle(account.showAppName) })
-        }
-        item {
-            GlassRow(
-                title = s.continueWatching,
-                subtitle = s.continueWatchingHint,
-                onClick = { vm.setShowContinueWatching(!account.showContinueWatching) },
-                trailing = { Toggle(account.showContinueWatching) },
-            )
-        }
-        item {
-            // OK passa ao estilo seguinte: fila de cartões → destaque → Down Under → fila de cartões.
-            val (label, next) = when (account.continueStyle) {
-                AccountSettings.STYLE_SHELF -> s.styleShelf to AccountSettings.STYLE_DOWN_UNDER
-                AccountSettings.STYLE_DOWN_UNDER -> s.styleDownUnder to AccountSettings.STYLE_ROW
-                else -> s.styleRow to AccountSettings.STYLE_SHELF
-            }
-            GlassRow(
-                title = s.continueStyle,
-                subtitle = label,
-                onClick = { vm.setContinueStyle(next) },
-                trailing = { Chevron() },
-            )
-        }
-        item {
-            // OK passa ao tempo seguinte: desligado → 1 → 2 → 5 → 10 → 30 min → desligado.
-            val next = IDLE_MINUTES.getOrElse(IDLE_MINUTES.indexOf(account.idleMinutes) + 1) { IDLE_MINUTES.first() }
-            GlassRow(
-                title = s.idleMode,
-                subtitle = if (account.idleMinutes > 0) s.idleAfter(account.idleMinutes) else s.idleOff,
-                onClick = { vm.setIdleMinutes(next) },
-                trailing = { Chevron() },
-            )
-        }
-        if (account.idleMinutes > 0) {
-            item {
-                GlassRow(
-                    title = s.idleKeepAwake,
-                    subtitle = s.idleKeepAwakeHint,
-                    onClick = { vm.setIdleKeepAwake(!account.idleKeepAwake) },
-                    trailing = { Toggle(account.idleKeepAwake) },
-                )
-            }
         }
 
         item { SectionLabel(s.apps) }
@@ -488,6 +465,210 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
         }
     }
 }
+
+/** Aparência: a disposição do ecrã inicial (Android TV ou Apple TV), o estilo do "Continuar a ver" e o resto. */
+@Composable
+private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
+    val s = LocalStrings.current
+    val account by vm.account.collectAsStateWithLifecycle()
+    val android = account.layout != AccountSettings.LAYOUT_APPLE_TV
+
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        item { SectionLabel(s.layout) }
+        item {
+            GlassRow(
+                title = LAYOUT_ANDROID_NAME,
+                subtitle = s.layoutAndroidHint,
+                onClick = { vm.setLayout(AccountSettings.LAYOUT_ANDROID) },
+                trailing = { if (android) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                modifier = Modifier.focusRequester(first),
+            )
+        }
+        item {
+            GlassRow(
+                title = LAYOUT_APPLE_NAME,
+                subtitle = s.layoutAppleHint,
+                onClick = { vm.setLayout(AccountSettings.LAYOUT_APPLE_TV) },
+                trailing = { if (!android) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
+            )
+        }
+        // O estilo do "Continuar a ver" só se escolhe na disposição Android (a Apple TV tem sempre os cartões grandes).
+        if (android) {
+            item { SectionLabel(s.continueStyle) }
+            items(listOf(AccountSettings.STYLE_ROW to s.styleRow, AccountSettings.STYLE_SHELF to s.styleShelf), key = { it.first }) { (style, name) ->
+                GlassRow(
+                    title = name,
+                    onClick = { vm.setContinueStyle(style) },
+                    trailing = {
+                        if (account.continueStyle == style) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                    },
+                )
+            }
+        }
+
+        item { SectionLabel(s.focusedCard) }
+        item {
+            // OK passa ao efeito seguinte: contorno → brilho → só sombra → contorno.
+            val (label, next) = when (account.focusEffect) {
+                AccountSettings.FOCUS_GLOW -> s.effectGlow to AccountSettings.FOCUS_SHADOW
+                AccountSettings.FOCUS_SHADOW -> s.effectShadow to AccountSettings.FOCUS_BORDER
+                else -> s.effectBorder to AccountSettings.FOCUS_GLOW
+            }
+            GlassRow(title = s.focusEffect, subtitle = label, onClick = { vm.setFocusEffect(next) }, trailing = { Chevron() })
+        }
+        // Só com sombra não há contorno nem brilho para animar ou pintar.
+        if (account.focusEffect != AccountSettings.FOCUS_SHADOW) {
+            item {
+                // OK passa à animação seguinte: nenhuma → pulsar → respirar → luz a rodar → nenhuma.
+                val (label, next) = when (account.focusAnimation) {
+                    AccountSettings.ANIM_PULSE -> s.animPulse to AccountSettings.ANIM_BREATH
+                    AccountSettings.ANIM_BREATH -> s.animBreath to AccountSettings.ANIM_SHINE
+                    AccountSettings.ANIM_SHINE -> s.animShine to AccountSettings.ANIM_NONE
+                    else -> s.animNone to AccountSettings.ANIM_PULSE
+                }
+                GlassRow(title = s.focusAnimation, subtitle = label, onClick = { vm.setFocusAnimation(next) }, trailing = { Chevron() })
+            }
+            item { FocusColorRow(account.focusColor, onPick = vm::setFocusColor) }
+        }
+
+        item { SectionLabel(s.general) }
+        item {
+            val code = Strings.normalize(account.language)
+            GlassRow(
+                title = s.language,
+                subtitle = Strings.LANGUAGES.firstOrNull { it.first == code }?.second ?: s.languageAuto,
+                onClick = { onPage(Page.Language) },
+                trailing = { Chevron() },
+            )
+        }
+        item {
+            GlassRow(
+                title = s.wallpaper,
+                subtitle = wallpaperName(account.wallpaper, s),
+                onClick = { onPage(Page.Wallpaper) },
+                trailing = { Chevron() },
+            )
+        }
+        item {
+            GlassRow(
+                title = s.nightAuto,
+                subtitle = s.nightAutoHint,
+                onClick = { vm.setNightAuto(!account.nightAuto) },
+                trailing = { Toggle(account.nightAuto) },
+            )
+        }
+        item {
+            GlassRow(title = s.clock24h, onClick = { vm.setClock24h(!account.clock24h) }, trailing = { Toggle(account.clock24h) })
+        }
+        item {
+            GlassRow(title = s.greeting, onClick = { vm.setShowGreeting(!account.showGreeting) }, trailing = { Toggle(account.showGreeting) })
+        }
+        item {
+            GlassRow(title = s.weather, onClick = { vm.setShowWeather(!account.showWeather) }, trailing = { Toggle(account.showWeather) })
+        }
+        item {
+            GlassRow(title = s.showAppName, onClick = { vm.setShowAppName(!account.showAppName) }, trailing = { Toggle(account.showAppName) })
+        }
+        item {
+            GlassRow(
+                title = s.continueWatching,
+                subtitle = s.continueWatchingHint,
+                onClick = { vm.setShowContinueWatching(!account.showContinueWatching) },
+                trailing = { Toggle(account.showContinueWatching) },
+            )
+        }
+        item {
+            // OK passa ao tempo seguinte: desligado → 1 → 2 → 5 → 10 → 30 min → desligado.
+            val next = IDLE_MINUTES.getOrElse(IDLE_MINUTES.indexOf(account.idleMinutes) + 1) { IDLE_MINUTES.first() }
+            GlassRow(
+                title = s.idleMode,
+                subtitle = if (account.idleMinutes > 0) s.idleAfter(account.idleMinutes) else s.idleOff,
+                onClick = { vm.setIdleMinutes(next) },
+                trailing = { Chevron() },
+            )
+        }
+        if (account.idleMinutes > 0) {
+            item {
+                GlassRow(
+                    title = s.idleKeepAwake,
+                    subtitle = s.idleKeepAwakeHint,
+                    onClick = { vm.setIdleKeepAwake(!account.idleKeepAwake) },
+                    trailing = { Toggle(account.idleKeepAwake) },
+                )
+            }
+        }
+    }
+}
+
+/** A cor do efeito de foco: a automática (círculo com as cores todas) e as da paleta; ← → escolhe. */
+@Composable
+private fun FocusColorRow(current: String, onPick: (String) -> Unit) {
+    val s = LocalStrings.current
+    val selected = parseColor(current)
+    Column(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
+        Text(s.focusColor, style = MaterialTheme.typography.titleSmall)
+        Text(
+            if (selected == null) s.colorAuto else current.uppercase(),
+            style = MaterialTheme.typography.bodySmall,
+            color = GoatColors.TextDim,
+        )
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FocusColors.forEach { color ->
+                Surface(
+                    onClick = { onPick(colorSpec(color)) },
+                    modifier = Modifier.size(26.dp),
+                    shape = ClickableSurfaceDefaults.shape(CircleShape),
+                    colors = ClickableSurfaceDefaults.colors(
+                        containerColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        pressedContainerColor = Color.Transparent,
+                    ),
+                    scale = ClickableSurfaceDefaults.scale(focusedScale = 1.3f),
+                    border = ClickableSurfaceDefaults.border(
+                        focusedBorder = Border(BorderStroke(2.dp, Color.White), inset = 0.dp, shape = CircleShape),
+                    ),
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                            .background(if (color != null) SolidColor(color) else AutoSwatch),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (color == selected) {
+                            Icon(
+                                GoatIcons.Check,
+                                contentDescription = null,
+                                tint = if (color != null && color.luminance() > 0.5f) Color.Black else Color.White,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** A cor automática (a de cada app): um círculo com as cores todas. */
+private val AutoSwatch = Brush.sweepGradient(
+    listOf(Color(0xFFF87171), Color(0xFFFACC15), Color(0xFF4ADE80), Color(0xFF38BDF8), Color(0xFFC084FC), Color(0xFFF87171)),
+)
+
+/** Largura das definições quando o ecrã se divide com a pré-visualização. */
+private val SplitPanelWidth = 400.dp
+
+private const val LAYOUT_ANDROID_NAME = "Android TV"
+private const val LAYOUT_APPLE_NAME = "Apple TV"
+
+/** "Apple TV" ou "Android TV · Destaque". */
+private fun layoutName(account: AccountSettings, s: Strings): String =
+    if (account.layout == AccountSettings.LAYOUT_APPLE_TV) {
+        LAYOUT_APPLE_NAME
+    } else {
+        "$LAYOUT_ANDROID_NAME · ${if (account.continueStyle == AccountSettings.STYLE_SHELF) s.styleShelf else s.styleRow}"
+    }
 
 @Composable
 private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxImages: () -> Unit) {
