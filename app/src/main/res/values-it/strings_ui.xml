@@ -25,7 +25,7 @@
     <string name="ambient_photos">Sfondo con ora, meteo e canale</string>
     <string name="ambient_bounce">Logo DVD che rimbalza sul nero</string>
     <string name="screensaver">Salvaschermo di Android</string>
-    <string name="screensaver_hint">Scegli GoatLauncher per vederlo in qualsiasi app</string>
+    <string name="screensaver_hint">Impostazioni Android → Salvaschermo → GoatLauncher</string>
     <string name="use_folder">Usa questa cartella (%1$d immagini)</string>
     <string name="use_folder_hint">Un\'immagine alla volta, cambia ogni 30 minuti</string>
     <string name="wallpaper_folder">Cartella: %1$s</string>

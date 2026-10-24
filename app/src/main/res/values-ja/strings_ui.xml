@@ -25,7 +25,7 @@
     <string name="ambient_photos">時刻・天気・チャンネル付きの壁紙</string>
     <string name="ambient_bounce">黒地に跳ね回る DVD ロゴ</string>
     <string name="screensaver">Android のスクリーンセーバー</string>
-    <string name="screensaver_hint">GoatLauncher を選ぶとどのアプリでも表示されます</string>
+    <string name="screensaver_hint">Android の設定 → スクリーンセーバー → GoatLauncher</string>
     <string name="use_folder">このフォルダを使う（%1$d 枚）</string>
     <string name="use_folder_hint">1 枚ずつ、30 分ごとに切り替わります</string>
     <string name="wallpaper_folder">フォルダ: %1$s</string>

@@ -25,7 +25,7 @@
     <string name="ambient_photos">Saat, hava durumu ve kanal ile duvar kâğıdı</string>
     <string name="ambient_bounce">Siyah üzerinde zıplayan DVD logosu</string>
     <string name="screensaver">Android ekran koruyucusu</string>
-    <string name="screensaver_hint">Her uygulamada görmek için GoatLauncher\'ı seçin</string>
+    <string name="screensaver_hint">Android ayarları → Ekran koruyucu → GoatLauncher</string>
     <string name="use_folder">Bu klasörü kullan (%1$d görsel)</string>
     <string name="use_folder_hint">Her seferinde bir görsel, 30 dakikada bir değişir</string>
     <string name="wallpaper_folder">Klasör: %1$s</string>

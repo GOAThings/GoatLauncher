@@ -25,7 +25,7 @@
     <string name="ambient_photos">समय, मौसम और चैनल के साथ वॉलपेपर</string>
     <string name="ambient_bounce">काले पर उछलता DVD लोगो</string>
     <string name="screensaver">Android स्क्रीनसेवर</string>
-    <string name="screensaver_hint">इसे किसी भी ऐप में देखने के लिए GoatLauncher चुनें</string>
+    <string name="screensaver_hint">Android सेटिंग → स्क्रीनसेवर → GoatLauncher</string>
     <string name="use_folder">यह फ़ोल्डर इस्तेमाल करें (%1$d चित्र)</string>
     <string name="use_folder_hint">एक बार में एक चित्र, हर 30 मिनट में बदलता है</string>
     <string name="wallpaper_folder">फ़ोल्डर: %1$s</string>

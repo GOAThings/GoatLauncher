@@ -77,6 +77,8 @@ import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import kotlin.math.abs
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Animatable
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.layout.offset
@@ -211,6 +213,14 @@ private fun BouncingDvd(modifier: Modifier) {
     var block by remember { mutableStateOf(IntSize.Zero) }
     var pos by remember { mutableStateOf(Offset.Zero) }
     var colorIndex by remember { mutableIntStateOf(0) }
+    // Easter egg: quando acerta mesmo num canto (as duas bordas quase ao mesmo tempo), aparece uma cabra lá.
+    var goatCorner by remember { mutableStateOf<Alignment?>(null) }
+    LaunchedEffect(goatCorner) {
+        if (goatCorner != null) {
+            delay(GOAT_MS)
+            goatCorner = null
+        }
+    }
     LaunchedEffect(area, block) {
         if (area == IntSize.Zero || block == IntSize.Zero) return@LaunchedEffect
         val maxX = (area.width - block.width).coerceAtLeast(0).toFloat()
@@ -219,6 +229,7 @@ private fun BouncingDvd(modifier: Modifier) {
         var p = Offset(pos.x.coerceIn(0f, maxX), pos.y.coerceIn(0f, maxY))
         var vx = speed
         var vy = speed * 0.75f
+        val cornerPx = with(density) { CORNER_TOLERANCE.toPx() }
         var last = withFrameNanos { it }
         while (true) {
             val t = withFrameNanos { it }
@@ -226,10 +237,19 @@ private fun BouncingDvd(modifier: Modifier) {
             last = t
             var x = p.x + vx * dt
             var y = p.y + vy * dt
-            var hit = false
-            if (x <= 0f || x >= maxX) { vx = -vx; x = x.coerceIn(0f, maxX); hit = true }
-            if (y <= 0f || y >= maxY) { vy = -vy; y = y.coerceIn(0f, maxY); hit = true }
-            if (hit) colorIndex = (colorIndex + 1) % BOUNCE_COLORS.size
+            val hitX = x <= 0f || x >= maxX
+            val hitY = y <= 0f || y >= maxY
+            if (hitX) { vx = -vx; x = x.coerceIn(0f, maxX) }
+            if (hitY) { vy = -vy; y = y.coerceIn(0f, maxY) }
+            if (hitX || hitY) colorIndex = (colorIndex + 1) % BOUNCE_COLORS.size
+            if (isCornerHit(hitX, hitY, x, y, maxX, maxY, cornerPx)) {
+                goatCorner = when {
+                    x < maxX / 2 && y < maxY / 2 -> Alignment.TopStart
+                    x < maxX / 2 -> Alignment.BottomStart
+                    y < maxY / 2 -> Alignment.TopEnd
+                    else -> Alignment.BottomEnd
+                }
+            }
             p = Offset(x, y)
             pos = p
         }
@@ -242,6 +262,22 @@ private fun BouncingDvd(modifier: Modifier) {
         ) {
             DvdLogo(BOUNCE_COLORS[colorIndex])
         }
+        goatCorner?.let { corner ->
+            // Entra com um salto (cresce além do tamanho e volta) e sai sozinha passado GOAT_MS.
+            val pop = remember(corner) { Animatable(0f) }
+            LaunchedEffect(corner) { pop.animateTo(1f, spring(dampingRatio = 0.35f, stiffness = 300f)) }
+            Text(
+                "🐐",
+                fontSize = 120.sp,
+                modifier = Modifier
+                    .align(corner)
+                    .padding(36.dp)
+                    .graphicsLayer {
+                        scaleX = pop.value
+                        scaleY = pop.value
+                    },
+            )
+        }
     }
 }
 
@@ -253,8 +289,10 @@ private fun BouncingDvd(modifier: Modifier) {
 private fun DvdLogo(color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            "DVD",
+            // O espaço fino no fim dá lugar à ponta do último D inclinado (o texto é cortado à largura que mede).
+            "DVD\u2009",
             color = color,
+            softWrap = false,
             style = MaterialTheme.typography.displayLarge.copy(
                 fontSize = 84.sp,
                 fontWeight = FontWeight.Black,
@@ -286,6 +324,9 @@ fun nowPlaying(watchNext: Map<String, List<WatchNextItem>>): String? =
 /** De quantos em quantos minutos o bloco do modo ambiente muda de lado. */
 private const val AMBIENT_MOVE_MINUTES = 10L
 private val BOUNCE_SPEED = 70.dp
+/** A que distância da outra borda (no momento da batida) ainda conta como acertar no canto. */
+private val CORNER_TOLERANCE = 2.dp
+private const val GOAT_MS = 3_000L
 private val BOUNCE_COLORS = listOf(
     Color.White,
     Color(0xFF7DD3FC),

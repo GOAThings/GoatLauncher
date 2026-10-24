@@ -25,7 +25,7 @@
     <string name="ambient_photos">Hintergrund mit Uhrzeit, Wetter und Sender</string>
     <string name="ambient_bounce">Hüpfendes DVD-Logo auf Schwarz</string>
     <string name="screensaver">Android-Bildschirmschoner</string>
-    <string name="screensaver_hint">Wähle GoatLauncher, um das in jeder App zu sehen</string>
+    <string name="screensaver_hint">Android-Einstellungen → Bildschirmschoner → GoatLauncher</string>
     <string name="use_folder">Diesen Ordner verwenden (%1$d Bilder)</string>
     <string name="use_folder_hint">Ein Bild nach dem anderen, Wechsel alle 30 Minuten</string>
     <string name="wallpaper_folder">Ordner: %1$s</string>

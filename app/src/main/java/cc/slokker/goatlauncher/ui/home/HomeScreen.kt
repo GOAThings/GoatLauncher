@@ -557,7 +557,6 @@ fun HomeScreen(vm: LauncherViewModel) {
                         onNetwork = { SystemIntents.openNetworkSettings(context) },
                         night = vm.night.collectAsStateWithLifecycle().value,
                         onNight = vm::toggleNight,
-                        onAndroidSettings = { SystemIntents.start(context, SystemIntents.androidSettings()) },
                         onFocusChanged = { tabBarFocused = it },
                     )
 
@@ -880,7 +879,6 @@ private fun TopBar(
     onNetwork: () -> Unit,
     night: Boolean,
     onNight: () -> Unit,
-    onAndroidSettings: () -> Unit,
     onFocusChanged: (Boolean) -> Unit,
 ) {
     val s = LocalStrings.current
@@ -940,10 +938,6 @@ private fun TopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // As definições do Android (som, imagem, Bluetooth…), sem passar pelas do launcher.
-            RoundButton(onClick = onAndroidSettings) {
-                Icon(GoatIcons.Settings, contentDescription = s.androidSettings, modifier = Modifier.size(18.dp))
-            }
             // Dia/noite: OK troca entre fundo claro e fundo escurecido (e fotos do tom certo).
             RoundButton(onClick = onNight) {
                 Icon(if (night) GoatIcons.Moon else GoatIcons.Sun, contentDescription = s.dayNight, modifier = Modifier.size(18.dp))

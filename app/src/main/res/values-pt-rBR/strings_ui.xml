@@ -25,7 +25,7 @@
     <string name="ambient_photos">Fundo com o horário, o tempo e o canal</string>
     <string name="ambient_bounce">Logo do DVD quicando no preto</string>
     <string name="screensaver">Protetor de tela do Android</string>
-    <string name="screensaver_hint">Escolha o GoatLauncher para ver isso em qualquer app</string>
+    <string name="screensaver_hint">Configurações do Android → Protetor de tela → GoatLauncher</string>
     <string name="use_folder">Usar esta pasta (%1$d imagens)</string>
     <string name="use_folder_hint">Uma imagem por vez, trocando a cada 30 minutos</string>
     <string name="wallpaper_folder">Pasta: %1$s</string>

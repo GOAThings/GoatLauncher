@@ -25,7 +25,7 @@
     <string name="ambient_photos">Обои со временем, погодой и каналом</string>
     <string name="ambient_bounce">Прыгающий логотип DVD на чёрном</string>
     <string name="screensaver">Заставка Android</string>
-    <string name="screensaver_hint">Выберите GoatLauncher, чтобы видеть это в любом приложении</string>
+    <string name="screensaver_hint">Настройки Android → Заставка → GoatLauncher</string>
     <string name="use_folder">Использовать эту папку (%1$d изображений)</string>
     <string name="use_folder_hint">По одному изображению, смена каждые 30 минут</string>
     <string name="wallpaper_folder">Папка: %1$s</string>

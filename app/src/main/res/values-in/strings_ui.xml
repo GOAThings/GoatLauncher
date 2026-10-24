@@ -25,7 +25,7 @@
     <string name="ambient_photos">Wallpaper dengan jam, cuaca, dan saluran</string>
     <string name="ambient_bounce">Logo DVD memantul di atas hitam</string>
     <string name="screensaver">Screensaver Android</string>
-    <string name="screensaver_hint">Pilih GoatLauncher untuk melihat ini di aplikasi apa pun</string>
+    <string name="screensaver_hint">Setelan Android → Screensaver → GoatLauncher</string>
     <string name="use_folder">Gunakan folder ini (%1$d gambar)</string>
     <string name="use_folder_hint">Satu gambar setiap kali, berganti setiap 30 menit</string>
     <string name="wallpaper_folder">Folder: %1$s</string>
