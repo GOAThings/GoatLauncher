@@ -21,6 +21,7 @@ import cc.slokker.goatlauncher.LauncherApp
 import cc.slokker.goatlauncher.ui.activation.ActivationScreen
 import cc.slokker.goatlauncher.ui.home.HomeScreen
 import cc.slokker.goatlauncher.ui.home.ToastPill
+import cc.slokker.goatlauncher.ui.common.semanticsOnlyForScreenReaders
 import cc.slokker.goatlauncher.ui.home.WallpaperView
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import kotlinx.coroutines.delay
@@ -40,7 +41,7 @@ fun LauncherRoot(vm: LauncherViewModel) {
     val configuration = LocalConfiguration.current
     val strings = remember(configuration) { Strings(context) }
     CompositionLocalProvider(LocalStrings provides strings) {
-        Box(Modifier.fillMaxSize().background(GoatColors.Background)) {
+        Box(Modifier.fillMaxSize().semanticsOnlyForScreenReaders().background(GoatColors.Background)) {
             // Até ler a cópia local das definições (milissegundos), só o fundo escuro: evita piscar o fundo por defeito.
             if (!ready) return@Box
             WallpaperView(account.wallpaper, reddit?.url ?: folderImage)
