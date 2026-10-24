@@ -21,7 +21,7 @@
     <string name="no_search">Esta TV no tiene búsqueda del sistema.</string>
     <string name="nav_sounds">Sonidos de navegación</string>
     <string name="nav_sounds_hint">Un tic suave al moverte y un clic en OK</string>
-    <string name="ambient_style">Modo ambiente y salvapantallas</string>
+    <string name="ambient_style">Estilo del modo ambiente</string>
     <string name="ambient_photos">Fondo con la hora, el tiempo y el canal</string>
     <string name="ambient_bounce">Reloj rebotando sobre negro</string>
     <string name="screensaver">Salvapantallas de Android</string>

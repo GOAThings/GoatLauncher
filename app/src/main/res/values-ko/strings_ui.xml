@@ -21,7 +21,7 @@
     <string name="no_search">이 TV에는 시스템 검색이 없어요.</string>
     <string name="nav_sounds">탐색 소리</string>
     <string name="nav_sounds_hint">이동할 때 부드러운 틱 소리, 확인 버튼에서 클릭 소리</string>
-    <string name="ambient_style">앰비언트 모드와 화면 보호기</string>
+    <string name="ambient_style">앰비언트 모드 스타일</string>
     <string name="ambient_photos">시간, 날씨, 채널이 있는 배경화면</string>
     <string name="ambient_bounce">검은 화면에서 튀는 시계</string>
     <string name="screensaver">Android 화면 보호기</string>

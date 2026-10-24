@@ -21,7 +21,7 @@
     <string name="no_search">На этом ТВ нет системного поиска.</string>
     <string name="nav_sounds">Звуки навигации</string>
     <string name="nav_sounds_hint">Тихий щелчок при перемещении и клик на OK</string>
-    <string name="ambient_style">Фоновый режим и заставка</string>
+    <string name="ambient_style">Стиль фонового режима</string>
     <string name="ambient_photos">Обои со временем, погодой и каналом</string>
     <string name="ambient_bounce">Прыгающие часы на чёрном</string>
     <string name="screensaver">Заставка Android</string>

@@ -21,7 +21,7 @@
     <string name="no_search">इस TV में सिस्टम सर्च नहीं है।</string>
     <string name="nav_sounds">नेविगेशन ध्वनियाँ</string>
     <string name="nav_sounds_hint">चलते समय हल्की टिक और OK पर क्लिक</string>
-    <string name="ambient_style">एम्बिएंट मोड और स्क्रीनसेवर</string>
+    <string name="ambient_style">एम्बिएंट मोड की शैली</string>
     <string name="ambient_photos">समय, मौसम और चैनल के साथ वॉलपेपर</string>
     <string name="ambient_bounce">काले पर उछलती घड़ी</string>
     <string name="screensaver">Android स्क्रीनसेवर</string>

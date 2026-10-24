@@ -21,7 +21,7 @@
     <string name="no_search">Bu TV\'de sistem araması yok.</string>
     <string name="nav_sounds">Gezinme sesleri</string>
     <string name="nav_sounds_hint">Hareket ederken yumuşak bir tık ve Tamam\'da bir klik</string>
-    <string name="ambient_style">Ortam modu ve ekran koruyucu</string>
+    <string name="ambient_style">Ortam modu stili</string>
     <string name="ambient_photos">Saat, hava durumu ve kanal ile duvar kâğıdı</string>
     <string name="ambient_bounce">Siyah üzerinde zıplayan saat</string>
     <string name="screensaver">Android ekran koruyucusu</string>
