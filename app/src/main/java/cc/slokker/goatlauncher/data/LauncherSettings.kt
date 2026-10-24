@@ -91,6 +91,8 @@ data class AccountSettings(
     val idleMinutes: Int = 0,
     /** Com o modo ambiente, o ecrã inicial não deixa a TV adormecer nem começar a proteção de ecrã do sistema. */
     val idleKeepAwake: Boolean = false,
+    /** O que mostram o modo ambiente e o protetor de ecrã: AMBIENT_PHOTOS (o fundo e as horas) ou AMBIENT_BOUNCE. */
+    val ambientStyle: String = AMBIENT_PHOTOS,
     /** O que a app do YouTube mostra no "Continuar a ver" (com a conta ligada): YT_BOTH, YT_CONTINUE ou YT_RECOMMENDED. */
     val youtubeFeed: String = YT_BOTH,
     /** Língua da app: "auto" (a do sistema) ou um código BCP 47 das 15 do site (ver Strings.LANGUAGES). */
@@ -124,6 +126,7 @@ data class AccountSettings(
         addProperty("reddit_min_width", redditMinWidth)
         addProperty("idle_minutes", idleMinutes)
         addProperty("idle_keep_awake", idleKeepAwake)
+        addProperty("ambient_style", ambientStyle)
         addProperty("youtube_feed", youtubeFeed)
         addProperty("language", language)
         addProperty("night_mode", nightMode)
@@ -142,6 +145,9 @@ data class AccountSettings(
         const val LAYOUT_APPLE_TV = "appletv"
 
         /** Modo noite automático: das 20h às 7h. */
+        const val AMBIENT_PHOTOS = "photos"
+        /** Ecrã preto com o relógio a ressaltar nas bordas. */
+        const val AMBIENT_BOUNCE = "bounce"
         const val NIGHT_FROM = 20
         const val NIGHT_TO = 7
 
@@ -190,6 +196,7 @@ data class AccountSettings(
                 redditMinWidth = json.int("reddit_min_width")?.coerceAtLeast(0) ?: 1920,
                 idleMinutes = json.int("idle_minutes")?.coerceAtLeast(0) ?: 0,
                 idleKeepAwake = json.bool("idle_keep_awake") ?: false,
+                ambientStyle = json.str("ambient_style")?.takeIf { it == AMBIENT_BOUNCE } ?: AMBIENT_PHOTOS,
                 youtubeFeed = json.str("youtube_feed")?.takeIf { it == YT_CONTINUE || it == YT_RECOMMENDED } ?: YT_BOTH,
                 language = json.str("language") ?: "auto",
                 nightMode = json.bool("night_mode") ?: false,

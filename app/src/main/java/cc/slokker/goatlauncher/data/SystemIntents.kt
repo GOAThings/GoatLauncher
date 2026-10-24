@@ -26,6 +26,11 @@ object SystemIntents {
 
     fun androidSettings(): Intent = Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
+    /** Onde se escolhe o protetor de ecrã; se a TV não tiver esse ecrã, as definições do Android. */
+    fun openScreensaverSettings(context: Context): Boolean =
+        listOf(Settings.ACTION_DREAM_SETTINGS, Settings.ACTION_DISPLAY_SETTINGS, Settings.ACTION_SETTINGS)
+            .any { start(context, Intent(it).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+
     fun appInfo(pkg: String): Intent =
         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", pkg, null))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

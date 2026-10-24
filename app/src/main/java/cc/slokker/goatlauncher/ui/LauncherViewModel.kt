@@ -240,11 +240,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
      * onde a box está, das [AccountSettings.NIGHT_FROM] às [AccountSettings.NIGHT_TO]).
      */
     val night: StateFlow<Boolean> = combine(settings.account, minuteOfDay, sunTimes) { a, m, sun ->
-        when {
-            !a.nightAuto -> a.nightMode
-            sun != null -> SunTimes.isNight(m, sun)
-            else -> m / 60 >= AccountSettings.NIGHT_FROM || m / 60 < AccountSettings.NIGHT_TO
-        }
+        SunTimes.isNight(a, m, sun)
     }.distinctUntilChanged().stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     init {
@@ -812,6 +808,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setIdleMinutes(minutes: Int) = settings.updateAccount { it.copy(idleMinutes = minutes) }
 
     fun setIdleKeepAwake(on: Boolean) = settings.updateAccount { it.copy(idleKeepAwake = on) }
+
+    fun setAmbientStyle(style: String) = settings.updateAccount { it.copy(ambientStyle = style) }
 
     fun setRedditMinWidth(px: Int) = settings.updateAccount { it.copy(redditMinWidth = px) }
 

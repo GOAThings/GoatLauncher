@@ -19,6 +19,11 @@
     <string name="no_apps">Yüklü TV uygulaması yok.</string>
     <string name="cant_open">Açılamadı.</string>
     <string name="no_search">Bu TV\'de sistem araması yok.</string>
+    <string name="ambient_style">Ortam modu ve ekran koruyucu</string>
+    <string name="ambient_photos">Saat, hava durumu ve kanal ile duvar kâğıdı</string>
+    <string name="ambient_bounce">Siyah üzerinde zıplayan saat</string>
+    <string name="screensaver">Android ekran koruyucusu</string>
+    <string name="screensaver_hint">Her uygulamada görmek için GoatLauncher\'ı seçin</string>
     <string name="use_folder">Bu klasörü kullan (%1$d görsel)</string>
     <string name="use_folder_hint">Her seferinde bir görsel, 30 dakikada bir değişir</string>
     <string name="wallpaper_folder">Klasör: %1$s</string>

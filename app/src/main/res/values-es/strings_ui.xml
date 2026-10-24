@@ -19,6 +19,11 @@
     <string name="no_apps">No hay apps de TV instaladas.</string>
     <string name="cant_open">No se pudo abrir.</string>
     <string name="no_search">Esta TV no tiene búsqueda del sistema.</string>
+    <string name="ambient_style">Modo ambiente y salvapantallas</string>
+    <string name="ambient_photos">Fondo con la hora, el tiempo y el canal</string>
+    <string name="ambient_bounce">Reloj rebotando sobre negro</string>
+    <string name="screensaver">Salvapantallas de Android</string>
+    <string name="screensaver_hint">Elige GoatLauncher para verlo en cualquier app</string>
     <string name="use_folder">Usar esta carpeta (%1$d imágenes)</string>
     <string name="use_folder_hint">Una imagen cada vez, cambia cada 30 minutos</string>
     <string name="wallpaper_folder">Carpeta: %1$s</string>

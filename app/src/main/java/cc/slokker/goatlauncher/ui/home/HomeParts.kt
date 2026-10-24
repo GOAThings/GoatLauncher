@@ -77,6 +77,17 @@ import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import kotlin.math.abs
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import cc.slokker.goatlauncher.data.AccountSettings
+import kotlin.math.roundToInt
 
 private val BannerShape = GoatShapes.Control
 val CardHeight = 88.dp
@@ -110,33 +121,146 @@ fun TopClock(clock24h: Boolean, modifier: Modifier = Modifier) {
 }
 
 /**
- * Modo ambiente: as horas em grande, a data e (com o fundo do Reddit) o título da foto, em baixo à esquerda,
- * por cima de um escurecer suave só nessa zona.
+ * O modo ambiente (e o protetor de ecrã): [AccountSettings.AMBIENT_PHOTOS] mostra o fundo com as horas, a data,
+ * o tempo, o canal que estava a dar ([nowPlaying]) e o título da foto ([caption]); [AccountSettings.AMBIENT_BOUNCE]
+ * é um ecrã preto com o relógio a andar e a bater nas bordas, como o DVD de antigamente.
  */
 @Composable
-fun AmbientClock(clock24h: Boolean, caption: String?, modifier: Modifier = Modifier) {
-    val s = LocalStrings.current
+fun AmbientScene(
+    style: String,
+    clock24h: Boolean,
+    weather: WeatherNow?,
+    nowPlaying: String?,
+    caption: String?,
+    modifier: Modifier = Modifier,
+) {
+    if (style == AccountSettings.AMBIENT_BOUNCE) {
+        BouncingClock(clock24h, weather, modifier)
+        return
+    }
     val now = rememberMinute()
+    // Para não marcar o ecrã: de 10 em 10 minutos o bloco muda de lado (e sobe ou desce um pouco).
+    val slot = (now / 60_000 / AMBIENT_MOVE_MINUTES % 4).toInt()
+    val alignment = if (slot % 2 == 0) Alignment.BottomStart else Alignment.BottomEnd
+    val lift = if (slot < 2) 0.dp else 28.dp
     Box(
         modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(0.55f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.55f)))
-            .padding(TvSafePadding),
-        contentAlignment = Alignment.BottomStart,
+            .background(Brush.verticalGradient(0.5f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.6f)))
+            .padding(TvSafePadding)
+            .padding(bottom = lift),
+        contentAlignment = alignment,
     ) {
-        Column {
-            Text(
-                SimpleDateFormat(timePattern(s, clock24h, amPm = false), s.locale).format(now),
-                style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Light),
-            )
-            Text(formatDate(now, s), style = MaterialTheme.typography.titleMedium, color = GoatColors.TextDim)
-            if (caption != null) {
-                Spacer(Modifier.height(6.dp))
-                Text(caption, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        val end = alignment == Alignment.BottomEnd
+        AmbientBlock(clock24h, weather, nowPlaying, caption, if (end) Alignment.End else Alignment.Start, now)
+    }
+}
+
+/** As horas em grande e, por baixo, a data com o tempo, o canal a dar e o título da foto. */
+@Composable
+private fun AmbientBlock(
+    clock24h: Boolean,
+    weather: WeatherNow?,
+    nowPlaying: String?,
+    caption: String?,
+    align: Alignment.Horizontal,
+    now: Long,
+    color: Color = Color.White,
+) {
+    val s = LocalStrings.current
+    Column(horizontalAlignment = align) {
+        Text(
+            SimpleDateFormat(timePattern(s, clock24h, amPm = false), s.locale).format(now),
+            style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Light),
+            color = color,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(formatDate(now, s), style = MaterialTheme.typography.titleMedium, color = color.copy(alpha = 0.75f))
+            if (weather != null) {
+                Text("  ·  ", style = MaterialTheme.typography.titleMedium, color = color.copy(alpha = 0.75f))
+                Icon(weatherIcon(weather), contentDescription = null, tint = color.copy(alpha = 0.75f), modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("${weather.temperature}°", style = MaterialTheme.typography.titleMedium, color = color.copy(alpha = 0.75f))
             }
+        }
+        if (nowPlaying != null) {
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(GoatIcons.Play, contentDescription = null, tint = color.copy(alpha = 0.6f), modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(nowPlaying, style = MaterialTheme.typography.bodyMedium, color = color.copy(alpha = 0.6f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        if (caption != null) {
+            Spacer(Modifier.height(6.dp))
+            Text(caption, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
+
+/**
+ * O relógio a andar na diagonal e a ressaltar nas bordas; muda de cor a cada batida. Tudo o resto é preto
+ * (um bom protetor de ecrã para TVs OLED).
+ */
+@Composable
+private fun BouncingClock(clock24h: Boolean, weather: WeatherNow?, modifier: Modifier) {
+    val now = rememberMinute()
+    val density = LocalDensity.current
+    var area by remember { mutableStateOf(IntSize.Zero) }
+    var block by remember { mutableStateOf(IntSize.Zero) }
+    var pos by remember { mutableStateOf(Offset.Zero) }
+    var colorIndex by remember { mutableIntStateOf(0) }
+    LaunchedEffect(area, block) {
+        if (area == IntSize.Zero || block == IntSize.Zero) return@LaunchedEffect
+        val maxX = (area.width - block.width).coerceAtLeast(0).toFloat()
+        val maxY = (area.height - block.height).coerceAtLeast(0).toFloat()
+        val speed = with(density) { BOUNCE_SPEED.toPx() }
+        var p = Offset(pos.x.coerceIn(0f, maxX), pos.y.coerceIn(0f, maxY))
+        var vx = speed
+        var vy = speed * 0.75f
+        var last = withFrameNanos { it }
+        while (true) {
+            val t = withFrameNanos { it }
+            val dt = ((t - last) / 1e9f).coerceAtMost(0.1f)
+            last = t
+            var x = p.x + vx * dt
+            var y = p.y + vy * dt
+            var hit = false
+            if (x <= 0f || x >= maxX) { vx = -vx; x = x.coerceIn(0f, maxX); hit = true }
+            if (y <= 0f || y >= maxY) { vy = -vy; y = y.coerceIn(0f, maxY); hit = true }
+            if (hit) colorIndex = (colorIndex + 1) % BOUNCE_COLORS.size
+            p = Offset(x, y)
+            pos = p
+        }
+    }
+    Box(modifier.fillMaxSize().background(Color.Black).onSizeChanged { area = it }) {
+        Box(
+            Modifier
+                .offset { IntOffset(pos.x.roundToInt(), pos.y.roundToInt()) }
+                .onSizeChanged { block = it },
+        ) {
+            AmbientBlock(clock24h, weather, nowPlaying = null, caption = null, Alignment.Start, now, BOUNCE_COLORS[colorIndex])
+        }
+    }
+}
+
+/** O canal em direto visto há menos tempo no "Continuar a ver" (ex.: o da GoatTV), como "TVI · Jornal da Noite". */
+fun nowPlaying(watchNext: Map<String, List<WatchNextItem>>): String? =
+    watchNext.values.flatten().filter { it.isChannel }.maxByOrNull { it.lastEngagement }
+        ?.let { listOfNotNull(it.title, it.episodeTitle?.takeIf { t -> t.isNotBlank() }).joinToString(" · ") }
+
+/** De quantos em quantos minutos o bloco do modo ambiente muda de lado. */
+private const val AMBIENT_MOVE_MINUTES = 10L
+private val BOUNCE_SPEED = 70.dp
+private val BOUNCE_COLORS = listOf(
+    Color.White,
+    Color(0xFF7DD3FC),
+    Color(0xFFF9A8D4),
+    Color(0xFFFCD34D),
+    Color(0xFF86EFAC),
+    Color(0xFFC4B5FD),
+    Color(0xFFFDBA74),
+)
 
 /**
  * Em cima à esquerda: "BOA NOITE" e, por baixo, "Terça, 20 de outubro · ☁ 14°"

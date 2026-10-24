@@ -19,6 +19,11 @@
     <string name="no_apps">No TV apps installed.</string>
     <string name="cant_open">Couldn\'t open that.</string>
     <string name="no_search">This TV has no system search.</string>
+    <string name="ambient_style">Ambient mode and screensaver</string>
+    <string name="ambient_photos">Wallpaper with the time, weather and channel</string>
+    <string name="ambient_bounce">Bouncing clock on black</string>
+    <string name="screensaver">Android screensaver</string>
+    <string name="screensaver_hint">Choose GoatLauncher to see this in any app</string>
     <string name="use_folder">Use this folder (%1$d images)</string>
     <string name="use_folder_hint">One image at a time, changing every 30 minutes</string>
     <string name="wallpaper_folder">Folder: %1$s</string>

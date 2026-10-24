@@ -19,6 +19,11 @@
     <string name="no_apps">कोई TV ऐप इंस्टॉल नहीं है।</string>
     <string name="cant_open">इसे खोला नहीं जा सका।</string>
     <string name="no_search">इस TV में सिस्टम सर्च नहीं है।</string>
+    <string name="ambient_style">एम्बिएंट मोड और स्क्रीनसेवर</string>
+    <string name="ambient_photos">समय, मौसम और चैनल के साथ वॉलपेपर</string>
+    <string name="ambient_bounce">काले पर उछलती घड़ी</string>
+    <string name="screensaver">Android स्क्रीनसेवर</string>
+    <string name="screensaver_hint">इसे किसी भी ऐप में देखने के लिए GoatLauncher चुनें</string>
     <string name="use_folder">यह फ़ोल्डर इस्तेमाल करें (%1$d चित्र)</string>
     <string name="use_folder_hint">एक बार में एक चित्र, हर 30 मिनट में बदलता है</string>
     <string name="wallpaper_folder">फ़ोल्डर: %1$s</string>

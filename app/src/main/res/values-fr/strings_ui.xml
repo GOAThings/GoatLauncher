@@ -19,6 +19,11 @@
     <string name="no_apps">Aucune app TV installée.</string>
     <string name="cant_open">Impossible d\'ouvrir cet élément.</string>
     <string name="no_search">Cette TV n\'a pas de recherche système.</string>
+    <string name="ambient_style">Mode ambiant et économiseur d\'écran</string>
+    <string name="ambient_photos">Fond d\'écran avec l\'heure, la météo et la chaîne</string>
+    <string name="ambient_bounce">Horloge rebondissante sur fond noir</string>
+    <string name="screensaver">Économiseur d\'écran Android</string>
+    <string name="screensaver_hint">Choisissez GoatLauncher pour l\'afficher dans n\'importe quelle app</string>
     <string name="use_folder">Utiliser ce dossier (%1$d images)</string>
     <string name="use_folder_hint">Une image à la fois, change toutes les 30 minutes</string>
     <string name="wallpaper_folder">Dossier : %1$s</string>

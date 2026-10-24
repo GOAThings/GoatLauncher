@@ -35,6 +35,16 @@ object SunTimes {
         return local(720 - 4 * (lon + ha) - eqTime) to local(720 - 4 * (lon - ha) - eqTime)
     }
 
+    /**
+     * O modo noite em vigor ao [minute] do dia: o escolhido no botão, ou, com o automático, do pôr ao nascer do sol
+     * ([sun]; sem ele, das [AccountSettings.NIGHT_FROM] às [AccountSettings.NIGHT_TO]).
+     */
+    fun isNight(account: AccountSettings, minute: Int, sun: Pair<Int, Int>?): Boolean = when {
+        !account.nightAuto -> account.nightMode
+        sun != null -> isNight(minute, sun)
+        else -> minute / 60 >= AccountSettings.NIGHT_FROM || minute / 60 < AccountSettings.NIGHT_TO
+    }
+
     /** Se [minute] (desde a meia-noite) é de noite, com o nascer e o pôr do sol de [sun]. */
     fun isNight(minute: Int, sun: Pair<Int, Int>): Boolean = minute < sun.first || minute >= sun.second
 

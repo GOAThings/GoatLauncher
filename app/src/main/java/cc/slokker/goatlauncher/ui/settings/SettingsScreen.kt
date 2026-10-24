@@ -614,6 +614,25 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
                 trailing = { Chevron() },
             )
         }
+        item {
+            // OK troca entre as fotos (o fundo com as horas) e o relógio a ressaltar; vale também para o protetor de ecrã.
+            val bounce = account.ambientStyle == AccountSettings.AMBIENT_BOUNCE
+            GlassRow(
+                title = s.ambientStyle,
+                subtitle = if (bounce) s.ambientBounce else s.ambientPhotos,
+                onClick = { vm.setAmbientStyle(if (bounce) AccountSettings.AMBIENT_PHOTOS else AccountSettings.AMBIENT_BOUNCE) },
+                trailing = { Chevron() },
+            )
+        }
+        item {
+            val context = LocalContext.current
+            GlassRow(
+                title = s.screensaver,
+                subtitle = s.screensaverHint,
+                onClick = { SystemIntents.openScreensaverSettings(context) },
+                trailing = { Chevron() },
+            )
+        }
         if (account.idleMinutes > 0) {
             item {
                 GlassRow(

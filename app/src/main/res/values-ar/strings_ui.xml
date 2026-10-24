@@ -19,6 +19,11 @@
     <string name="no_apps">لا توجد تطبيقات تلفزيون مثبّتة.</string>
     <string name="cant_open">تعذّر فتح هذا العنصر.</string>
     <string name="no_search">لا يحتوي هذا التلفزيون على بحث النظام.</string>
+    <string name="ambient_style">الوضع المحيطي وشاشة التوقف</string>
+    <string name="ambient_photos">الخلفية مع الوقت والطقس والقناة</string>
+    <string name="ambient_bounce">ساعة تقفز على الأسود</string>
+    <string name="screensaver">شاشة توقف أندرويد</string>
+    <string name="screensaver_hint">اختر GoatLauncher لرؤية هذا في أي تطبيق</string>
     <string name="use_folder">استخدام هذا المجلد (%1$d صور)</string>
     <string name="use_folder_hint">صورة واحدة في كل مرة، تتغير كل 30 دقيقة</string>
     <string name="wallpaper_folder">مجلد: %1$s</string>

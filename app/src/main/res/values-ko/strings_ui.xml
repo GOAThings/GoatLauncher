@@ -19,6 +19,11 @@
     <string name="no_apps">설치된 TV 앱이 없어요.</string>
     <string name="cant_open">열 수 없어요.</string>
     <string name="no_search">이 TV에는 시스템 검색이 없어요.</string>
+    <string name="ambient_style">앰비언트 모드와 화면 보호기</string>
+    <string name="ambient_photos">시간, 날씨, 채널이 있는 배경화면</string>
+    <string name="ambient_bounce">검은 화면에서 튀는 시계</string>
+    <string name="screensaver">Android 화면 보호기</string>
+    <string name="screensaver_hint">GoatLauncher를 선택하면 어떤 앱에서도 볼 수 있습니다</string>
     <string name="use_folder">이 폴더 사용 (이미지 %1$d개)</string>
     <string name="use_folder_hint">한 번에 한 장씩, 30분마다 바뀝니다</string>
     <string name="wallpaper_folder">폴더: %1$s</string>

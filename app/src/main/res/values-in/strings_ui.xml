@@ -19,6 +19,11 @@
     <string name="no_apps">Tidak ada aplikasi TV yang terpasang.</string>
     <string name="cant_open">Tidak dapat membukanya.</string>
     <string name="no_search">TV ini tidak punya pencarian sistem.</string>
+    <string name="ambient_style">Mode ambien dan screensaver</string>
+    <string name="ambient_photos">Wallpaper dengan jam, cuaca, dan saluran</string>
+    <string name="ambient_bounce">Jam memantul di atas hitam</string>
+    <string name="screensaver">Screensaver Android</string>
+    <string name="screensaver_hint">Pilih GoatLauncher untuk melihat ini di aplikasi apa pun</string>
     <string name="use_folder">Gunakan folder ini (%1$d gambar)</string>
     <string name="use_folder_hint">Satu gambar setiap kali, berganti setiap 30 menit</string>
     <string name="wallpaper_folder">Folder: %1$s</string>

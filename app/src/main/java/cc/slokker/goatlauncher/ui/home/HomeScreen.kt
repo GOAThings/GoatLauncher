@@ -848,7 +848,13 @@ fun HomeScreen(vm: LauncherViewModel) {
                 }
             }
             AnimatedVisibility(visible = idle, enter = fadeIn(tween(AMBIENT_FADE_MS)), exit = fadeOut(tween(250))) {
-                AmbientClock(clock24h = account.clock24h, caption = reddit?.title?.let(::cleanRedditTitle))
+                AmbientScene(
+                    style = account.ambientStyle,
+                    clock24h = account.clock24h,
+                    weather = weather?.takeIf { account.showWeather },
+                    nowPlaying = nowPlaying(watchNext),
+                    caption = reddit?.title?.let(::cleanRedditTitle),
+                )
             }
         }
     }

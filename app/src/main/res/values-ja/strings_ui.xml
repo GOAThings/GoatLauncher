@@ -19,6 +19,11 @@
     <string name="no_apps">テレビ用アプリがインストールされていません。</string>
     <string name="cant_open">開けませんでした。</string>
     <string name="no_search">このテレビにはシステム検索がありません。</string>
+    <string name="ambient_style">アンビエントモードとスクリーンセーバー</string>
+    <string name="ambient_photos">時刻・天気・チャンネル付きの壁紙</string>
+    <string name="ambient_bounce">黒地に跳ね回る時計</string>
+    <string name="screensaver">Android のスクリーンセーバー</string>
+    <string name="screensaver_hint">GoatLauncher を選ぶとどのアプリでも表示されます</string>
     <string name="use_folder">このフォルダを使う（%1$d 枚）</string>
     <string name="use_folder_hint">1 枚ずつ、30 分ごとに切り替わります</string>
     <string name="wallpaper_folder">フォルダ: %1$s</string>
