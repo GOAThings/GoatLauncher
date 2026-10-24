@@ -14,12 +14,21 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import android.view.KeyEvent
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import cc.slokker.goatlauncher.data.NavSounds
 import cc.slokker.goatlauncher.ui.LauncherRoot
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import cc.slokker.goatlauncher.ui.LauncherViewModel
 import cc.slokker.goatlauncher.ui.theme.GoatTheme
 
 class MainActivity : AppCompatActivity() {
     private val vm: LauncherViewModel by viewModels()
+    private val sounds by lazy { NavSounds(this) }
 
     private val permissionRequest = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         vm.reloadWatchNext()
@@ -38,8 +47,24 @@ class MainActivity : AppCompatActivity() {
         setContent {
             GoatTheme { LauncherRoot(vm) }
         }
+        // Sons de navegação (Aparência): ligam-se e desligam-se com a definição.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.account.map { it.navSounds }.distinctUntilChanged().collect { sounds.setEnabled(it) }
+            }
+        }
         // O fundo (desenho ou foto) enche sempre o ecrã: o fundo da janela por baixo era só mais uma camada a pintar.
         window.setBackgroundDrawable(null)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        sounds.onKey(event)
+        return super.dispatchKeyEvent(event)
+    }
+
+    override fun onDestroy() {
+        sounds.setEnabled(false)
+        super.onDestroy()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

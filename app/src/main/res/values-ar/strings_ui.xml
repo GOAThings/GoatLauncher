@@ -19,6 +19,8 @@
     <string name="no_apps">لا توجد تطبيقات تلفزيون مثبّتة.</string>
     <string name="cant_open">تعذّر فتح هذا العنصر.</string>
     <string name="no_search">لا يحتوي هذا التلفزيون على بحث النظام.</string>
+    <string name="nav_sounds">أصوات التنقل</string>
+    <string name="nav_sounds_hint">نقرة خفيفة عند التنقل ونقرة عند الضغط على موافق</string>
     <string name="ambient_style">الوضع المحيطي وشاشة التوقف</string>
     <string name="ambient_photos">الخلفية مع الوقت والطقس والقناة</string>
     <string name="ambient_bounce">ساعة تقفز على الأسود</string>

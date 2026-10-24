@@ -19,6 +19,8 @@
     <string name="no_apps">No TV apps installed.</string>
     <string name="cant_open">Couldn\'t open that.</string>
     <string name="no_search">This TV has no system search.</string>
+    <string name="nav_sounds">Navigation sounds</string>
+    <string name="nav_sounds_hint">A soft tick when moving and a click on OK</string>
     <string name="ambient_style">Ambient mode and screensaver</string>
     <string name="ambient_photos">Wallpaper with the time, weather and channel</string>
     <string name="ambient_bounce">Bouncing clock on black</string>

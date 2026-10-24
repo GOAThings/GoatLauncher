@@ -19,6 +19,8 @@
     <string name="no_apps">Keine TV-Apps installiert.</string>
     <string name="cant_open">Konnte nicht geöffnet werden.</string>
     <string name="no_search">Dieser TV hat keine Systemsuche.</string>
+    <string name="nav_sounds">Navigationstöne</string>
+    <string name="nav_sounds_hint">Ein leises Ticken beim Bewegen und ein Klick bei OK</string>
     <string name="ambient_style">Umgebungsmodus und Bildschirmschoner</string>
     <string name="ambient_photos">Hintergrund mit Uhrzeit, Wetter und Sender</string>
     <string name="ambient_bounce">Hüpfende Uhr auf Schwarz</string>

@@ -46,6 +46,8 @@ class Strings(context: Context) {
     val noApps get() = s(R.string.no_apps)
     val cantOpen get() = s(R.string.cant_open)
     val noSearch get() = s(R.string.no_search)
+    val navSounds get() = s(R.string.nav_sounds)
+    val navSoundsHint get() = s(R.string.nav_sounds_hint)
     val ambientStyle get() = s(R.string.ambient_style)
     val ambientPhotos get() = s(R.string.ambient_photos)
     val ambientBounce get() = s(R.string.ambient_bounce)

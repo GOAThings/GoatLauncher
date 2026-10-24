@@ -811,6 +811,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun setAmbientStyle(style: String) = settings.updateAccount { it.copy(ambientStyle = style) }
 
+    fun setNavSounds(on: Boolean) = settings.updateAccount { it.copy(navSounds = on) }
+
     fun setRedditMinWidth(px: Int) = settings.updateAccount { it.copy(redditMinWidth = px) }
 
     // ---- Navegação ----

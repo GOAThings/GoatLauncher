@@ -93,6 +93,8 @@ data class AccountSettings(
     val idleKeepAwake: Boolean = false,
     /** O que mostram o modo ambiente e o protetor de ecrã: AMBIENT_PHOTOS (o fundo e as horas) ou AMBIENT_BOUNCE. */
     val ambientStyle: String = AMBIENT_PHOTOS,
+    /** Um tique ao mover com as setas e um clique no OK (ver NavSounds). */
+    val navSounds: Boolean = false,
     /** O que a app do YouTube mostra no "Continuar a ver" (com a conta ligada): YT_BOTH, YT_CONTINUE ou YT_RECOMMENDED. */
     val youtubeFeed: String = YT_BOTH,
     /** Língua da app: "auto" (a do sistema) ou um código BCP 47 das 15 do site (ver Strings.LANGUAGES). */
@@ -127,6 +129,7 @@ data class AccountSettings(
         addProperty("idle_minutes", idleMinutes)
         addProperty("idle_keep_awake", idleKeepAwake)
         addProperty("ambient_style", ambientStyle)
+        addProperty("nav_sounds", navSounds)
         addProperty("youtube_feed", youtubeFeed)
         addProperty("language", language)
         addProperty("night_mode", nightMode)
@@ -197,6 +200,7 @@ data class AccountSettings(
                 idleMinutes = json.int("idle_minutes")?.coerceAtLeast(0) ?: 0,
                 idleKeepAwake = json.bool("idle_keep_awake") ?: false,
                 ambientStyle = json.str("ambient_style")?.takeIf { it == AMBIENT_BOUNCE } ?: AMBIENT_PHOTOS,
+                navSounds = json.bool("nav_sounds") ?: false,
                 youtubeFeed = json.str("youtube_feed")?.takeIf { it == YT_CONTINUE || it == YT_RECOMMENDED } ?: YT_BOTH,
                 language = json.str("language") ?: "auto",
                 nightMode = json.bool("night_mode") ?: false,

@@ -584,6 +584,14 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
             )
         }
         item {
+            GlassRow(
+                title = s.navSounds,
+                subtitle = s.navSoundsHint,
+                onClick = { vm.setNavSounds(!account.navSounds) },
+                trailing = { Toggle(account.navSounds) },
+            )
+        }
+        item {
             GlassRow(title = s.clock24h, onClick = { vm.setClock24h(!account.clock24h) }, trailing = { Toggle(account.clock24h) })
         }
         item {

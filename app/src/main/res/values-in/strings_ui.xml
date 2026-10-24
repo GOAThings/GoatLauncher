@@ -19,6 +19,8 @@
     <string name="no_apps">Tidak ada aplikasi TV yang terpasang.</string>
     <string name="cant_open">Tidak dapat membukanya.</string>
     <string name="no_search">TV ini tidak punya pencarian sistem.</string>
+    <string name="nav_sounds">Suara navigasi</string>
+    <string name="nav_sounds_hint">Bunyi tik lembut saat bergerak dan klik saat OK</string>
     <string name="ambient_style">Mode ambien dan screensaver</string>
     <string name="ambient_photos">Wallpaper dengan jam, cuaca, dan saluran</string>
     <string name="ambient_bounce">Jam memantul di atas hitam</string>

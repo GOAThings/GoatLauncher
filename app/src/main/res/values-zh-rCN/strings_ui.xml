@@ -19,6 +19,8 @@
     <string name="no_apps">未安装电视应用。</string>
     <string name="cant_open">无法打开。</string>
     <string name="no_search">此电视没有系统搜索。</string>
+    <string name="nav_sounds">导航音效</string>
+    <string name="nav_sounds_hint">移动时轻柔的滴答声，按确定时的点击声</string>
     <string name="ambient_style">环境模式和屏幕保护</string>
     <string name="ambient_photos">带时间、天气和频道的壁纸</string>
     <string name="ambient_bounce">黑色背景上弹跳的时钟</string>

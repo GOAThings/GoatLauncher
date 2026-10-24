@@ -19,6 +19,8 @@
     <string name="no_apps">テレビ用アプリがインストールされていません。</string>
     <string name="cant_open">開けませんでした。</string>
     <string name="no_search">このテレビにはシステム検索がありません。</string>
+    <string name="nav_sounds">ナビゲーション音</string>
+    <string name="nav_sounds_hint">移動時に小さなチック音、OK でクリック音</string>
     <string name="ambient_style">アンビエントモードとスクリーンセーバー</string>
     <string name="ambient_photos">時刻・天気・チャンネル付きの壁紙</string>
     <string name="ambient_bounce">黒地に跳ね回る時計</string>
