@@ -229,7 +229,6 @@ private fun BouncingDvd(modifier: Modifier) {
         var p = Offset(pos.x.coerceIn(0f, maxX), pos.y.coerceIn(0f, maxY))
         var vx = speed
         var vy = speed * 0.75f
-        val cornerPx = with(density) { CORNER_TOLERANCE.toPx() }
         var last = withFrameNanos { it }
         while (true) {
             val t = withFrameNanos { it }
@@ -242,7 +241,8 @@ private fun BouncingDvd(modifier: Modifier) {
             if (hitX) { vx = -vx; x = x.coerceIn(0f, maxX) }
             if (hitY) { vy = -vy; y = y.coerceIn(0f, maxY) }
             if (hitX || hitY) colorIndex = (colorIndex + 1) % BOUNCE_COLORS.size
-            if (isCornerHit(hitX, hitY, x, y, maxX, maxY, cornerPx)) {
+            // Só no canto exato: as duas bordas na mesma frame (perto não conta).
+            if (isCornerHit(hitX, hitY, x, y, maxX, maxY, tolerance = 0f)) {
                 goatCorner = when {
                     x < maxX / 2 && y < maxY / 2 -> Alignment.TopStart
                     x < maxX / 2 -> Alignment.BottomStart
@@ -324,8 +324,6 @@ fun nowPlaying(watchNext: Map<String, List<WatchNextItem>>): String? =
 /** De quantos em quantos minutos o bloco do modo ambiente muda de lado. */
 private const val AMBIENT_MOVE_MINUTES = 10L
 private val BOUNCE_SPEED = 70.dp
-/** A que distância da outra borda (no momento da batida) ainda conta como acertar no canto. */
-private val CORNER_TOLERANCE = 2.dp
 private const val GOAT_MS = 3_000L
 private val BOUNCE_COLORS = listOf(
     Color.White,

@@ -894,7 +894,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         it.copy(names = if (clean.isEmpty()) it.names - pkg else it.names + (pkg to clean))
     }
 
-    fun setContinueStyle(style: String) = settings.updateAccount { it.copy(continueStyle = style) }
+    /** Escolher um estilo também volta a ligar o "Continuar a ver" (se estava desligado). */
+    fun setContinueStyle(style: String) = settings.updateAccount { it.copy(continueStyle = style, showContinueWatching = true) }
 
     fun setFocusEffect(effect: String) = settings.updateAccount { it.copy(focusEffect = effect) }
 

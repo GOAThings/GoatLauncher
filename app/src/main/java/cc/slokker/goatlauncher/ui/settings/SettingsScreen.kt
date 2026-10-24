@@ -500,7 +500,8 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
                 trailing = { if (!android) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
             )
         }
-        // O estilo do "Continuar a ver" só se escolhe na disposição Android (a Apple TV tem sempre os cartões grandes).
+        // O "Continuar a ver" logo a seguir à disposição: na Android escolhe-se o estilo (ou desliga-se); a Apple TV
+        // tem sempre os cartões grandes, por isso só se liga ou desliga.
         if (android) {
             item { SectionLabel(s.continueStyle) }
             items(listOf(AccountSettings.STYLE_ROW to s.styleRow, AccountSettings.STYLE_SHELF to s.styleShelf), key = { it.first }) { (style, name) ->
@@ -508,8 +509,28 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
                     title = name,
                     onClick = { vm.setContinueStyle(style) },
                     trailing = {
-                        if (account.continueStyle == style) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                        if (account.showContinueWatching && account.continueStyle == style) {
+                            Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                        }
                     },
+                )
+            }
+            item(key = "continue_off") {
+                GlassRow(
+                    title = s.idleOff,
+                    onClick = { vm.setShowContinueWatching(false) },
+                    trailing = {
+                        if (!account.showContinueWatching) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+                    },
+                )
+            }
+        } else {
+            item {
+                GlassRow(
+                    title = s.continueWatching,
+                    subtitle = s.continueWatchingHint,
+                    onClick = { vm.setShowContinueWatching(!account.showContinueWatching) },
+                    trailing = { Toggle(account.showContinueWatching) },
                 )
             }
         }
@@ -604,14 +625,6 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
             GlassRow(title = s.showAppName, onClick = { vm.setShowAppName(!account.showAppName) }, trailing = { Toggle(account.showAppName) })
         }
         item { IconBackgroundRow(account.iconBackground, onPick = vm::setIconBackground) }
-        item {
-            GlassRow(
-                title = s.continueWatching,
-                subtitle = s.continueWatchingHint,
-                onClick = { vm.setShowContinueWatching(!account.showContinueWatching) },
-                trailing = { Toggle(account.showContinueWatching) },
-            )
-        }
         item {
             // OK passa ao tempo seguinte: desligado → 1 → 2 → 5 → 10 → 30 min → desligado.
             val next = IDLE_MINUTES.getOrElse(IDLE_MINUTES.indexOf(account.idleMinutes) + 1) { IDLE_MINUTES.first() }

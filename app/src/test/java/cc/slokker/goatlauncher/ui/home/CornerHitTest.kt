@@ -12,24 +12,25 @@ class CornerHitTest {
 
     @Test
     fun cantoExato() {
-        assertTrue(isCornerHit(hitX = true, hitY = true, x = 0f, y = 0f, maxX, maxY, 4f))
-        assertTrue(isCornerHit(hitX = true, hitY = false, x = maxX, y = maxY - 3f, maxX, maxY, 4f))
+        assertTrue(isCornerHit(hitX = true, hitY = true, x = 0f, y = 0f, maxX, maxY, 0f))
+        assertTrue(isCornerHit(hitX = true, hitY = true, x = maxX, y = maxY, maxX, maxY, 0f))
     }
 
     @Test
     fun quaseCantoNaoConta() {
-        // 17 px do canto (o que a regra antiga, por tempo, aceitava): não.
-        assertFalse(isCornerHit(hitX = true, hitY = false, x = 0f, y = 17f, maxX, maxY, 4f))
-        assertFalse(isCornerHit(hitX = false, hitY = true, x = maxX - 20f, y = maxY, maxX, maxY, 4f))
+        // Perto não conta, nem a 1 px.
+        assertFalse(isCornerHit(hitX = true, hitY = false, x = 0f, y = 17f, maxX, maxY, 0f))
+        assertFalse(isCornerHit(hitX = true, hitY = false, x = 0f, y = 1f, maxX, maxY, 0f))
+        assertFalse(isCornerHit(hitX = false, hitY = true, x = maxX - 1f, y = maxY, maxX, maxY, 0f))
     }
 
     @Test
     fun bordaNormalNaoConta() {
-        assertFalse(isCornerHit(hitX = true, hitY = false, x = 0f, y = 400f, maxX, maxY, 4f))
-        assertFalse(isCornerHit(hitX = false, hitY = false, x = 0f, y = 0f, maxX, maxY, 4f))
+        assertFalse(isCornerHit(hitX = true, hitY = false, x = 0f, y = 400f, maxX, maxY, 0f))
+        assertFalse(isCornerHit(hitX = false, hitY = false, x = 0f, y = 0f, maxX, maxY, 0f))
     }
 
-    /** Simula o logótipo a andar uma hora a 60 fps: os cantos detetados ficam todos a menos da tolerância. */
+    /** Simula o logótipo a andar uma hora a 60 fps: os cantos detetados são todos o canto exato. */
     @Test
     fun simulacao() {
         var x = 37f
@@ -45,11 +46,9 @@ class CornerHitTest {
             val hitY = y <= 0f || y >= maxY
             if (hitX) { vx = -vx; x = x.coerceIn(0f, maxX) }
             if (hitY) { vy = -vy; y = y.coerceIn(0f, maxY) }
-            if (isCornerHit(hitX, hitY, x, y, maxX, maxY, 4f)) {
+            if (isCornerHit(hitX, hitY, x, y, maxX, maxY, 0f)) {
                 corners++
-                val dx = minOf(x, maxX - x)
-                val dy = minOf(y, maxY - y)
-                assertTrue("canto longe: $dx, $dy", dx <= 4f && dy <= 4f)
+                assertTrue("não é o canto: $x, $y", (x == 0f || x == maxX) && (y == 0f || y == maxY))
             }
         }
         // Raro mas acontece (senão o easter egg nunca se via).
