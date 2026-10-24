@@ -19,6 +19,12 @@
     <string name="no_apps">未安装电视应用。</string>
     <string name="cant_open">无法打开。</string>
     <string name="no_search">此电视没有系统搜索。</string>
+    <string name="location">位置</string>
+    <string name="location_auto">自动（通过网络）</string>
+    <string name="location_auto_city">自动：%1$s（通过网络）</string>
+    <string name="location_hint">用于天气和自动日夜切换。网络定位可能出错（例如使用 VPN 时）。</string>
+    <string name="location_search_hint">城市名称</string>
+    <string name="location_none">没有这个名称的地点</string>
     <string name="nav_sounds">导航音效</string>
     <string name="nav_sounds_hint">移动时轻柔的滴答声，按确定时的点击声</string>
     <string name="ambient_style">环境模式样式</string>

@@ -19,6 +19,12 @@
     <string name="no_apps">テレビ用アプリがインストールされていません。</string>
     <string name="cant_open">開けませんでした。</string>
     <string name="no_search">このテレビにはシステム検索がありません。</string>
+    <string name="location">場所</string>
+    <string name="location_auto">自動（インターネットから）</string>
+    <string name="location_auto_city">自動: %1$s（インターネットから）</string>
+    <string name="location_hint">天気と昼夜の自動切り替えに使います。VPN などでは間違うことがあります。</string>
+    <string name="location_search_hint">都市名</string>
+    <string name="location_none">その名前の場所はありません</string>
     <string name="nav_sounds">ナビゲーション音</string>
     <string name="nav_sounds_hint">移動時に小さなチック音、OK でクリック音</string>
     <string name="ambient_style">アンビエントモードのスタイル</string>

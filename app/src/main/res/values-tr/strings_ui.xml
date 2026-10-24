@@ -19,6 +19,12 @@
     <string name="no_apps">Yüklü TV uygulaması yok.</string>
     <string name="cant_open">Açılamadı.</string>
     <string name="no_search">Bu TV\'de sistem araması yok.</string>
+    <string name="location">Konum</string>
+    <string name="location_auto">Otomatik (internet ile)</string>
+    <string name="location_auto_city">Otomatik: %1$s (internet ile)</string>
+    <string name="location_hint">Hava durumu ve otomatik gece/gündüz için. İnternet yanılabilir (örneğin VPN ile).</string>
+    <string name="location_search_hint">Şehir adı</string>
+    <string name="location_none">Bu adla bir yer yok</string>
     <string name="nav_sounds">Gezinme sesleri</string>
     <string name="nav_sounds_hint">Hareket ederken yumuşak bir tık ve Tamam\'da bir klik</string>
     <string name="ambient_style">Ortam modu stili</string>

@@ -19,6 +19,12 @@
     <string name="no_apps">Нет установленных ТВ-приложений.</string>
     <string name="cant_open">Не удалось открыть.</string>
     <string name="no_search">На этом ТВ нет системного поиска.</string>
+    <string name="location">Местоположение</string>
+    <string name="location_auto">Автоматически (по интернету)</string>
+    <string name="location_auto_city">Автоматически: %1$s (по интернету)</string>
+    <string name="location_hint">Для погоды и автоматической смены дня и ночи. Интернет может ошибаться (например, с VPN).</string>
+    <string name="location_search_hint">Название города</string>
+    <string name="location_none">Нет мест с таким названием</string>
     <string name="nav_sounds">Звуки навигации</string>
     <string name="nav_sounds_hint">Тихий щелчок при перемещении и клик на OK</string>
     <string name="ambient_style">Стиль фонового режима</string>

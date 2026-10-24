@@ -19,6 +19,12 @@
     <string name="no_apps">Tidak ada aplikasi TV yang terpasang.</string>
     <string name="cant_open">Tidak dapat membukanya.</string>
     <string name="no_search">TV ini tidak punya pencarian sistem.</string>
+    <string name="location">Lokasi</string>
+    <string name="location_auto">Otomatis (lewat internet)</string>
+    <string name="location_auto_city">Otomatis: %1$s (lewat internet)</string>
+    <string name="location_hint">Untuk cuaca dan siang/malam otomatis. Internet bisa salah (misalnya dengan VPN).</string>
+    <string name="location_search_hint">Nama kota</string>
+    <string name="location_none">Tidak ada tempat dengan nama itu</string>
     <string name="nav_sounds">Suara navigasi</string>
     <string name="nav_sounds_hint">Bunyi tik lembut saat bergerak dan klik saat OK</string>
     <string name="ambient_style">Gaya mode ambien</string>

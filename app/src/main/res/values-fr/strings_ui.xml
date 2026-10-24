@@ -19,6 +19,12 @@
     <string name="no_apps">Aucune app TV installée.</string>
     <string name="cant_open">Impossible d\'ouvrir cet élément.</string>
     <string name="no_search">Cette TV n\'a pas de recherche système.</string>
+    <string name="location">Emplacement</string>
+    <string name="location_auto">Automatique (par internet)</string>
+    <string name="location_auto_city">Automatique : %1$s (par internet)</string>
+    <string name="location_hint">Pour la météo et le jour et la nuit automatiques. Internet peut se tromper (avec un VPN, par exemple).</string>
+    <string name="location_search_hint">Nom de la ville</string>
+    <string name="location_none">Aucun lieu de ce nom</string>
     <string name="nav_sounds">Sons de navigation</string>
     <string name="nav_sounds_hint">Un léger tic en se déplaçant et un clic sur OK</string>
     <string name="ambient_style">Style du mode ambiant</string>

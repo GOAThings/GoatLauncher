@@ -19,6 +19,12 @@
     <string name="no_apps">No TV apps installed.</string>
     <string name="cant_open">Couldn\'t open that.</string>
     <string name="no_search">This TV has no system search.</string>
+    <string name="location">Location</string>
+    <string name="location_auto">Automatic (by internet)</string>
+    <string name="location_auto_city">Automatic: %1$s (by internet)</string>
+    <string name="location_hint">For the weather and automatic day and night. The internet can guess wrong (with a VPN, for example).</string>
+    <string name="location_search_hint">City name</string>
+    <string name="location_none">No places with that name</string>
     <string name="nav_sounds">Navigation sounds</string>
     <string name="nav_sounds_hint">A soft tick when moving and a click on OK</string>
     <string name="ambient_style">Ambient mode style</string>

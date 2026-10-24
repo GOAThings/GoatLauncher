@@ -31,6 +31,7 @@ import cc.slokker.goatlauncher.data.Updater
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.data.WatchNextItem
 import cc.slokker.goatlauncher.data.SunTimes
+import cc.slokker.goatlauncher.data.Place
 import java.io.File
 import cc.slokker.goatlauncher.data.WeatherNow
 import cc.slokker.goatlauncher.data.YouTubeLogin
@@ -264,6 +265,14 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             // Com o dia/noite automático, a localização para o nascer e o pôr do sol (uma vez por dia, como no tempo).
             settings.account.map { it.nightAuto }.distinctUntilChanged().collectLatest { on ->
                 if (on) c.weather.location()?.let { location.value = it }
+            }
+        }
+        viewModelScope.launch {
+            // O sítio escolhido nas definições (ou volta ao do IP): muda o dia/noite e o tempo logo.
+            settings.device.map { it.location }.distinctUntilChanged().collectLatest { place ->
+                c.weather.fixed = place?.let { it.lat to it.lon }
+                location.value = c.weather.location()
+                if (settings.account.value.showWeather) c.weather.current()?.let { _weather.value = it }
             }
         }
         viewModelScope.launch {
@@ -808,6 +817,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setIdleMinutes(minutes: Int) = settings.updateAccount { it.copy(idleMinutes = minutes) }
 
     fun setIdleKeepAwake(on: Boolean) = settings.updateAccount { it.copy(idleKeepAwake = on) }
+
+    fun setLocation(place: Place?) = settings.updateDevice { it.copy(location = place) }
+
+    suspend fun searchPlaces(query: String): List<Place> = c.weather.searchPlaces(query, Strings.normalize(account.value.language).let { if (it == "auto") java.util.Locale.getDefault().language else it.substringBefore('-') })
+
+    /** A cidade que o IP diz (para mostrar em "Automática"). */
+    fun ipCity(): String? = c.weather.ipCity()
 
     fun setAmbientStyle(style: String) = settings.updateAccount { it.copy(ambientStyle = style) }
 

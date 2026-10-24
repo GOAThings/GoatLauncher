@@ -217,6 +217,9 @@ data class AccountSettings(
 }
 
 /** Só desta TV. [apps] é a ordem da fila; as apps instaladas que lá não estão vão para o fim. */
+/** Um sítio escolhido à mão para o tempo e o dia/noite (em vez do que o IP diz). [name] é para mostrar. */
+data class Place(val name: String, val lat: Double, val lon: Double)
+
 data class DeviceSettings(
     val apps: List<String> = emptyList(),
     val hidden: Set<String> = emptySet(),
@@ -241,6 +244,8 @@ data class DeviceSettings(
     /** As apps só ficam bloqueadas entre estas horas (ex.: 20 → 8); null = sempre. */
     val lockFrom: Int? = null,
     val lockTo: Int? = null,
+    /** Onde a TV está, para o tempo e o dia/noite; null = pelo IP (pode falhar com VPN). Cada TV tem a sua. */
+    val location: Place? = null,
     val raw: JsonObject = JsonObject(),
 ) {
     fun toJson(): JsonObject = raw.deepCopy().apply {
@@ -266,6 +271,15 @@ data class DeviceSettings(
         add("locked", JsonArray().apply { locked.sorted().forEach(::add) })
         addProperty("lock_settings", lockSettings)
         if (lockFrom != null && lockTo != null) add("lock_hours", JsonArray().apply { add(lockFrom); add(lockTo) }) else remove("lock_hours")
+        if (location != null) {
+            add("location", JsonObject().apply {
+                addProperty("name", location.name)
+                addProperty("lat", location.lat)
+                addProperty("lon", location.lon)
+            })
+        } else {
+            remove("location")
+        }
     }
 
     companion object {
@@ -286,6 +300,12 @@ data class DeviceSettings(
                 lockSettings = json.bool("lock_settings") ?: false,
                 lockFrom = json.ints("lock_hours").takeIf { it.size == 2 }?.get(0)?.coerceIn(0, 23),
                 lockTo = json.ints("lock_hours").takeIf { it.size == 2 }?.get(1)?.coerceIn(0, 23),
+                location = json.obj("location")?.let { o ->
+                    val lat = o.get("lat")?.takeIf { it.isJsonPrimitive }?.asDouble
+                    val lon = o.get("lon")?.takeIf { it.isJsonPrimitive }?.asDouble
+                    if (lat == null || lon == null || lat !in -90.0..90.0 || lon !in -180.0..180.0) null
+                    else Place(o.get("name")?.takeIf { it.isJsonPrimitive }?.asString.orEmpty(), lat, lon)
+                },
                 raw = json,
             )
         }

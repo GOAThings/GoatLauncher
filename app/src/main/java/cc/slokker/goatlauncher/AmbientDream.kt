@@ -102,7 +102,8 @@ private fun DreamContent(c: AppContainer) {
         while (true) {
             val now = Calendar.getInstance()
             val minute = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
-            val sun = c.weather.cachedLocation()?.let { (lat, lon) -> SunTimes.of(lat, lon, now.timeInMillis) }
+            val place = c.settings.device.value.location?.let { it.lat to it.lon } ?: c.weather.cachedLocation()
+            val sun = place?.let { (lat, lon) -> SunTimes.of(lat, lon, now.timeInMillis) }
             value = SunTimes.isNight(account, minute, sun)
             delay(60_000L - System.currentTimeMillis() % 60_000L)
         }

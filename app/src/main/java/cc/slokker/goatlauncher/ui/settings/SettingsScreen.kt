@@ -78,6 +78,9 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.BuildConfig
 import cc.slokker.goatlauncher.data.AccountSettings
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import cc.slokker.goatlauncher.data.Place
 import cc.slokker.goatlauncher.data.RedditWallpapers
 import cc.slokker.goatlauncher.HomeGuardService
 import cc.slokker.goatlauncher.data.SystemIntents
@@ -101,7 +104,7 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
 
-private enum class Page { Main, Appearance, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Buttons, ButtonCapture, ButtonApp, Language, Parental, PinSetup, LockedApps }
+private enum class Page { Main, Appearance, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Buttons, ButtonCapture, ButtonApp, Language, Location, Parental, PinSetup, LockedApps }
 
 /** Definições do launcher: um painel de vidro à direita, por cima do fundo. Voltar sobe um nível. */
 @Composable
@@ -195,6 +198,7 @@ fun SettingsScreen(
                     Page.Autostart -> s.autostart
                     Page.Buttons -> s.buttons
                     Page.Language -> s.language
+                    Page.Location -> s.location
                     Page.ButtonCapture -> s.addButton
                     Page.ButtonApp -> buttonKey?.let { (k, sc) -> s.buttonOpens(buttonName(k, sc, s)) } ?: s.buttons
                     Page.Parental, Page.PinSetup -> s.parental
@@ -235,6 +239,7 @@ fun SettingsScreen(
                     }
                 }
                 Page.Language -> LanguagePage(vm, first)
+                Page.Location -> LocationPage(vm, first)
                 Page.Buttons -> ButtonsPage(
                     vm,
                     first,
@@ -272,7 +277,7 @@ fun SettingsScreen(
 private fun parentPage(page: Page, hasPin: Boolean): Page? = when (page) {
     Page.Main -> null
     Page.Appearance, Page.HiddenApps, Page.YouTube, Page.Autostart, Page.Buttons, Page.Parental -> Page.Main
-    Page.Language, Page.Wallpaper -> Page.Appearance
+    Page.Language, Page.Location, Page.Wallpaper -> Page.Appearance
     Page.WallpaperFiles -> Page.Wallpaper
     Page.ButtonCapture, Page.ButtonApp -> Page.Buttons
     Page.LockedApps -> Page.Parental
@@ -591,6 +596,15 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
                 title = s.wallpaper,
                 subtitle = wallpaperName(account.wallpaper, s),
                 onClick = { onPage(Page.Wallpaper) },
+                trailing = { Chevron() },
+            )
+        }
+        item {
+            val device by vm.device.collectAsStateWithLifecycle()
+            GlassRow(
+                title = s.location,
+                subtitle = device.location?.name ?: vm.ipCity()?.let(s::locationAutoCity) ?: s.locationAuto,
+                onClick = { onPage(Page.Location) },
                 trailing = { Chevron() },
             )
         }
@@ -1218,6 +1232,63 @@ private fun ButtonCapturePage(first: FocusRequester, onCaptured: (Pair<Int, Int>
 }
 
 /** "Automático" e as 15 línguas, cada uma com o nome na própria língua. Ao escolher, o ecrã muda logo. */
+/**
+ * Onde está a TV (para o tempo e o dia/noite): automática pelo IP, ou uma cidade procurada pelo nome.
+ * O IP engana-se com VPN ou com alguns operadores (dá a cidade do servidor).
+ */
+@Composable
+private fun LocationPage(vm: LauncherViewModel, first: FocusRequester) {
+    val s = LocalStrings.current
+    val device by vm.device.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    var query by remember { mutableStateOf("") }
+    var results by remember { mutableStateOf<List<Place>?>(null) }
+    var searching by remember { mutableStateOf(false) }
+    fun search() {
+        if (query.isBlank()) return
+        searching = true
+        scope.launch {
+            results = vm.searchPlaces(query)
+            searching = false
+        }
+    }
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        item {
+            Text(s.locationHint, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 6.dp))
+        }
+        item {
+            GlassRow(
+                title = vm.ipCity()?.let(s::locationAutoCity) ?: s.locationAuto,
+                onClick = { vm.setLocation(null) },
+                trailing = { if (device.location == null) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                modifier = Modifier.focusRequester(first),
+            )
+        }
+        device.location?.let { place ->
+            item {
+                GlassRow(title = place.name, onClick = {}, trailing = { Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) })
+            }
+        }
+        item {
+            Row(
+                Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TvTextField(query, { query = it }, s.locationSearchHint, Modifier.weight(1f), onDone = ::search)
+                GlassButton(s.search, onClick = ::search)
+            }
+        }
+        when {
+            searching -> item { Text(s.loading, color = GoatColors.TextFaint, modifier = Modifier.padding(12.dp)) }
+            results?.isEmpty() == true -> item { Text(s.locationNone, color = GoatColors.TextFaint, modifier = Modifier.padding(12.dp)) }
+            else -> items(results.orEmpty(), key = { "${it.lat},${it.lon}" }) { place ->
+                GlassRow(title = place.name, onClick = { vm.setLocation(place) })
+            }
+        }
+    }
+}
+
 @Composable
 private fun LanguagePage(vm: LauncherViewModel, first: FocusRequester) {
     val s = LocalStrings.current

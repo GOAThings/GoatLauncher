@@ -19,6 +19,12 @@
     <string name="no_apps">لا توجد تطبيقات تلفزيون مثبّتة.</string>
     <string name="cant_open">تعذّر فتح هذا العنصر.</string>
     <string name="no_search">لا يحتوي هذا التلفزيون على بحث النظام.</string>
+    <string name="location">الموقع</string>
+    <string name="location_auto">تلقائي (عبر الإنترنت)</string>
+    <string name="location_auto_city">تلقائي: %1$s (عبر الإنترنت)</string>
+    <string name="location_hint">للطقس والتبديل التلقائي بين الليل والنهار. قد يخطئ الإنترنت (مع VPN مثلاً).</string>
+    <string name="location_search_hint">اسم المدينة</string>
+    <string name="location_none">لا توجد أماكن بهذا الاسم</string>
     <string name="nav_sounds">أصوات التنقل</string>
     <string name="nav_sounds_hint">نقرة خفيفة عند التنقل ونقرة عند الضغط على موافق</string>
     <string name="ambient_style">نمط الوضع المحيطي</string>

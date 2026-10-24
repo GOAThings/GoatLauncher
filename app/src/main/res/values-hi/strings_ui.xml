@@ -19,6 +19,12 @@
     <string name="no_apps">कोई TV ऐप इंस्टॉल नहीं है।</string>
     <string name="cant_open">इसे खोला नहीं जा सका।</string>
     <string name="no_search">इस TV में सिस्टम सर्च नहीं है।</string>
+    <string name="location">स्थान</string>
+    <string name="location_auto">स्वचालित (इंटरनेट से)</string>
+    <string name="location_auto_city">स्वचालित: %1$s (इंटरनेट से)</string>
+    <string name="location_hint">मौसम और अपने-आप दिन/रात के लिए। इंटरनेट गलत हो सकता है (जैसे VPN के साथ)।</string>
+    <string name="location_search_hint">शहर का नाम</string>
+    <string name="location_none">इस नाम की कोई जगह नहीं</string>
     <string name="nav_sounds">नेविगेशन ध्वनियाँ</string>
     <string name="nav_sounds_hint">चलते समय हल्की टिक और OK पर क्लिक</string>
     <string name="ambient_style">एम्बिएंट मोड की शैली</string>

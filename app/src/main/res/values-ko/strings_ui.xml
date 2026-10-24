@@ -19,6 +19,12 @@
     <string name="no_apps">설치된 TV 앱이 없어요.</string>
     <string name="cant_open">열 수 없어요.</string>
     <string name="no_search">이 TV에는 시스템 검색이 없어요.</string>
+    <string name="location">위치</string>
+    <string name="location_auto">자동 (인터넷 기준)</string>
+    <string name="location_auto_city">자동: %1$s (인터넷 기준)</string>
+    <string name="location_hint">날씨와 자동 낮/밤 전환에 사용됩니다. VPN 등에서는 틀릴 수 있습니다.</string>
+    <string name="location_search_hint">도시 이름</string>
+    <string name="location_none">그 이름의 장소가 없습니다</string>
     <string name="nav_sounds">탐색 소리</string>
     <string name="nav_sounds_hint">이동할 때 부드러운 틱 소리, 확인 버튼에서 클릭 소리</string>
     <string name="ambient_style">앰비언트 모드 스타일</string>
