@@ -85,6 +85,14 @@
     <string name="effect_border">Outline</string>
     <string name="effect_glow">Glow</string>
     <string name="effect_shadow">Shadow only</string>
+    <string name="effect_glass">Glass</string>
+    <string name="effect_reflection">Reflection</string>
+    <string name="effect_aurora">Aurora</string>
+    <string name="effect_viewfinder">Viewfinder</string>
+    <string name="effect_underline">Underline</string>
+    <string name="effect_ring">Floating ring</string>
+    <string name="effect_dim">Dim the rest</string>
+    <string name="anim_spin">Spin</string>
     <string name="focus_animation">Animation</string>
     <string name="anim_none">None</string>
     <string name="anim_pulse">Pulse</string>

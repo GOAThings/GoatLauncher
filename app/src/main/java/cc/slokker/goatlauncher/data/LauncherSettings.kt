@@ -93,7 +93,7 @@ data class AccountSettings(
     val nightMode: Boolean = false,
     /** Dia/noite pela hora da TV (noite das [NIGHT_FROM] às [NIGHT_TO]); carregar no botão desliga-o. */
     val nightAuto: Boolean = false,
-    /** Cartão de uma app com foco: FOCUS_BORDER (contorno), FOCUS_GLOW (brilho à volta) ou FOCUS_SHADOW (só sombra). */
+    /** Cartão de uma app com foco: um dos FOCUS_EFFECTS (contorno, brilho, vidro, reflexo, aurora, visor, sublinhado, anel, escurecer os outros, só sombra). */
     val focusEffect: String = FOCUS_BORDER,
     /** Animação do efeito de foco: ANIM_NONE, ANIM_PULSE, ANIM_BREATH ou ANIM_SHINE (luz a dar a volta ao cartão). */
     val focusAnimation: String = ANIM_NONE,
@@ -142,6 +142,18 @@ data class AccountSettings(
         const val FOCUS_BORDER = "border"
         const val FOCUS_GLOW = "glow"
         const val FOCUS_SHADOW = "shadow"
+        const val FOCUS_GLASS = "glass"
+        const val FOCUS_REFLECTION = "reflection"
+        const val FOCUS_AURORA = "aurora"
+        const val FOCUS_VIEWFINDER = "viewfinder"
+        const val FOCUS_UNDERLINE = "underline"
+        const val FOCUS_RING = "ring"
+        const val FOCUS_DIM = "dim"
+        /** Pela ordem em que o OK os percorre nas Definições. */
+        val FOCUS_EFFECTS = listOf(
+            FOCUS_BORDER, FOCUS_GLOW, FOCUS_GLASS, FOCUS_REFLECTION, FOCUS_AURORA, FOCUS_VIEWFINDER, FOCUS_UNDERLINE, FOCUS_RING,
+            FOCUS_DIM, FOCUS_SHADOW,
+        )
         const val ANIM_NONE = "none"
         const val ANIM_PULSE = "pulse"
         const val ANIM_BREATH = "breath"
@@ -176,7 +188,7 @@ data class AccountSettings(
                 language = json.str("language") ?: "auto",
                 nightMode = json.bool("night_mode") ?: false,
                 nightAuto = json.bool("night_auto") ?: false,
-                focusEffect = json.str("focus_effect")?.takeIf { it == FOCUS_GLOW || it == FOCUS_SHADOW } ?: FOCUS_BORDER,
+                focusEffect = json.str("focus_effect")?.takeIf { it in FOCUS_EFFECTS } ?: FOCUS_BORDER,
                 focusAnimation = json.str("focus_animation")?.takeIf { it == ANIM_PULSE || it == ANIM_BREATH || it == ANIM_SHINE } ?: ANIM_NONE,
                 focusColor = json.str("focus_color")?.takeIf { it.matches(Regex("#[0-9A-Fa-f]{6}")) } ?: COLOR_AUTO,
                 iconBackground = json.str("icon_background")

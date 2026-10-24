@@ -85,6 +85,14 @@
     <string name="effect_border">إطار</string>
     <string name="effect_glow">توهج</string>
     <string name="effect_shadow">ظل فقط</string>
+    <string name="effect_glass">زجاج</string>
+    <string name="effect_reflection">انعكاس</string>
+    <string name="effect_aurora">شفق</string>
+    <string name="effect_viewfinder">محدد المنظر</string>
+    <string name="effect_underline">خط سفلي</string>
+    <string name="effect_ring">حلقة عائمة</string>
+    <string name="effect_dim">تعتيم البقية</string>
+    <string name="anim_spin">دوران</string>
     <string name="focus_animation">الحركة</string>
     <string name="anim_none">بلا</string>
     <string name="anim_pulse">نبض</string>

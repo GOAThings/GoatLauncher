@@ -85,6 +85,14 @@
     <string name="effect_border">Contorno</string>
     <string name="effect_glow">Bagliore</string>
     <string name="effect_shadow">Solo ombra</string>
+    <string name="effect_glass">Vetro</string>
+    <string name="effect_reflection">Riflesso</string>
+    <string name="effect_aurora">Aurora</string>
+    <string name="effect_viewfinder">Mirino</string>
+    <string name="effect_underline">Sottolineato</string>
+    <string name="effect_ring">Anello sospeso</string>
+    <string name="effect_dim">Scurisci il resto</string>
+    <string name="anim_spin">Ruota</string>
     <string name="focus_animation">Animazione</string>
     <string name="anim_none">Nessuna</string>
     <string name="anim_pulse">Pulsazione</string>

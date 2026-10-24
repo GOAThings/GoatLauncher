@@ -85,6 +85,14 @@
     <string name="effect_border">테두리</string>
     <string name="effect_glow">글로우</string>
     <string name="effect_shadow">그림자만</string>
+    <string name="effect_glass">유리</string>
+    <string name="effect_reflection">반사</string>
+    <string name="effect_aurora">오로라</string>
+    <string name="effect_viewfinder">뷰파인더</string>
+    <string name="effect_underline">밑줄</string>
+    <string name="effect_ring">떠 있는 테두리</string>
+    <string name="effect_dim">나머지 어둡게</string>
+    <string name="anim_spin">회전</string>
     <string name="focus_animation">애니메이션</string>
     <string name="anim_none">없음</string>
     <string name="anim_pulse">펄스</string>

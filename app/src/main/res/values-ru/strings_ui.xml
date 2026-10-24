@@ -85,6 +85,14 @@
     <string name="effect_border">Рамка</string>
     <string name="effect_glow">Свечение</string>
     <string name="effect_shadow">Только тень</string>
+    <string name="effect_glass">Стекло</string>
+    <string name="effect_reflection">Отражение</string>
+    <string name="effect_aurora">Сияние</string>
+    <string name="effect_viewfinder">Видоискатель</string>
+    <string name="effect_underline">Подчёркивание</string>
+    <string name="effect_ring">Парящее кольцо</string>
+    <string name="effect_dim">Затемнить остальные</string>
+    <string name="anim_spin">Вращение</string>
     <string name="focus_animation">Анимация</string>
     <string name="anim_none">Нет</string>
     <string name="anim_pulse">Пульс</string>

@@ -85,6 +85,14 @@
     <string name="effect_border">Rahmen</string>
     <string name="effect_glow">Leuchten</string>
     <string name="effect_shadow">Nur Schatten</string>
+    <string name="effect_glass">Glas</string>
+    <string name="effect_reflection">Spiegelung</string>
+    <string name="effect_aurora">Polarlicht</string>
+    <string name="effect_viewfinder">Sucher</string>
+    <string name="effect_underline">Unterstrich</string>
+    <string name="effect_ring">Schwebender Ring</string>
+    <string name="effect_dim">Rest abdunkeln</string>
+    <string name="anim_spin">Drehen</string>
     <string name="focus_animation">Animation</string>
     <string name="anim_none">Keine</string>
     <string name="anim_pulse">Pulsieren</string>

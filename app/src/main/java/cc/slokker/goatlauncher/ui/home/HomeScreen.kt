@@ -167,6 +167,7 @@ private val SafeH = 48.dp
  */
 @Composable
 fun HomeScreen(vm: LauncherViewModel) {
+    val dockNight by vm.night.collectAsStateWithLifecycle()
     val s = LocalStrings.current
     val context = LocalContext.current
     val screen by vm.screen.collectAsStateWithLifecycle()
@@ -418,7 +419,11 @@ fun HomeScreen(vm: LauncherViewModel) {
 
     // O efeito de foco dos cartões das apps (Definições → Aparência).
     val focusStyle = remember(account) { FocusStyle.of(account) }
-    CompositionLocalProvider(LocalFocusStyle provides focusStyle, LocalIconBackground provides account.iconBackground) {
+    CompositionLocalProvider(
+        LocalFocusStyle provides focusStyle,
+        LocalIconBackground provides account.iconBackground,
+        LocalFocusDim provides remember { FocusDim() },
+    ) {
         Box(Modifier.fillMaxSize()) {
             Box(
                 Modifier
@@ -622,7 +627,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                                         Box(
                                             Modifier
                                                 .requiredWidth(TilesRowWidth + DockPadding * 2)
-                                                .background(Color.White.copy(alpha = 0.1f), DockShape)
+                                                .background(dockColor(dockNight), DockShape)
                                                 .padding(horizontal = DockPadding, vertical = 18.dp),
                                             contentAlignment = Alignment.Center,
                                         ) {
@@ -1111,6 +1116,9 @@ private fun TopShelfRow(items: List<WatchNextItem>, onOpen: (WatchNextItem) -> U
 
 private val TopShelfCardMax = 230.dp
 private val DockShape = RoundedCornerShape(30.dp)
+
+/** O vidro da doca (Apple TV): escuro no modo noite, claro no modo dia, como o resto do ecrã. */
+fun dockColor(night: Boolean): Color = if (night) Color.Black.copy(alpha = 0.38f) else Color.White.copy(alpha = 0.26f)
 
 /** Folga entre os favoritos das pontas e a borda da doca (o banner com foco cresce 10%). */
 private val DockPadding = 30.dp

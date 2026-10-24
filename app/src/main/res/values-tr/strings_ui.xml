@@ -85,6 +85,14 @@
     <string name="effect_border">Çerçeve</string>
     <string name="effect_glow">Parıltı</string>
     <string name="effect_shadow">Yalnızca gölge</string>
+    <string name="effect_glass">Cam</string>
+    <string name="effect_reflection">Yansıma</string>
+    <string name="effect_aurora">Aurora</string>
+    <string name="effect_viewfinder">Vizör</string>
+    <string name="effect_underline">Alt çizgi</string>
+    <string name="effect_ring">Yüzen halka</string>
+    <string name="effect_dim">Diğerlerini karart</string>
+    <string name="anim_spin">Döndür</string>
     <string name="focus_animation">Animasyon</string>
     <string name="anim_none">Yok</string>
     <string name="anim_pulse">Nabız</string>

@@ -85,6 +85,14 @@
     <string name="effect_border">Garis tepi</string>
     <string name="effect_glow">Cahaya</string>
     <string name="effect_shadow">Hanya bayangan</string>
+    <string name="effect_glass">Kaca</string>
+    <string name="effect_reflection">Pantulan</string>
+    <string name="effect_aurora">Aurora</string>
+    <string name="effect_viewfinder">Jendela bidik</string>
+    <string name="effect_underline">Garis bawah</string>
+    <string name="effect_ring">Cincin melayang</string>
+    <string name="effect_dim">Redupkan yang lain</string>
+    <string name="anim_spin">Putar</string>
     <string name="focus_animation">Animasi</string>
     <string name="anim_none">Tidak ada</string>
     <string name="anim_pulse">Denyut</string>

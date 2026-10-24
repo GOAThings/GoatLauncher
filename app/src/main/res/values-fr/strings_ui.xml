@@ -85,6 +85,14 @@
     <string name="effect_border">Contour</string>
     <string name="effect_glow">Halo</string>
     <string name="effect_shadow">Ombre seule</string>
+    <string name="effect_glass">Verre</string>
+    <string name="effect_reflection">Reflet</string>
+    <string name="effect_aurora">Aurore</string>
+    <string name="effect_viewfinder">Viseur</string>
+    <string name="effect_underline">Soulignement</string>
+    <string name="effect_ring">Anneau flottant</string>
+    <string name="effect_dim">Assombrir le reste</string>
+    <string name="anim_spin">Rotation</string>
     <string name="focus_animation">Animation</string>
     <string name="anim_none">Aucune</string>
     <string name="anim_pulse">Pulsation</string>

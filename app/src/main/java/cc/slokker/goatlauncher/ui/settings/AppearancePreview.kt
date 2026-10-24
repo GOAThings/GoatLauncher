@@ -54,6 +54,9 @@ import cc.slokker.goatlauncher.ui.home.BannerImage
 import cc.slokker.goatlauncher.ui.home.FavoriteCount
 import cc.slokker.goatlauncher.ui.home.FocusScale
 import cc.slokker.goatlauncher.ui.home.FocusStyle
+import cc.slokker.goatlauncher.ui.home.FocusDim
+import cc.slokker.goatlauncher.ui.home.dockColor
+import cc.slokker.goatlauncher.ui.home.LocalFocusDim
 import cc.slokker.goatlauncher.ui.home.LocalFocusStyle
 import cc.slokker.goatlauncher.ui.home.LocalIconBackground
 import cc.slokker.goatlauncher.ui.home.isSeeThrough
@@ -89,6 +92,7 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
     val device by vm.device.collectAsStateWithLifecycle()
     val apps by vm.apps.collectAsStateWithLifecycle()
     val watchNext by vm.watchNext.collectAsStateWithLifecycle()
+    val night by vm.night.collectAsStateWithLifecycle()
     val reddit by vm.redditImage.collectAsStateWithLifecycle()
     val weather by vm.weather.collectAsStateWithLifecycle()
 
@@ -131,7 +135,11 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
                     ),
                 )
             }
-            CompositionLocalProvider(LocalFocusStyle provides focusStyle, LocalIconBackground provides account.iconBackground) {
+            CompositionLocalProvider(
+        LocalFocusStyle provides focusStyle,
+        LocalIconBackground provides account.iconBackground,
+        LocalFocusDim provides remember { FocusDim() },
+    ) {
                 Column(Modifier.fillMaxSize().padding(TvSafePadding)) {
                     PreviewTopBar(account, weather?.takeIf { account.showWeather }, showApps = !appleTv)
                     Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -152,7 +160,7 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
                                     Box(
                                         Modifier
                                             .requiredWidth(TilesRowWidth + 60.dp)
-                                            .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(30.dp))
+                                            .background(dockColor(night), RoundedCornerShape(30.dp))
                                             .padding(horizontal = 30.dp, vertical = 18.dp),
                                         contentAlignment = Alignment.Center,
                                     ) { tiles() }

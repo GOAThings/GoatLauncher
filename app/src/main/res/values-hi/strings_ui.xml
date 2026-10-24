@@ -85,6 +85,14 @@
     <string name="effect_border">आउटलाइन</string>
     <string name="effect_glow">चमक</string>
     <string name="effect_shadow">सिर्फ़ छाया</string>
+    <string name="effect_glass">ग्लास</string>
+    <string name="effect_reflection">प्रतिबिंब</string>
+    <string name="effect_aurora">ऑरोरा</string>
+    <string name="effect_viewfinder">व्यूफ़ाइंडर</string>
+    <string name="effect_underline">अंडरलाइन</string>
+    <string name="effect_ring">तैरती रिंग</string>
+    <string name="effect_dim">बाकी को धुंधला करें</string>
+    <string name="anim_spin">घुमाएँ</string>
     <string name="focus_animation">ऐनिमेशन</string>
     <string name="anim_none">कोई नहीं</string>
     <string name="anim_pulse">धड़कन</string>

@@ -32,6 +32,7 @@ import cc.slokker.goatlauncher.ui.home.FocusColors
 import cc.slokker.goatlauncher.ui.home.GraphiteBackground
 import androidx.compose.ui.geometry.Offset
 import cc.slokker.goatlauncher.ui.home.colorSpec
+import cc.slokker.goatlauncher.ui.home.focusAnimations
 import cc.slokker.goatlauncher.ui.home.parseColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -510,26 +511,42 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
 
         item { SectionLabel(s.focusedCard) }
         item {
-            // OK passa ao efeito seguinte: contorno → brilho → só sombra → contorno.
-            val (label, next) = when (account.focusEffect) {
-                AccountSettings.FOCUS_GLOW -> s.effectGlow to AccountSettings.FOCUS_SHADOW
-                AccountSettings.FOCUS_SHADOW -> s.effectShadow to AccountSettings.FOCUS_BORDER
-                else -> s.effectBorder to AccountSettings.FOCUS_GLOW
+            // OK passa ao efeito seguinte (pela ordem de FOCUS_EFFECTS, e volta ao primeiro); a pré-visualização ao lado mostra-o.
+            val effects = AccountSettings.FOCUS_EFFECTS
+            val next = effects[(effects.indexOf(account.focusEffect) + 1) % effects.size]
+            val label = when (account.focusEffect) {
+                AccountSettings.FOCUS_GLOW -> s.effectGlow
+                AccountSettings.FOCUS_GLASS -> s.effectGlass
+                AccountSettings.FOCUS_REFLECTION -> s.effectReflection
+                AccountSettings.FOCUS_AURORA -> s.effectAurora
+                AccountSettings.FOCUS_VIEWFINDER -> s.effectViewfinder
+                AccountSettings.FOCUS_UNDERLINE -> s.effectUnderline
+                AccountSettings.FOCUS_RING -> s.effectRing
+                AccountSettings.FOCUS_DIM -> s.effectDim
+                AccountSettings.FOCUS_SHADOW -> s.effectShadow
+                else -> s.effectBorder
             }
             GlassRow(title = s.focusEffect, subtitle = label, onClick = { vm.setFocusEffect(next) }, trailing = { Chevron() })
         }
-        // Só com sombra não há contorno nem brilho para animar ou pintar.
-        if (account.focusEffect != AccountSettings.FOCUS_SHADOW) {
+        // Cada efeito tem as suas animações (o vidro tem o brilho a passar e mais nenhuma); a cor não serve
+        // para "só sombra" nem para "escurecer os outros".
+        val effect = account.focusEffect
+        val animations = focusAnimations(effect)
+        if (animations.isNotEmpty()) {
             item {
-                // OK passa à animação seguinte: nenhuma → pulsar → respirar → luz a rodar → nenhuma.
-                val (label, next) = when (account.focusAnimation) {
-                    AccountSettings.ANIM_PULSE -> s.animPulse to AccountSettings.ANIM_BREATH
-                    AccountSettings.ANIM_BREATH -> s.animBreath to AccountSettings.ANIM_SHINE
-                    AccountSettings.ANIM_SHINE -> s.animShine to AccountSettings.ANIM_NONE
-                    else -> s.animNone to AccountSettings.ANIM_PULSE
+                // OK passa à animação seguinte das que este efeito aceita (e volta à primeira).
+                val current = account.focusAnimation.takeIf { it in animations } ?: AccountSettings.ANIM_NONE
+                val next = animations[(animations.indexOf(current) + 1) % animations.size]
+                val label = when (current) {
+                    AccountSettings.ANIM_PULSE -> s.animPulse
+                    AccountSettings.ANIM_BREATH -> s.animBreath
+                    AccountSettings.ANIM_SHINE -> if (effect == AccountSettings.FOCUS_AURORA) s.animSpin else s.animShine
+                    else -> s.animNone
                 }
                 GlassRow(title = s.focusAnimation, subtitle = label, onClick = { vm.setFocusAnimation(next) }, trailing = { Chevron() })
             }
+        }
+        if (effect != AccountSettings.FOCUS_SHADOW && effect != AccountSettings.FOCUS_DIM) {
             item { FocusColorRow(account.focusColor, onPick = vm::setFocusColor) }
         }
 
