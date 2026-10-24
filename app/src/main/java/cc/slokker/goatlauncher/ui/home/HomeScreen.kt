@@ -269,9 +269,14 @@ fun HomeScreen(vm: LauncherViewModel) {
 
     fun lastFavorite() = favorites.firstOrNull { it.packageName == focusedPkg }?.packageName ?: favorites.firstOrNull()?.packageName
 
+    // Quando acabou o último "mover": o OK que confirma a posição não pode também abrir a app (o comando pode
+    // mandar o clique por outra tecla, ou depois de o "mover" já ter acabado).
+    var moveEndedAt by remember { mutableLongStateOf(0L) }
+
     fun endMove() {
         if (moving != null) {
             moving = null
+            moveEndedAt = SystemClock.uptimeMillis()
             vm.finishMove()
         }
     }
@@ -319,7 +324,12 @@ fun HomeScreen(vm: LauncherViewModel) {
                 focusedPkg = app.packageName
                 vm.focusedPackage = app.packageName
             },
-            onClick = { vm.launchApp(context, app.packageName) },
+            onClick = {
+                when {
+                    moving != null -> endMove()
+                    SystemClock.uptimeMillis() - moveEndedAt > MOVE_CLICK_GUARD_MS -> vm.launchApp(context, app.packageName)
+                }
+            },
             // Com as definições protegidas, o menu (mover, esconder, mudar nome…) pede o código.
             onLongClick = { vm.withSettingsUnlocked { menuFor = app } },
             bannerModifier = modifier.then(if (app.packageName == targetPkg) Modifier.focusRequester(target) else Modifier),
@@ -454,7 +464,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                                     }
                                     true
                                 }
-                                Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.Back -> {
+                                Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.ButtonA, Key.ButtonSelect, Key.Back -> {
                                     if (up) endMove()
                                     true
                                 }
@@ -1117,8 +1127,11 @@ private fun TopShelfRow(items: List<WatchNextItem>, onOpen: (WatchNextItem) -> U
 private val TopShelfCardMax = 230.dp
 private val DockShape = RoundedCornerShape(30.dp)
 
+/** Depois de acabar de mover, um clique na app durante este tempo não a abre (é o OK que confirmou a posição). */
+private const val MOVE_CLICK_GUARD_MS = 600L
+
 /** O vidro da doca (Apple TV): escuro no modo noite, claro no modo dia, como o resto do ecrã. */
-fun dockColor(night: Boolean): Color = if (night) Color.Black.copy(alpha = 0.38f) else Color.White.copy(alpha = 0.26f)
+fun dockColor(night: Boolean): Color = if (night) Color.Black.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.26f)
 
 /** Folga entre os favoritos das pontas e a borda da doca (o banner com foco cresce 10%). */
 private val DockPadding = 30.dp

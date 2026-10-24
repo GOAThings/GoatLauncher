@@ -263,7 +263,7 @@ private fun ContentDrawScope.drawReflection(alpha: Float) {
     clipRect(area.left, area.top, area.right, area.bottom) {
         withTransform({ scale(1f, -1f, pivot = Offset(0f, size.height + gap / 2)) }) { this@drawReflection.drawContent() }
         drawRect(
-            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.3f * alpha), Color.Transparent), startY = top, endY = top + depth),
+            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.6f * alpha), Color.Transparent), startY = top, endY = top + depth),
             topLeft = area.topLeft,
             size = area.size,
             blendMode = BlendMode.DstIn,
