@@ -162,6 +162,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Largura original de cada foto do Reddit já carregada (para a "resolução mínima"). */
     private val redditWidths = mutableMapOf<String, Int>()
 
+    /**
+     * Se cada foto é clara (true) ou escura (false), para o modo dia/noite. Tem de ficar antes do init: a escolha
+     * do fundo arranca lá e pode chegar aqui antes de o resto da classe estar inicializado (era o crash no onResume).
+     */
+    private val redditLight = mutableMapOf<String, Boolean>()
+
     private val _pinPrompt = MutableStateFlow<PinPrompt?>(null)
     val pinPrompt: StateFlow<PinPrompt?> = _pinPrompt.asStateFlow()
 
@@ -421,8 +427,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         fallback?.let { if (it.url != _reddit.value?.url) _reddit.value = it }
     }
 
-    /** Se cada foto é clara (true) ou escura (false), para o modo dia/noite. */
-    private val redditLight = mutableMapOf<String, Boolean>()
 
     /** Mede a luminosidade média numa cópia de 32×18 (barata); acima de 35% conta como clara. */
     private suspend fun isLight(url: String): Boolean? = redditLight[url] ?: withContext(Dispatchers.IO) {

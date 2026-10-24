@@ -24,6 +24,8 @@ sed -i "s/versionCode = $code/versionCode = $((code + 1))/; s/versionName = \"[^
 
 apk="build/goatlauncher-$VERSION.apk"
 mkdir -p build
+# O mapeamento do R8 desta versão (só no PC): sem ele, os crashes das TVs vêm com nomes ofuscados (ex.: MainActivity.p).
+cp app/build/outputs/mapping/release/mapping.txt "build/mapping-$VERSION.txt"
 cp app/build/outputs/apk/release/app-release.apk "$apk"
 # Cópia com nome fixo: https://github.com/$RELEASES_REPO/releases/latest/download/goatlauncher.apk dá sempre
 # a versão mais recente (é para aí que aponta o código do Downloader, que nunca muda).
