@@ -23,7 +23,7 @@
     <string name="nav_sounds_hint">Un tic leggero quando ti sposti e un clic su OK</string>
     <string name="ambient_style">Stile della modalità ambiente</string>
     <string name="ambient_photos">Sfondo con ora, meteo e canale</string>
-    <string name="ambient_bounce">Orologio che rimbalza sul nero</string>
+    <string name="ambient_bounce">Logo DVD che rimbalza sul nero</string>
     <string name="screensaver">Salvaschermo di Android</string>
     <string name="screensaver_hint">Scegli GoatLauncher per vederlo in qualsiasi app</string>
     <string name="use_folder">Usa questa cartella (%1$d immagini)</string>

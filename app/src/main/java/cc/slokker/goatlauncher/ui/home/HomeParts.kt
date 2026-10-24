@@ -77,6 +77,8 @@ import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import kotlin.math.abs
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
@@ -123,7 +125,7 @@ fun TopClock(clock24h: Boolean, modifier: Modifier = Modifier) {
 /**
  * O modo ambiente (e o protetor de ecrã): [AccountSettings.AMBIENT_PHOTOS] mostra o fundo com as horas, a data,
  * o tempo, o canal que estava a dar ([nowPlaying]) e o título da foto ([caption]); [AccountSettings.AMBIENT_BOUNCE]
- * é um ecrã preto com o relógio a andar e a bater nas bordas, como o DVD de antigamente.
+ * é um ecrã preto com o logótipo DVD a andar e a bater nas bordas, como nos leitores de DVD de antigamente.
  */
 @Composable
 fun AmbientScene(
@@ -135,7 +137,7 @@ fun AmbientScene(
     modifier: Modifier = Modifier,
 ) {
     if (style == AccountSettings.AMBIENT_BOUNCE) {
-        BouncingClock(clock24h, weather, modifier)
+        BouncingDvd(modifier)
         return
     }
     val now = rememberMinute()
@@ -199,12 +201,11 @@ private fun AmbientBlock(
 }
 
 /**
- * O relógio a andar na diagonal e a ressaltar nas bordas; muda de cor a cada batida. Tudo o resto é preto
- * (um bom protetor de ecrã para TVs OLED).
+ * O logótipo DVD a andar na diagonal e a ressaltar nas bordas (de vez em quando acerta num canto); muda de cor a
+ * cada batida. Tudo o resto é preto (um bom protetor de ecrã para TVs OLED).
  */
 @Composable
-private fun BouncingClock(clock24h: Boolean, weather: WeatherNow?, modifier: Modifier) {
-    val now = rememberMinute()
+private fun BouncingDvd(modifier: Modifier) {
     val density = LocalDensity.current
     var area by remember { mutableStateOf(IntSize.Zero) }
     var block by remember { mutableStateOf(IntSize.Zero) }
@@ -239,7 +240,40 @@ private fun BouncingClock(clock24h: Boolean, weather: WeatherNow?, modifier: Mod
                 .offset { IntOffset(pos.x.roundToInt(), pos.y.roundToInt()) }
                 .onSizeChanged { block = it },
         ) {
-            AmbientBlock(clock24h, weather, nowPlaying = null, caption = null, Alignment.Start, now, BOUNCE_COLORS[colorIndex])
+            DvdLogo(BOUNCE_COLORS[colorIndex])
+        }
+    }
+}
+
+/**
+ * Um logótipo ao estilo do DVD Video, desenhado aqui (não é a arte oficial da marca): "DVD" a negrito inclinado
+ * e, por baixo, um disco achatado com "VIDEO" vazado.
+ */
+@Composable
+private fun DvdLogo(color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            "DVD",
+            color = color,
+            style = MaterialTheme.typography.displayLarge.copy(
+                fontSize = 84.sp,
+                fontWeight = FontWeight.Black,
+                fontStyle = FontStyle.Italic,
+                letterSpacing = (-3).sp,
+            ),
+        )
+        Box(
+            Modifier
+                .offset(y = (-6).dp)
+                .size(width = 210.dp, height = 36.dp)
+                .drawBehind { drawOval(color) },
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "VIDEO",
+                color = Color.Black,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black, letterSpacing = 6.sp),
+            )
         }
     }
 }

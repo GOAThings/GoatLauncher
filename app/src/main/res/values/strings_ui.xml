@@ -23,7 +23,7 @@
     <string name="nav_sounds_hint">A soft tick when moving and a click on OK</string>
     <string name="ambient_style">Ambient mode style</string>
     <string name="ambient_photos">Wallpaper with the time, weather and channel</string>
-    <string name="ambient_bounce">Bouncing clock on black</string>
+    <string name="ambient_bounce">Bouncing DVD logo on black</string>
     <string name="screensaver">Android screensaver</string>
     <string name="screensaver_hint">Choose GoatLauncher to see this in any app</string>
     <string name="use_folder">Use this folder (%1$d images)</string>

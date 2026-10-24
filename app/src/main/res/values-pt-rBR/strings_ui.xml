@@ -23,7 +23,7 @@
     <string name="nav_sounds_hint">Um tique suave ao mover e um clique no OK</string>
     <string name="ambient_style">Estilo do modo ambiente</string>
     <string name="ambient_photos">Fundo com o horário, o tempo e o canal</string>
-    <string name="ambient_bounce">Relógio quicando no preto</string>
+    <string name="ambient_bounce">Logo do DVD quicando no preto</string>
     <string name="screensaver">Protetor de tela do Android</string>
     <string name="screensaver_hint">Escolha o GoatLauncher para ver isso em qualquer app</string>
     <string name="use_folder">Usar esta pasta (%1$d imagens)</string>

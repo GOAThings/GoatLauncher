@@ -23,7 +23,7 @@
     <string name="nav_sounds_hint">Hareket ederken yumuşak bir tık ve Tamam\'da bir klik</string>
     <string name="ambient_style">Ortam modu stili</string>
     <string name="ambient_photos">Saat, hava durumu ve kanal ile duvar kâğıdı</string>
-    <string name="ambient_bounce">Siyah üzerinde zıplayan saat</string>
+    <string name="ambient_bounce">Siyah üzerinde zıplayan DVD logosu</string>
     <string name="screensaver">Android ekran koruyucusu</string>
     <string name="screensaver_hint">Her uygulamada görmek için GoatLauncher\'ı seçin</string>
     <string name="use_folder">Bu klasörü kullan (%1$d görsel)</string>

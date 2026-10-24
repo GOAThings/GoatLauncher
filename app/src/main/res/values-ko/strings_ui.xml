@@ -23,7 +23,7 @@
     <string name="nav_sounds_hint">이동할 때 부드러운 틱 소리, 확인 버튼에서 클릭 소리</string>
     <string name="ambient_style">앰비언트 모드 스타일</string>
     <string name="ambient_photos">시간, 날씨, 채널이 있는 배경화면</string>
-    <string name="ambient_bounce">검은 화면에서 튀는 시계</string>
+    <string name="ambient_bounce">검은 화면에서 튀는 DVD 로고</string>
     <string name="screensaver">Android 화면 보호기</string>
     <string name="screensaver_hint">GoatLauncher를 선택하면 어떤 앱에서도 볼 수 있습니다</string>
     <string name="use_folder">이 폴더 사용 (이미지 %1$d개)</string>

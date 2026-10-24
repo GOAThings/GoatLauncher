@@ -23,7 +23,7 @@
     <string name="nav_sounds_hint">نقرة خفيفة عند التنقل ونقرة عند الضغط على موافق</string>
     <string name="ambient_style">نمط الوضع المحيطي</string>
     <string name="ambient_photos">الخلفية مع الوقت والطقس والقناة</string>
-    <string name="ambient_bounce">ساعة تقفز على الأسود</string>
+    <string name="ambient_bounce">شعار DVD يقفز على الأسود</string>
     <string name="screensaver">شاشة توقف أندرويد</string>
     <string name="screensaver_hint">اختر GoatLauncher لرؤية هذا في أي تطبيق</string>
     <string name="use_folder">استخدام هذا المجلد (%1$d صور)</string>

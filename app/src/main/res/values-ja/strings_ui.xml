@@ -23,7 +23,7 @@
     <string name="nav_sounds_hint">移動時に小さなチック音、OK でクリック音</string>
     <string name="ambient_style">アンビエントモードのスタイル</string>
     <string name="ambient_photos">時刻・天気・チャンネル付きの壁紙</string>
-    <string name="ambient_bounce">黒地に跳ね回る時計</string>
+    <string name="ambient_bounce">黒地に跳ね回る DVD ロゴ</string>
     <string name="screensaver">Android のスクリーンセーバー</string>
     <string name="screensaver_hint">GoatLauncher を選ぶとどのアプリでも表示されます</string>
     <string name="use_folder">このフォルダを使う（%1$d 枚）</string>

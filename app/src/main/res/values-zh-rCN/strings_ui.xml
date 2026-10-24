@@ -23,7 +23,7 @@
     <string name="nav_sounds_hint">移动时轻柔的滴答声，按确定时的点击声</string>
     <string name="ambient_style">环境模式样式</string>
     <string name="ambient_photos">带时间、天气和频道的壁纸</string>
-    <string name="ambient_bounce">黑色背景上弹跳的时钟</string>
+    <string name="ambient_bounce">黑色背景上弹跳的 DVD 标志</string>
     <string name="screensaver">Android 屏幕保护程序</string>
     <string name="screensaver_hint">选择 GoatLauncher，在任何应用中都能看到</string>
     <string name="use_folder">使用此文件夹（%1$d 张图片）</string>

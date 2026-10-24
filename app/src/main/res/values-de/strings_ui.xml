@@ -23,7 +23,7 @@
     <string name="nav_sounds_hint">Ein leises Ticken beim Bewegen und ein Klick bei OK</string>
     <string name="ambient_style">Stil des Umgebungsmodus</string>
     <string name="ambient_photos">Hintergrund mit Uhrzeit, Wetter und Sender</string>
-    <string name="ambient_bounce">Hüpfende Uhr auf Schwarz</string>
+    <string name="ambient_bounce">Hüpfendes DVD-Logo auf Schwarz</string>
     <string name="screensaver">Android-Bildschirmschoner</string>
     <string name="screensaver_hint">Wähle GoatLauncher, um das in jeder App zu sehen</string>
     <string name="use_folder">Diesen Ordner verwenden (%1$d Bilder)</string>
