@@ -31,6 +31,7 @@ import cc.slokker.goatlauncher.data.Updater
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.data.WatchNextItem
 import cc.slokker.goatlauncher.data.SunTimes
+import java.io.File
 import cc.slokker.goatlauncher.data.WeatherNow
 import cc.slokker.goatlauncher.data.YouTubeLogin
 import cc.slokker.goatlauncher.data.api.BackendDevice
@@ -157,6 +158,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Com o fundo do Reddit: a imagem atual (já carregada na cache, para entrar com um fade sem saltos). */
     val redditImage: StateFlow<RedditImage?> = _reddit.asStateFlow()
 
+    /** Com o fundo "pasta": a imagem dela que está a aparecer agora. */
+    private val _folderImage = MutableStateFlow<File?>(null)
+    val folderImage: StateFlow<File?> = _folderImage.asStateFlow()
+
     /** Imagens que não servem de fundo (ao alto, ou que não carregaram). */
     private val badReddit = mutableSetOf<String>()
 
@@ -282,6 +287,21 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                     showReddit(wp.value, next, minWidth, night)
                     delay(c.reddit.msUntilRotation(wp.value))
                     next = true
+                }
+            }
+        }
+        viewModelScope.launch {
+            // Fundo de uma pasta: uma imagem ao acaso, trocada a cada FOLDER_ROTATE_MS (e ao passar de dia para noite),
+            // de preferência do tom certo (clara de dia, escura à noite), como no Reddit.
+            combine(settings.account.map { it.wallpaper }, night) { wp, n -> wp to n }.distinctUntilChanged().collectLatest { (wp, night) ->
+                if (wp.type != Wallpaper.TYPE_FOLDER) {
+                    _folderImage.value = null
+                    return@collectLatest
+                }
+                val dir = File(wp.value)
+                while (true) {
+                    _folderImage.value = pickFolderImage(dir, night)
+                    delay(FOLDER_ROTATE_MS)
                 }
             }
         }
@@ -452,9 +472,20 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
 
     /** Mede a luminosidade média numa cópia de 32×18 (barata); acima de 35% conta como clara. */
-    private suspend fun isLight(url: String): Boolean? = redditLight[url] ?: withContext(Dispatchers.IO) {
+    private suspend fun isLight(url: String): Boolean? = isLight(url, url)
+
+    /** Uma imagem da pasta, diferente da atual e do tom certo se houver; null se a pasta não tiver imagens. */
+    private suspend fun pickFolderImage(dir: File, night: Boolean): File? {
+        val all = ImageImport.images(dir)
+        val others = (all - setOfNotNull(_folderImage.value)).shuffled().ifEmpty { all }
+        // Mede no máximo umas quantas (cada uma é uma leitura pequena da imagem).
+        return others.take(FOLDER_TONE_TRIES).firstOrNull { f -> isLight(f, f.path).let { it == null || it != night } }
+            ?: others.firstOrNull()
+    }
+
+    private suspend fun isLight(data: Any, key: String): Boolean? = redditLight[key] ?: withContext(Dispatchers.IO) {
         val result = SingletonImageLoader.get(context).execute(
-            ImageRequest.Builder(context).data(url).size(32, 18).allowHardware(false).build(),
+            ImageRequest.Builder(context).data(data).size(32, 18).allowHardware(false).build(),
         )
         val bmp = (result as? SuccessResult)?.image?.toBitmap() ?: return@withContext null
         val px = IntArray(bmp.width * bmp.height).also { bmp.getPixels(it, 0, bmp.width, 0, 0, bmp.width, bmp.height) }
@@ -462,7 +493,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             0.2126 * ((c shr 16) and 0xFF) + 0.7152 * ((c shr 8) and 0xFF) + 0.0722 * (c and 0xFF)
         } / (px.size * 255.0)
         luma > LIGHT_LUMA
-    }?.also { redditLight[url] = it }
+    }?.also { redditLight[key] = it }
 
     /** O botão dia/noite: troca o que está agora e desliga o automático. */
     fun toggleNight() {
@@ -901,6 +932,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     /** Fundo a partir de uma imagem da box (copiada para a app). */
+    fun setWallpaperFolder(dir: File) = setWallpaper(Wallpaper(Wallpaper.TYPE_FOLDER, dir.path))
+
     fun setWallpaperFromImage(source: Any) {
         viewModelScope.launch {
             val name = ImageImport.saveWallpaper(context, source)
@@ -946,6 +979,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private companion object {
         /** De quanto em quanto tempo procurar versões novas. */
         const val UPDATE_CHECK_MS = 12 * 60 * 60_000L
+        /** De quanto em quanto tempo o fundo "pasta" muda de imagem (como o do Reddit). */
+        const val FOLDER_ROTATE_MS = 30 * 60_000L
+        const val FOLDER_TONE_TRIES = 8
         const val WEATHER_MS = 30 * 60_000L
         const val YOUTUBE_MS = 30 * 60_000L
         const val YOUTUBE_STALE_MS = 10 * 60_000L

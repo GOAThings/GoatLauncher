@@ -19,6 +19,9 @@
     <string name="no_apps">テレビ用アプリがインストールされていません。</string>
     <string name="cant_open">開けませんでした。</string>
     <string name="no_search">このテレビにはシステム検索がありません。</string>
+    <string name="use_folder">このフォルダを使う（%1$d 枚）</string>
+    <string name="use_folder_hint">1 枚ずつ、30 分ごとに切り替わります</string>
+    <string name="wallpaper_folder">フォルダ: %1$s</string>
     <string name="move">移動</string>
     <string name="hide">ホームから非表示</string>
     <string name="show_on_home">ホームに表示</string>

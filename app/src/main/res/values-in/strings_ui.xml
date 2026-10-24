@@ -19,6 +19,9 @@
     <string name="no_apps">Tidak ada aplikasi TV yang terpasang.</string>
     <string name="cant_open">Tidak dapat membukanya.</string>
     <string name="no_search">TV ini tidak punya pencarian sistem.</string>
+    <string name="use_folder">Gunakan folder ini (%1$d gambar)</string>
+    <string name="use_folder_hint">Satu gambar setiap kali, berganti setiap 30 menit</string>
+    <string name="wallpaper_folder">Folder: %1$s</string>
     <string name="move">Pindahkan</string>
     <string name="hide">Sembunyikan dari Beranda</string>
     <string name="show_on_home">Tampilkan di Beranda</string>

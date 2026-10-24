@@ -19,6 +19,9 @@
     <string name="no_apps">कोई TV ऐप इंस्टॉल नहीं है।</string>
     <string name="cant_open">इसे खोला नहीं जा सका।</string>
     <string name="no_search">इस TV में सिस्टम सर्च नहीं है।</string>
+    <string name="use_folder">यह फ़ोल्डर इस्तेमाल करें (%1$d चित्र)</string>
+    <string name="use_folder_hint">एक बार में एक चित्र, हर 30 मिनट में बदलता है</string>
+    <string name="wallpaper_folder">फ़ोल्डर: %1$s</string>
     <string name="move">जगह बदलें</string>
     <string name="hide">होम से छिपाएँ</string>
     <string name="show_on_home">होम पर दिखाएँ</string>

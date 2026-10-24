@@ -19,6 +19,9 @@
     <string name="no_apps">Yüklü TV uygulaması yok.</string>
     <string name="cant_open">Açılamadı.</string>
     <string name="no_search">Bu TV\'de sistem araması yok.</string>
+    <string name="use_folder">Bu klasörü kullan (%1$d görsel)</string>
+    <string name="use_folder_hint">Her seferinde bir görsel, 30 dakikada bir değişir</string>
+    <string name="wallpaper_folder">Klasör: %1$s</string>
     <string name="move">Taşı</string>
     <string name="hide">Ana ekrandan gizle</string>
     <string name="show_on_home">Ana ekranda göster</string>

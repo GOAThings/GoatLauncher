@@ -19,6 +19,9 @@
     <string name="no_apps">Aucune app TV installée.</string>
     <string name="cant_open">Impossible d\'ouvrir cet élément.</string>
     <string name="no_search">Cette TV n\'a pas de recherche système.</string>
+    <string name="use_folder">Utiliser ce dossier (%1$d images)</string>
+    <string name="use_folder_hint">Une image à la fois, change toutes les 30 minutes</string>
+    <string name="wallpaper_folder">Dossier : %1$s</string>
     <string name="move">Déplacer</string>
     <string name="hide">Masquer de l\'accueil</string>
     <string name="show_on_home">Afficher sur l\'accueil</string>

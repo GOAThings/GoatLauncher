@@ -19,6 +19,9 @@
     <string name="no_apps">لا توجد تطبيقات تلفزيون مثبّتة.</string>
     <string name="cant_open">تعذّر فتح هذا العنصر.</string>
     <string name="no_search">لا يحتوي هذا التلفزيون على بحث النظام.</string>
+    <string name="use_folder">استخدام هذا المجلد (%1$d صور)</string>
+    <string name="use_folder_hint">صورة واحدة في كل مرة، تتغير كل 30 دقيقة</string>
+    <string name="wallpaper_folder">مجلد: %1$s</string>
     <string name="move">نقل</string>
     <string name="hide">إخفاء من الرئيسية</string>
     <string name="show_on_home">إظهار في الرئيسية</string>

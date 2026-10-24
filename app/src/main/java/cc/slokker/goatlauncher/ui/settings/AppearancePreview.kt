@@ -94,6 +94,7 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
     val watchNext by vm.watchNext.collectAsStateWithLifecycle()
     val night by vm.night.collectAsStateWithLifecycle()
     val reddit by vm.redditImage.collectAsStateWithLifecycle()
+    val folderImage by vm.folderImage.collectAsStateWithLifecycle()
     val weather by vm.weather.collectAsStateWithLifecycle()
 
     val favorites = apps.orEmpty().take(FavoriteCount)
@@ -112,7 +113,7 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
             .border(1.dp, Color.White.copy(alpha = 0.22f), shape),
     ) {
         VirtualScreen {
-            WallpaperView(account.wallpaper, reddit?.url)
+            WallpaperView(account.wallpaper, reddit?.url ?: folderImage)
             // Destaque: a imagem do conteúdo enche o fundo (os logos dos canais não).
             val hero = items.firstOrNull()?.takeIf { shelf && !it.isChannel && it.imageUri != null }
             if (hero != null) {

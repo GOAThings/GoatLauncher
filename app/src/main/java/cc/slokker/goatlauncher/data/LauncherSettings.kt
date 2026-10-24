@@ -37,6 +37,12 @@ data class Wallpaper(val type: String, val value: String) {
         /** Imagem da box copiada para a app (ver ImageImport). */
         const val TYPE_FILE = "file"
 
+        /**
+         * As imagens de uma pasta da box (ou de um disco USB/de rede), uma de cada vez, a mudar de tempos a tempos.
+         * [value] é o caminho da pasta; noutra TV da conta não existe e fica o fundo por defeito.
+         */
+        const val TYPE_FOLDER = "folder"
+
         /** Imagens de um subreddit, a mudar de tempos a tempos (ver RedditWallpapers). [value] é o subreddit. */
         const val TYPE_REDDIT = "reddit"
         /** Fotos do r/EarthPorn; sem rede (ou antes de chegarem) vê-se o fundo "Lago" desenhado. */

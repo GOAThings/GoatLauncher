@@ -19,6 +19,9 @@
     <string name="no_apps">Нет установленных ТВ-приложений.</string>
     <string name="cant_open">Не удалось открыть.</string>
     <string name="no_search">На этом ТВ нет системного поиска.</string>
+    <string name="use_folder">Использовать эту папку (%1$d изображений)</string>
+    <string name="use_folder_hint">По одному изображению, смена каждые 30 минут</string>
+    <string name="wallpaper_folder">Папка: %1$s</string>
     <string name="move">Переместить</string>
     <string name="hide">Скрыть с главной</string>
     <string name="show_on_home">Показывать на главной</string>

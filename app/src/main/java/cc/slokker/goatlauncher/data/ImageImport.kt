@@ -35,6 +35,11 @@ object ImageImport {
 
     fun isRoot(dir: File) = roots().any { it.path == dir.path }
 
+    /** As imagens de [dir] (sem subpastas nem ficheiros escondidos). */
+    suspend fun images(dir: File): List<File> = withContext(Dispatchers.IO) {
+        dir.listFiles().orEmpty().filter { it.isFile && !it.name.startsWith(".") && it.extension.lowercase() in EXTENSIONS }
+    }
+
     /** Lê uma imagem (ficheiro ou content://) já reduzida para caber em [maxW]×[maxH]. */
     suspend fun decode(context: Context, source: Any, maxW: Int, maxH: Int): Bitmap? = withContext(Dispatchers.IO) {
         fun open(): InputStream? = when (source) {

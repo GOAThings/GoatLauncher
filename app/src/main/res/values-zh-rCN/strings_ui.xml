@@ -19,6 +19,9 @@
     <string name="no_apps">未安装电视应用。</string>
     <string name="cant_open">无法打开。</string>
     <string name="no_search">此电视没有系统搜索。</string>
+    <string name="use_folder">使用此文件夹（%1$d 张图片）</string>
+    <string name="use_folder_hint">每次一张，每 30 分钟更换</string>
+    <string name="wallpaper_folder">文件夹：%1$s</string>
     <string name="move">移动</string>
     <string name="hide">从首页隐藏</string>
     <string name="show_on_home">在首页显示</string>

@@ -68,7 +68,7 @@ fun parentFolder(dir: File): File? = if (ImageImport.isRoot(dir)) null else dir.
  * A pasta atual fica com quem chama (Voltar sobe uma pasta: ver [parentFolder]).
  */
 @Composable
-fun ImageBrowser(dir: File?, onDir: (File?) -> Unit, onPick: (File) -> Unit, first: FocusRequester) {
+fun ImageBrowser(dir: File?, onDir: (File?) -> Unit, onPick: (File) -> Unit, first: FocusRequester, onPickFolder: ((File) -> Unit)? = null) {
     val s = LocalStrings.current
     val context = LocalContext.current
     val permission = if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE
@@ -109,6 +109,18 @@ fun ImageBrowser(dir: File?, onDir: (File?) -> Unit, onPick: (File) -> Unit, fir
                         leading = { Icon(GoatIcons.ArrowUp, null, Modifier.size(20.dp)) },
                         onClick = { onDir(parentFolder(dir)) },
                         modifier = Modifier.focusRequester(first),
+                    )
+                }
+            }
+            // Uma pasta com imagens pode ser o fundo inteira (uma imagem de cada vez, a mudar).
+            val images = list.count { it.isFile }
+            if (dir != null && onPickFolder != null && images > 0) {
+                item(key = "folder") {
+                    GlassRow(
+                        title = s.useFolder(images),
+                        subtitle = s.useFolderHint,
+                        leading = { Icon(GoatIcons.Folder, null, Modifier.size(20.dp)) },
+                        onClick = { onPickFolder(dir) },
                     )
                 }
             }

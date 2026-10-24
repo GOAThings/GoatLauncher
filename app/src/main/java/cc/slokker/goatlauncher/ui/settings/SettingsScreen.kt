@@ -219,6 +219,10 @@ fun SettingsScreen(
                         vm.setWallpaperFromImage(it)
                         page = Page.Wallpaper
                     },
+                    onPickFolder = {
+                        vm.setWallpaperFolder(it)
+                        page = Page.Wallpaper
+                    },
                     first = first,
                 )
                 Page.HiddenApps -> HiddenAppsPage(vm, first)
@@ -749,12 +753,12 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
                 modifier = if (wp == Wallpapers.ALL.first()) Modifier.focusRequester(first) else Modifier,
             )
         }
-        // Uma imagem da box (copiada para a app) ou do gestor de ficheiros do sistema.
-        val isImage = current.type == Wallpaper.TYPE_FILE || current.type == Wallpaper.TYPE_URL
+        // Uma imagem da box (copiada para a app), uma pasta inteira, ou do gestor de ficheiros do sistema.
+        val isImage = current.type == Wallpaper.TYPE_FILE || current.type == Wallpaper.TYPE_URL || current.type == Wallpaper.TYPE_FOLDER
         item {
             GlassRow(
                 title = s.boxImages,
-                subtitle = if (isImage) s.wallpaperImage else s.boxImagesHint,
+                subtitle = if (isImage) wallpaperName(current, s) else s.boxImagesHint,
                 leading = { Icon(GoatIcons.Folder, null, Modifier.size(20.dp)) },
                 onClick = onBoxImages,
                 trailing = { if (isImage) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) else Chevron() },
@@ -899,6 +903,7 @@ private fun clockText(minutes: Int, h24: Boolean): String {
 private fun wallpaperName(w: Wallpaper, s: cc.slokker.goatlauncher.ui.Strings): String = when (w.type) {
     Wallpaper.TYPE_BUILTIN -> Wallpapers.byId(w.value).name(s)
     Wallpaper.TYPE_REDDIT -> "r/${w.value}"
+    Wallpaper.TYPE_FOLDER -> s.wallpaperFolder(w.value.substringAfterLast('/'))
     else -> s.wallpaperImage
 }
 

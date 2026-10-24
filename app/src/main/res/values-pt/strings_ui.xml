@@ -19,6 +19,9 @@
     <string name="no_apps">Nenhuma app de TV instalada.</string>
     <string name="cant_open">Não foi possível abrir.</string>
     <string name="no_search">Esta TV não tem pesquisa do sistema.</string>
+    <string name="use_folder">Usar esta pasta (%1$d imagens)</string>
+    <string name="use_folder_hint">Uma imagem de cada vez, a mudar a cada 30 minutos</string>
+    <string name="wallpaper_folder">Pasta: %1$s</string>
     <string name="move">Mover</string>
     <string name="hide">Esconder do Início</string>
     <string name="show_on_home">Mostrar no Início</string>

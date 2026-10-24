@@ -49,7 +49,7 @@ object Wallpapers {
  * do fundo por defeito; ao mudar de imagem (o Reddit troca de tempos a tempos), a nova entra com um fade lento.
  */
 @Composable
-fun WallpaperView(wallpaper: Wallpaper, redditUrl: String?, modifier: Modifier = Modifier) {
+fun WallpaperView(wallpaper: Wallpaper, rotating: Any?, modifier: Modifier = Modifier) {
     val builtin = if (wallpaper.type == Wallpaper.TYPE_BUILTIN) Wallpapers.byId(wallpaper.value) else Wallpapers.ALL.first()
     Box(modifier.fillMaxSize()) {
         val context = LocalContext.current
@@ -57,7 +57,8 @@ fun WallpaperView(wallpaper: Wallpaper, redditUrl: String?, modifier: Modifier =
             Wallpaper.TYPE_URL -> wallpaper.value
             // Imagem da box copiada para a app; noutra TV da conta não existe e fica o fundo por defeito.
             Wallpaper.TYPE_FILE -> ImageImport.wallpaperFile(context, wallpaper.value).takeIf { it.exists() }
-            Wallpaper.TYPE_REDDIT -> redditUrl
+            // Reddit e pasta: a imagem que o ViewModel escolheu agora (URL ou ficheiro).
+            Wallpaper.TYPE_REDDIT, Wallpaper.TYPE_FOLDER -> rotating
             else -> null
         }
         // O desenho por defeito só aparece sem foto (ou se a foto falhar): enquanto ela carrega fica o fundo

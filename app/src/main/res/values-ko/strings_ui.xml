@@ -19,6 +19,9 @@
     <string name="no_apps">설치된 TV 앱이 없어요.</string>
     <string name="cant_open">열 수 없어요.</string>
     <string name="no_search">이 TV에는 시스템 검색이 없어요.</string>
+    <string name="use_folder">이 폴더 사용 (이미지 %1$d개)</string>
+    <string name="use_folder_hint">한 번에 한 장씩, 30분마다 바뀝니다</string>
+    <string name="wallpaper_folder">폴더: %1$s</string>
     <string name="move">이동</string>
     <string name="hide">홈에서 숨기기</string>
     <string name="show_on_home">홈에 표시</string>
