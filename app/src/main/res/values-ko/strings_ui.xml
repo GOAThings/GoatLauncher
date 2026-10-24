@@ -19,6 +19,15 @@
     <string name="no_apps">설치된 TV 앱이 없어요.</string>
     <string name="cant_open">열 수 없어요.</string>
     <string name="no_search">이 TV에는 시스템 검색이 없어요.</string>
+    <string name="quick_panel">빠른 설정</string>
+    <string name="sleep_timer">취침 타이머</string>
+    <string name="sleep_off">꺼짐: 확인으로 시간 선택</string>
+    <string name="sleep_at">%1$s에 꺼짐</string>
+    <string name="minutes_short">%1$d분</string>
+    <string name="sound_output">소리 및 오디오 출력</string>
+    <string name="picture_settings">화면 및 해상도</string>
+    <string name="bluetooth">블루투스</string>
+    <string name="screensaver_now">화면 보호기 시작</string>
     <string name="nav_sounds">탐색 소리</string>
     <string name="nav_sounds_hint">이동할 때 부드러운 틱 소리, 확인 버튼에서 클릭 소리</string>
     <string name="ambient_style">앰비언트 모드와 화면 보호기</string>

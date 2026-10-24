@@ -5,6 +5,10 @@ import cc.slokker.goatlauncher.ui.common.PinPad
 import cc.slokker.goatlauncher.ui.PinPrompt
 import android.content.pm.ApplicationInfo
 import android.os.SystemClock
+import java.text.SimpleDateFormat
+import cc.slokker.goatlauncher.HomeGuardService
+import android.widget.Toast
+import android.provider.Settings
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.ui.platform.LocalView
@@ -257,6 +261,9 @@ fun HomeScreen(vm: LauncherViewModel) {
     }
 
     // Ao fechar o menu de uma app, o foco volta ao banner dela (o menu está por cima, no mesmo ecrã).
+    // O painel rápido (botão de ajustes no topo): ao fechar, o foco volta ao favorito onde estava.
+    var quickOpen by remember { mutableStateOf(false) }
+
     fun closeMenu() {
         menuFor?.let { focusApp(it.packageName) }
         menuFor = null
@@ -268,6 +275,11 @@ fun HomeScreen(vm: LauncherViewModel) {
     var hadPin by remember { mutableStateOf(false) }
 
     fun lastFavorite() = favorites.firstOrNull { it.packageName == focusedPkg }?.packageName ?: favorites.firstOrNull()?.packageName
+
+    fun closeQuick() {
+        quickOpen = false
+        focusApp(lastFavorite())
+    }
 
     // Quando acabou o último "mover": o OK que confirma a posição não pode também abrir a app (o comando pode
     // mandar o clique por outra tecla, ou depois de o "mover" já ter acabado).
@@ -474,6 +486,10 @@ fun HomeScreen(vm: LauncherViewModel) {
                                 if (up) vm.cancelPin()
                                 true
                             }
+                            quickOpen && e.key == Key.Back -> {
+                                if (up) closeQuick()
+                                true
+                            }
                             menuFor != null && e.key == Key.Back -> {
                                 if (up) closeMenu()
                                 true
@@ -557,6 +573,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                         onNetwork = { SystemIntents.openNetworkSettings(context) },
                         night = vm.night.collectAsStateWithLifecycle().value,
                         onNight = vm::toggleNight,
+                        onQuick = { quickOpen = true },
                         onFocusChanged = { tabBarFocused = it },
                     )
 
@@ -729,6 +746,9 @@ fun HomeScreen(vm: LauncherViewModel) {
                 }
 
                 // O menu desenha-se por cima do ecrã, não numa janela à parte (Dialog): abre sem criar janela nova.
+                AnimatedVisibility(visible = quickOpen, enter = fadeIn(tween(MENU_MS)), exit = fadeOut(tween(MENU_MS))) {
+                    QuickPanel(onDone = ::closeQuick)
+                }
                 // Guarda a última app para o fade de saída não ficar vazio.
                 var menuShown by remember { mutableStateOf<LauncherApp?>(null) }
                 if (menuFor != null) menuShown = menuFor
@@ -879,6 +899,7 @@ private fun TopBar(
     onNetwork: () -> Unit,
     night: Boolean,
     onNight: () -> Unit,
+    onQuick: () -> Unit,
     onFocusChanged: (Boolean) -> Unit,
 ) {
     val s = LocalStrings.current
@@ -938,6 +959,10 @@ private fun TopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // Painel rápido: temporizador para desligar e atalhos para o som, a imagem e o Bluetooth do Android.
+            RoundButton(onClick = onQuick) {
+                Icon(GoatIcons.Tune, contentDescription = s.quickPanel, modifier = Modifier.size(18.dp))
+            }
             // Dia/noite: OK troca entre fundo claro e fundo escurecido (e fotos do tom certo).
             RoundButton(onClick = onNight) {
                 Icon(if (night) GoatIcons.Moon else GoatIcons.Sun, contentDescription = s.dayNight, modifier = Modifier.size(18.dp))
@@ -1251,6 +1276,65 @@ private fun AppMenu(
         }
     }
 }
+
+/**
+ * O painel rápido: o temporizador para desligar (OK passa pelos tempos) e atalhos para as definições do Android
+ * que mais se mudam no sofá. Abre ao lado do botão, em cima à direita.
+ */
+@Composable
+private fun QuickPanel(onDone: () -> Unit) {
+    val s = LocalStrings.current
+    val context = LocalContext.current
+    val first = remember { FocusRequester() }
+    val sleepAt by HomeGuardService.sleepAt.collectAsStateWithLifecycle()
+    val canSleep = remember { HomeGuardService.canSleep() }
+    var minutes by remember { mutableIntStateOf(0) }
+    fun open(action: () -> Boolean) {
+        if (!action()) Toast.makeText(context, s.cantOpen, Toast.LENGTH_SHORT).show()
+        onDone()
+    }
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)).padding(TvSafePadding), contentAlignment = Alignment.TopEnd) {
+        Column(
+            Modifier
+                .padding(top = 52.dp)
+                .width(360.dp)
+                .glass(GoatShapes.Panel, tint = Color(0xF0111522))
+                .padding(16.dp)
+                .focusProperties { onExit = { cancelFocusChange() } }
+                .focusGroup(),
+        ) {
+            Text(s.quickPanel, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 12.dp, bottom = 10.dp))
+            GlassRow(
+                title = s.sleepTimer,
+                subtitle = when {
+                    !canSleep -> s.needsGuard
+                    sleepAt != null -> s.sleepAt(SimpleDateFormat.getTimeInstance(SimpleDateFormat.SHORT, s.locale).format(sleepAt))
+                    else -> s.sleepOff
+                },
+                onClick = {
+                    if (canSleep) {
+                        // OK passa ao tempo seguinte: desligado → 15 → 30 → 60 → 90 → 120 min → desligado.
+                        minutes = SLEEP_MINUTES.getOrElse(SLEEP_MINUTES.indexOf(minutes) + 1) { 0 }
+                        HomeGuardService.setSleepTimer(minutes)
+                    }
+                },
+                trailing = { if (canSleep && minutes > 0) Text(s.minutesShort(minutes), color = GoatColors.TextDim) },
+                modifier = Modifier.focusRequester(first),
+            )
+            GlassRow(title = s.soundOutput, onClick = { open { SystemIntents.openSettingsPage(context, Settings.ACTION_SOUND_SETTINGS) } })
+            GlassRow(title = s.pictureSettings, onClick = { open { SystemIntents.openSettingsPage(context, Settings.ACTION_DISPLAY_SETTINGS) } })
+            GlassRow(title = s.bluetooth, onClick = { open { SystemIntents.openSettingsPage(context, Settings.ACTION_BLUETOOTH_SETTINGS) } })
+            GlassRow(title = s.screensaverNow, onClick = { open { SystemIntents.startScreensaver(context) } })
+            GlassRow(title = s.androidSettings, onClick = { open { SystemIntents.start(context, SystemIntents.androidSettings()) } })
+        }
+        LaunchedEffect(Unit) {
+            withFrameNanos { }
+            first.requestFocusSafely()
+        }
+    }
+}
+
+private val SLEEP_MINUTES = listOf(0, 15, 30, 60, 90, 120)
 
 private const val MENU_MS = 120
 

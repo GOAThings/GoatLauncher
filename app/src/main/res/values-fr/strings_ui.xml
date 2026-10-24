@@ -19,6 +19,15 @@
     <string name="no_apps">Aucune app TV installée.</string>
     <string name="cant_open">Impossible d\'ouvrir cet élément.</string>
     <string name="no_search">Cette TV n\'a pas de recherche système.</string>
+    <string name="quick_panel">Réglages rapides</string>
+    <string name="sleep_timer">Minuterie de mise en veille</string>
+    <string name="sleep_off">Désactivée : OK choisit la durée</string>
+    <string name="sleep_at">S\'éteint à %1$s</string>
+    <string name="minutes_short">%1$d min</string>
+    <string name="sound_output">Son et sortie audio</string>
+    <string name="picture_settings">Image et résolution</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="screensaver_now">Lancer l\'économiseur d\'écran</string>
     <string name="nav_sounds">Sons de navigation</string>
     <string name="nav_sounds_hint">Un léger tic en se déplaçant et un clic sur OK</string>
     <string name="ambient_style">Mode ambiant et économiseur d\'écran</string>

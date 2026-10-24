@@ -19,6 +19,15 @@
     <string name="no_apps">未安装电视应用。</string>
     <string name="cant_open">无法打开。</string>
     <string name="no_search">此电视没有系统搜索。</string>
+    <string name="quick_panel">快捷设置</string>
+    <string name="sleep_timer">睡眠定时</string>
+    <string name="sleep_off">关闭：按确定选择时间</string>
+    <string name="sleep_at">将在 %1$s 关闭</string>
+    <string name="minutes_short">%1$d 分钟</string>
+    <string name="sound_output">声音和音频输出</string>
+    <string name="picture_settings">画面和分辨率</string>
+    <string name="bluetooth">蓝牙</string>
+    <string name="screensaver_now">启动屏幕保护程序</string>
     <string name="nav_sounds">导航音效</string>
     <string name="nav_sounds_hint">移动时轻柔的滴答声，按确定时的点击声</string>
     <string name="ambient_style">环境模式和屏幕保护</string>

@@ -26,6 +26,18 @@ object SystemIntents {
 
     fun androidSettings(): Intent = Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
+    /** Uma página das definições do Android (ex.: Settings.ACTION_SOUND_SETTINGS); se a TV não a tiver, a inicial. */
+    fun openSettingsPage(context: Context, action: String): Boolean =
+        listOf(action, Settings.ACTION_SETTINGS).any { start(context, Intent(it).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+
+    /** Começa já o protetor de ecrã escolhido no Android (o "Somnambulator" do sistema). */
+    fun startScreensaver(context: Context): Boolean = start(
+        context,
+        Intent(Intent.ACTION_MAIN)
+            .setClassName("com.android.systemui", "com.android.systemui.Somnambulator")
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+    )
+
     /** Onde se escolhe o protetor de ecrã; se a TV não tiver esse ecrã, as definições do Android. */
     fun openScreensaverSettings(context: Context): Boolean =
         listOf(Settings.ACTION_DREAM_SETTINGS, Settings.ACTION_DISPLAY_SETTINGS, Settings.ACTION_SETTINGS)
