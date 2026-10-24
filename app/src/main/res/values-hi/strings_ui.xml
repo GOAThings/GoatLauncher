@@ -19,15 +19,6 @@
     <string name="no_apps">कोई TV ऐप इंस्टॉल नहीं है।</string>
     <string name="cant_open">इसे खोला नहीं जा सका।</string>
     <string name="no_search">इस TV में सिस्टम सर्च नहीं है।</string>
-    <string name="quick_panel">त्वरित सेटिंग</string>
-    <string name="sleep_timer">स्लीप टाइमर</string>
-    <string name="sleep_off">बंद: OK से समय चुनें</string>
-    <string name="sleep_at">%1$s पर बंद होगा</string>
-    <string name="minutes_short">%1$d मिनट</string>
-    <string name="sound_output">ध्वनि और ऑडियो आउटपुट</string>
-    <string name="picture_settings">चित्र और रिज़ॉल्यूशन</string>
-    <string name="bluetooth">ब्लूटूथ</string>
-    <string name="screensaver_now">स्क्रीनसेवर शुरू करें</string>
     <string name="nav_sounds">नेविगेशन ध्वनियाँ</string>
     <string name="nav_sounds_hint">चलते समय हल्की टिक और OK पर क्लिक</string>
     <string name="ambient_style">एम्बिएंट मोड और स्क्रीनसेवर</string>

@@ -19,15 +19,6 @@
     <string name="no_apps">Нет установленных ТВ-приложений.</string>
     <string name="cant_open">Не удалось открыть.</string>
     <string name="no_search">На этом ТВ нет системного поиска.</string>
-    <string name="quick_panel">Быстрые настройки</string>
-    <string name="sleep_timer">Таймер сна</string>
-    <string name="sleep_off">Выкл.: OK выбирает время</string>
-    <string name="sleep_at">Выключится в %1$s</string>
-    <string name="minutes_short">%1$d мин</string>
-    <string name="sound_output">Звук и аудиовыход</string>
-    <string name="picture_settings">Изображение и разрешение</string>
-    <string name="bluetooth">Bluetooth</string>
-    <string name="screensaver_now">Запустить заставку</string>
     <string name="nav_sounds">Звуки навигации</string>
     <string name="nav_sounds_hint">Тихий щелчок при перемещении и клик на OK</string>
     <string name="ambient_style">Фоновый режим и заставка</string>

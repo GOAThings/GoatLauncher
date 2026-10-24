@@ -19,15 +19,6 @@
     <string name="no_apps">Nessuna app per TV installata.</string>
     <string name="cant_open">Impossibile aprirlo.</string>
     <string name="no_search">Questa TV non ha la ricerca di sistema.</string>
-    <string name="quick_panel">Impostazioni rapide</string>
-    <string name="sleep_timer">Timer di spegnimento</string>
-    <string name="sleep_off">Disattivato: OK sceglie il tempo</string>
-    <string name="sleep_at">Si spegne alle %1$s</string>
-    <string name="minutes_short">%1$d min</string>
-    <string name="sound_output">Audio e uscita audio</string>
-    <string name="picture_settings">Immagine e risoluzione</string>
-    <string name="bluetooth">Bluetooth</string>
-    <string name="screensaver_now">Avvia il salvaschermo</string>
     <string name="nav_sounds">Suoni di navigazione</string>
     <string name="nav_sounds_hint">Un tic leggero quando ti sposti e un clic su OK</string>
     <string name="ambient_style">Modalità ambiente e salvaschermo</string>

@@ -19,15 +19,6 @@
     <string name="no_apps">Yüklü TV uygulaması yok.</string>
     <string name="cant_open">Açılamadı.</string>
     <string name="no_search">Bu TV\'de sistem araması yok.</string>
-    <string name="quick_panel">Hızlı ayarlar</string>
-    <string name="sleep_timer">Uyku zamanlayıcısı</string>
-    <string name="sleep_off">Kapalı: Tamam süreyi seçer</string>
-    <string name="sleep_at">%1$s\'de kapanır</string>
-    <string name="minutes_short">%1$d dk</string>
-    <string name="sound_output">Ses ve ses çıkışı</string>
-    <string name="picture_settings">Görüntü ve çözünürlük</string>
-    <string name="bluetooth">Bluetooth</string>
-    <string name="screensaver_now">Ekran koruyucuyu başlat</string>
     <string name="nav_sounds">Gezinme sesleri</string>
     <string name="nav_sounds_hint">Hareket ederken yumuşak bir tık ve Tamam\'da bir klik</string>
     <string name="ambient_style">Ortam modu ve ekran koruyucu</string>

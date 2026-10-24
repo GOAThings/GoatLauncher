@@ -4,10 +4,6 @@ import android.accessibilityservice.AccessibilityService
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import kotlinx.coroutines.flow.MutableStateFlow
-import android.os.Looper
-import android.os.Handler
-import android.os.Build
 import android.content.pm.PackageManager
 import android.provider.Settings
 import android.util.Log
@@ -120,29 +116,6 @@ class HomeGuardService : AccessibilityService() {
         @Volatile
         var instance: HomeGuardService? = null
             private set
-
-        /** Temporizador para desligar (painel rápido): quando a box vai adormecer (relógio, ms), ou null. */
-        val sleepAt = MutableStateFlow<Long?>(null)
-        private val sleepHandler = Handler(Looper.getMainLooper())
-        private val sleepNow = Runnable {
-            sleepAt.value = null
-            // No Android 9+, "bloquear o ecrã" de um serviço de acessibilidade põe a box a dormir (como o botão).
-            instance?.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
-        }
-
-        /** Só com o serviço ligado ("Manter como ecrã inicial") e Android 9 ou mais recente. */
-        fun canSleep(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && instance != null
-
-        /** Adormece a box daqui a [minutes] minutos (0 cancela). O serviço mantém o processo vivo até lá. */
-        fun setSleepTimer(minutes: Int) {
-            sleepHandler.removeCallbacks(sleepNow)
-            if (minutes <= 0 || !canSleep()) {
-                sleepAt.value = null
-                return
-            }
-            sleepAt.value = System.currentTimeMillis() + minutes * 60_000L
-            sleepHandler.postDelayed(sleepNow, minutes * 60_000L)
-        }
 
         fun isDefaultHome(context: Context): Boolean {
             val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
