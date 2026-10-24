@@ -472,6 +472,7 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
 /** Aparência: a disposição do ecrã inicial (Android TV ou Apple TV), o estilo do "Continuar a ver" e o resto. */
 @Composable
 private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
+    val sun by vm.sunTimes.collectAsStateWithLifecycle()
     val s = LocalStrings.current
     val account by vm.account.collectAsStateWithLifecycle()
     val android = account.layout != AccountSettings.LAYOUT_APPLE_TV
@@ -571,7 +572,9 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
         item {
             GlassRow(
                 title = s.nightAuto,
-                subtitle = s.nightAutoHint,
+                // Com a localização, do pôr ao nascer do sol de hoje; sem ela, a hora fixa.
+                subtitle = sun?.let { (rise, set) -> s.nightAutoSun(clockText(set, account.clock24h), clockText(rise, account.clock24h)) }
+                    ?: s.nightAutoHint,
                 onClick = { vm.setNightAuto(!account.nightAuto) },
                 trailing = { Toggle(account.nightAuto) },
             )
@@ -884,6 +887,13 @@ private fun HiddenAppsPage(vm: LauncherViewModel, first: FocusRequester) {
 @Composable
 private fun Chevron() {
     Icon(GoatIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp))
+}
+
+/** [minutes] desde a meia-noite como "19:42" (ou "7:42 PM" sem o relógio de 24 horas). */
+private fun clockText(minutes: Int, h24: Boolean): String {
+    val h = minutes / 60
+    val m = minutes % 60
+    return if (h24) "%d:%02d".format(h, m) else "%d:%02d %s".format((h + 11) % 12 + 1, m, if (h < 12) "AM" else "PM")
 }
 
 private fun wallpaperName(w: Wallpaper, s: cc.slokker.goatlauncher.ui.Strings): String = when (w.type) {

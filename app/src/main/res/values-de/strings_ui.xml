@@ -238,4 +238,5 @@
     <string name="night_off">Tag: hellerer Hintergrund</string>
     <string name="night_auto">Tag und Nacht automatisch</string>
     <string name="night_auto_hint">Nacht von 20:00 bis 07:00, nach der Uhrzeit des TV</string>
+    <string name="night_auto_sun">Nacht von Sonnenuntergang (%1$s) bis Sonnenaufgang (%2$s)</string>
 </resources>

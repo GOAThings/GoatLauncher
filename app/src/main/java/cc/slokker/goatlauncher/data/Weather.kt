@@ -41,7 +41,7 @@ class WeatherSource(context: Context, private val http: OkHttpClient) {
 
     suspend fun current(): WeatherNow? = withContext(Dispatchers.IO) {
         runCatching {
-            val (lat, lon) = location() ?: return@runCatching cached()
+            val (lat, lon) = locate() ?: return@runCatching cached()
             val url = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,weather_code,is_day"
             val cur = getJson(url).getAsJsonObject("current")
             WeatherNow(
@@ -58,7 +58,14 @@ class WeatherSource(context: Context, private val http: OkHttpClient) {
         }.onFailure { Log.w("Weather", "Tempo: ${it.message}") }.getOrElse { cached() }
     }
 
-    private fun location(): Pair<Double, Double>? {
+    /** A última localização conhecida (latitude, longitude), sem ir à rede. */
+    fun cachedLocation(): Pair<Double, Double>? =
+        if (prefs.contains("lat")) prefs.getFloat("lat", 0f).toDouble() to prefs.getFloat("lon", 0f).toDouble() else null
+
+    /** A localização da box pelo IP (guardada um dia); também serve para o nascer e o pôr do sol. */
+    suspend fun location(): Pair<Double, Double>? = withContext(Dispatchers.IO) { runCatching { locate() }.getOrElse { cachedLocation() } }
+
+    private fun locate(): Pair<Double, Double>? {
         val at = prefs.getLong("loc_at", 0)
         if (prefs.contains("lat") && System.currentTimeMillis() - at < LOCATION_MS) {
             return prefs.getFloat("lat", 0f).toDouble() to prefs.getFloat("lon", 0f).toDouble()

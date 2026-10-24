@@ -246,4 +246,5 @@
     <string name="night_off">نهار: خلفية أفتح</string>
     <string name="night_auto">نهار وليل تلقائيًا</string>
     <string name="night_auto_hint">الليل من 20:00 إلى 07:00 حسب ساعة التلفزيون</string>
+    <string name="night_auto_sun">الليل من الغروب (%1$s) حتى الشروق (%2$s)</string>
 </resources>

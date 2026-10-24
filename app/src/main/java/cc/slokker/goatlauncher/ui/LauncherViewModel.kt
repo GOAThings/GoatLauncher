@@ -30,6 +30,7 @@ import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.data.Updater
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.data.WatchNextItem
+import cc.slokker.goatlauncher.data.SunTimes
 import cc.slokker.goatlauncher.data.WeatherNow
 import cc.slokker.goatlauncher.data.YouTubeLogin
 import cc.slokker.goatlauncher.data.api.BackendDevice
@@ -212,17 +213,33 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
     private val stopObservingWatchNext: () -> Unit
 
-    /** A hora atual, de minuto a minuto (para o dia/noite automático). */
-    private val hour: Flow<Int> = flow {
+    /** O minuto do dia (desde a meia-noite), de minuto a minuto (para o dia/noite automático). */
+    private val minuteOfDay: Flow<Int> = flow {
         while (true) {
-            emit(Calendar.getInstance().get(Calendar.HOUR_OF_DAY))
+            val now = Calendar.getInstance()
+            emit(now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE))
             delay(60_000L - System.currentTimeMillis() % 60_000L)
         }
     }
 
-    /** Modo noite em vigor: o escolhido no botão, ou pela hora com o automático ligado. */
-    val night: StateFlow<Boolean> = combine(settings.account, hour) { a, h ->
-        if (a.nightAuto) h >= AccountSettings.NIGHT_FROM || h < AccountSettings.NIGHT_TO else a.nightMode
+    /** Onde está a box (pelo IP, a mesma do tempo); null até se saber. */
+    private val location = MutableStateFlow(c.weather.cachedLocation())
+
+    /** Nascer e pôr do sol de hoje aqui (minutos desde a meia-noite); null sem localização ou no verão/inverno polar. */
+    val sunTimes: StateFlow<Pair<Int, Int>?> = combine(location, minuteOfDay.map { it / 60 }.distinctUntilChanged()) { loc, _ ->
+        loc?.let { (lat, lon) -> SunTimes.of(lat, lon, System.currentTimeMillis()) }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /**
+     * Modo noite em vigor: o escolhido no botão, ou, com o automático ligado, do pôr ao nascer do sol (sem saber
+     * onde a box está, das [AccountSettings.NIGHT_FROM] às [AccountSettings.NIGHT_TO]).
+     */
+    val night: StateFlow<Boolean> = combine(settings.account, minuteOfDay, sunTimes) { a, m, sun ->
+        when {
+            !a.nightAuto -> a.nightMode
+            sun != null -> SunTimes.isNight(m, sun)
+            else -> m / 60 >= AccountSettings.NIGHT_FROM || m / 60 < AccountSettings.NIGHT_TO
+        }
     }.distinctUntilChanged().stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     init {
@@ -240,6 +257,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 val all = c.watchNext.load().let { if (demo) it + demoWatchNext() else it }
                 _watchNext.value = all
                 prefetchImages(all)
+            }
+        }
+        viewModelScope.launch {
+            // Com o dia/noite automático, a localização para o nascer e o pôr do sol (uma vez por dia, como no tempo).
+            settings.account.map { it.nightAuto }.distinctUntilChanged().collectLatest { on ->
+                if (on) c.weather.location()?.let { location.value = it }
             }
         }
         viewModelScope.launch {

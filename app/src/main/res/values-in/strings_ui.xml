@@ -236,4 +236,5 @@
     <string name="night_off">Siang: latar lebih terang</string>
     <string name="night_auto">Siang dan malam otomatis</string>
     <string name="night_auto_hint">Malam pukul 20.00–07.00, sesuai jam TV</string>
+    <string name="night_auto_sun">Malam dari matahari terbenam (%1$s) sampai terbit (%2$s)</string>
 </resources>

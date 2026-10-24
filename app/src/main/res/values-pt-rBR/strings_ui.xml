@@ -240,4 +240,5 @@
     <string name="night_off">Dia: fundo mais claro</string>
     <string name="night_auto">Dia e noite automáticos</string>
     <string name="night_auto_hint">Noite das 20:00 às 07:00, pelo horário da TV</string>
+    <string name="night_auto_sun">Noite do pôr do sol (%1$s) ao nascer do sol (%2$s)</string>
 </resources>

@@ -238,4 +238,5 @@
     <string name="night_off">दिन: हल्का बैकग्राउंड</string>
     <string name="night_auto">अपने-आप दिन और रात</string>
     <string name="night_auto_hint">TV की घड़ी के अनुसार रात 20:00 से 07:00 तक</string>
+    <string name="night_auto_sun">सूर्यास्त (%1$s) से सूर्योदय (%2$s) तक रात</string>
 </resources>

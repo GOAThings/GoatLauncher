@@ -238,6 +238,7 @@ class Strings(context: Context) {
     val nightOff get() = s(R.string.night_off)
     val nightAuto get() = s(R.string.night_auto)
     val nightAutoHint get() = s(R.string.night_auto_hint)
+    fun nightAutoSun(sunset: String, sunrise: String) = s(R.string.night_auto_sun, sunset, sunrise)
     val languageAuto get() = s(R.string.language_auto)
     fun wallpaperName(id: String) = s(
         when (id) {

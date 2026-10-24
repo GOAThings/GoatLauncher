@@ -238,4 +238,5 @@
     <string name="night_off">Gündüz: daha açık arka plan</string>
     <string name="night_auto">Otomatik gündüz ve gece</string>
     <string name="night_auto_hint">Gece 20:00–07:00 arası, TV saatine göre</string>
+    <string name="night_auto_sun">Gün batımından (%1$s) gün doğumuna (%2$s) kadar gece</string>
 </resources>

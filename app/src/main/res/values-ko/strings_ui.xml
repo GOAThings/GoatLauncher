@@ -236,4 +236,5 @@
     <string name="night_off">낮: 더 밝은 배경</string>
     <string name="night_auto">낮과 밤 자동 전환</string>
     <string name="night_auto_hint">TV 시계 기준 20:00~07:00은 밤</string>
+    <string name="night_auto_sun">일몰(%1$s)부터 일출(%2$s)까지 밤</string>
 </resources>

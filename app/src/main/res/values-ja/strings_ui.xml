@@ -236,4 +236,5 @@
     <string name="night_off">昼：背景を明るく</string>
     <string name="night_auto">昼と夜を自動で切り替え</string>
     <string name="night_auto_hint">テレビの時計で 20:00〜07:00 は夜</string>
+    <string name="night_auto_sun">日没 (%1$s) から日の出 (%2$s) まで夜</string>
 </resources>

@@ -238,4 +238,5 @@
     <string name="night_off">Day: lighter wallpaper</string>
     <string name="night_auto">Automatic day and night</string>
     <string name="night_auto_hint">Night from 20:00 to 07:00, by the TV\'s clock</string>
+    <string name="night_auto_sun">Night from sunset (%1$s) to sunrise (%2$s)</string>
 </resources>
