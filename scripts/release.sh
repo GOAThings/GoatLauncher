@@ -7,8 +7,8 @@ set -euo pipefail
 VERSION="${1:?Uso: scripts/release.sh <versão> [notas]}"
 NOTES="${2:-}"
 RELEASES_REPO="GOAThings/GoatLauncher"
-# O repositório antigo das versões: os launchers até à 0.8.7 procuram atualizações lá, e o código do Downloader
-# aponta para lá. Enquanto houver TVs com essas versões, cada versão sai também lá.
+# O repositório antigo das versões: os launchers até à 0.8.7 procuram atualizações lá (e o código antigo do
+# Downloader, 3400411, aponta para lá). Enquanto houver TVs com essas versões, cada versão sai também lá.
 OLD_RELEASES_REPO="GOAThings/GoatLauncher-Releases"
 cd "$(dirname "$0")/.."
 
@@ -31,7 +31,7 @@ mkdir -p build
 cp app/build/outputs/mapping/release/mapping.txt "build/mapping-$VERSION.txt"
 cp app/build/outputs/apk/release/app-release.apk "$apk"
 # Cópia com nome fixo: https://github.com/<repositório>/releases/latest/download/goatlauncher.apk dá sempre a
-# versão mais recente (o código do Downloader aponta para a do repositório antigo).
+# versão mais recente (o código do Downloader, 2462776, aponta para a deste repositório).
 latest="build/goatlauncher.apk"
 cp "$apk" "$latest"
 

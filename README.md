@@ -6,7 +6,7 @@ A home screen for Android TV and Google TV, made for the NVIDIA SHIELD.
 
 Latest version: https://github.com/GOAThings/GoatLauncher/releases/latest/download/goatlauncher.apk
 
-On the TV, open the [Downloader](https://www.aftvnews.com/downloader/) app and enter the code **3400411**.
+On the TV, open the [Downloader](https://www.aftvnews.com/downloader/) app and enter the code **2462776**.
 
 To make it the home screen, with adb:
 
