@@ -7,9 +7,6 @@ set -euo pipefail
 VERSION="${1:?Uso: scripts/release.sh <versão> [notas]}"
 NOTES="${2:-}"
 RELEASES_REPO="GOAThings/GoatLauncher"
-# O repositório antigo das versões: os launchers até à 0.8.7 procuram atualizações lá (e o código antigo do
-# Downloader, 3400411, aponta para lá). Enquanto houver TVs com essas versões, cada versão sai também lá.
-OLD_RELEASES_REPO="GOAThings/GoatLauncher-Releases"
 cd "$(dirname "$0")/.."
 
 if [ -n "$(git status --porcelain)" ]; then
@@ -40,6 +37,4 @@ git tag -a "v$VERSION" -m "Versão $VERSION"  # anotada: o --follow-tags só env
 git push -q --follow-tags
 
 gh release create "v$VERSION" "$apk" "$latest" --repo "$RELEASES_REPO" --title "GoatLauncher $VERSION" --notes "${NOTES:-Versão $VERSION}"
-gh release create "v$VERSION" "$apk" "$latest" --repo "$OLD_RELEASES_REPO" --title "GoatLauncher $VERSION" \
-    --notes "${NOTES:-Versão $VERSION}"$'\n\n'"GoatLauncher now lives at https://github.com/$RELEASES_REPO"
 echo "Publicada a $VERSION em https://github.com/$RELEASES_REPO/releases"
