@@ -1,6 +1,8 @@
 package cc.slokker.goatlauncher
 
 import android.content.Context
+import android.os.Build
+import cc.slokker.goatlauncher.data.AppIndex
 import cc.slokker.goatlauncher.data.AuthToken
 import cc.slokker.goatlauncher.data.CustomIcons
 import cc.slokker.goatlauncher.data.InstalledApps
@@ -32,14 +34,18 @@ class AppContainer(context: Context) {
 
     private val token = AuthToken()
 
+    private val client = goatClient()
+
     private val backendHttp = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .addInterceptor { chain ->
             val current = token.value
-            // Sem "Bearer": o backend espera o token tal como está.
-            val request = if (current != null) chain.request().newBuilder().header("Authorization", current).build() else chain.request()
-            chain.proceed(request)
+            // Sem "Bearer": o backend espera o token tal como está. O X-Goat-Client diz ao site a app, a versão e o
+            // tipo de TV (aparece em Dispositivos).
+            val request = chain.request().newBuilder().header("X-Goat-Client", client)
+            if (current != null) request.header("Authorization", current)
+            chain.proceed(request.build())
         }
         .build()
 
@@ -52,6 +58,8 @@ class AppContainer(context: Context) {
 
     val settings = SettingsRepository(context, backend, SessionStore(context), token, scope)
     val apps = InstalledApps(context)
+    /** As apps desta TV para o site da conta. */
+    val appIndex = AppIndex(context, backend, settings)
     /** A lista de apps para o GoatRemote (o comando no telemóvel), na rede de casa. */
     val phoneApps = PhoneApps(context.applicationContext, apps, scope)
     val watchNext = WatchNextSource(context)
@@ -67,4 +75,10 @@ class AppContainer(context: Context) {
     val updater = Updater(context, plainHttp, Gson())
     val weather = WeatherSource(context, plainHttp)
     val youtube = YouTubeSource(context, plainHttp)
+}
+
+/** `goatlauncher/<versão> (<plataforma>)`, por exemplo `goatlauncher/0.8.9 (android-tv)`. */
+private fun goatClient(): String {
+    val platform = if (Build.MANUFACTURER.equals("Amazon", ignoreCase = true)) "fire-tv" else "android-tv"
+    return "goatlauncher/${BuildConfig.VERSION_NAME} ($platform)"
 }

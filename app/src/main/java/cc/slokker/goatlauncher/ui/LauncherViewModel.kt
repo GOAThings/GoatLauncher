@@ -248,9 +248,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             settings.init()
             settings.sync(refreshToken = true)
+            c.appIndex.upload(c.apps.load())
         }
         viewModelScope.launch {
-            appRequests.receiveAsFlow().collectLatest { installed.value = c.apps.load() }
+            appRequests.receiveAsFlow().collectLatest {
+                val apps = c.apps.load()
+                installed.value = apps
+                // Para o site da conta (só envia quando a lista mudou); não atrasa o ecrã.
+                c.scope.launch { c.appIndex.upload(apps) }
+            }
         }
         viewModelScope.launch {
             // As apps escrevem no Watch Next várias vezes seguidas: junta as mudanças antes de ler.
@@ -872,6 +878,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         _screen.value = Screen.Settings
         viewModelScope.launch {
             settings.link(token, user?.email, device?.name)
+            c.scope.launch { c.appIndex.upload(c.apps.load()) }
             toast(strings.linked)
         }
     }

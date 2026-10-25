@@ -1,13 +1,16 @@
 package cc.slokker.goatlauncher.data.api
 
-import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import retrofit2.Response
+import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 
 const val BACKEND_URL = "https://thegoat.systems/"
 
@@ -29,12 +32,27 @@ interface BackendApi {
     @POST("api/collections/devices/auth-refresh")
     suspend fun authRefresh(): AuthRefreshResponse
 
+    /**
+     * `{account, account_rev, device, device_rev}`; com [etag] (o `ETag` da última resposta), 304 sem corpo quando
+     * nada mudou.
+     */
     @GET("api/launcher/settings")
-    suspend fun settings(): SettingsResponse
+    suspend fun settings(@Header("If-None-Match") etag: String?): Response<JsonObject>
 
-    /** Substitui `account` e/ou `device` inteiros (só os campos enviados). */
+    /**
+     * Grava `account_merge` / `device_merge` (JSON Merge Patch) com `account_rev` / `device_rev`, ou `account` /
+     * `device` inteiros (servidores antigos). 200 e 409 trazem o estado atual, com as revisões.
+     */
     @PATCH("api/launcher/settings")
-    suspend fun updateSettings(@Body body: JsonObject): JsonObject
+    suspend fun updateSettings(@Body body: JsonObject): Response<JsonObject>
+
+    /** O índice das apps desta TV, para o site. Responde `{hash, apps, missing: [pacotes sem ícone]}`. */
+    @PUT("api/launcher/apps")
+    suspend fun putApps(@Body body: JsonObject): Response<JsonObject>
+
+    /** O banner ou ícone (PNG, até 200 KB) de uma app do último índice; o SHA-1 tem de ser o `icon_hash` dela. */
+    @PUT("api/launcher/apps/{package}/icon")
+    suspend fun putAppIcon(@Path("package") pkg: String, @Body png: RequestBody): Response<JsonObject>
 }
 
 // Todos os campos são anuláveis: o Gson não respeita a nulidade do Kotlin.
@@ -61,5 +79,3 @@ data class BackendUser(val id: String?, val email: String?)
 
 data class AuthRefreshResponse(val token: String?, val record: JsonObject?)
 
-/** O JSON das definições é decidido pela app (ver LauncherSettings): aqui fica em bruto. */
-data class SettingsResponse(val account: JsonElement?, val device: JsonElement?)
