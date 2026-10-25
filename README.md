@@ -56,8 +56,7 @@ Needs Android Studio (for the Android SDK and JDK).
 ./gradlew assembleDebug
 ```
 
-Release builds are signed with a key that is not part of this repository. `scripts/release.sh <version> <notes>`
-builds, tags and publishes a release (it needs that key).
+Release builds are signed with a key that is not part of this repository.
 
 ### Code
 
