@@ -53,7 +53,7 @@ class AppContainer(context: Context) {
     val settings = SettingsRepository(context, backend, SessionStore(context), token, scope)
     val apps = InstalledApps(context)
     /** A lista de apps para o GoatRemote (o comando no telemóvel), na rede de casa. */
-    val phoneApps = PhoneApps(apps, scope)
+    val phoneApps = PhoneApps(context.applicationContext, apps, scope)
     val watchNext = WatchNextSource(context)
     val icons = CustomIcons(context)
 

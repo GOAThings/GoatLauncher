@@ -1,6 +1,8 @@
 package cc.slokker.goatlauncher.data
 
+import android.content.Context
 import android.graphics.Bitmap
+import android.media.AudioManager
 import android.util.Log
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.toArgb
@@ -18,15 +20,21 @@ import java.net.ServerSocket
 import java.net.Socket
 
 /**
- * As apps da TV para o GoatRemote (o comando no telemóvel): o protocolo das Android TV não dá a lista de apps
- * instaladas, por isso o launcher dá-a na rede de casa. Só leitura e só para endereços privados:
+ * O GoatRemote (o comando no telemóvel) na rede de casa, só para endereços privados:
  *
- *   GET /apps            [{"package", "label", "banner": true|false, "color": "#RRGGBB"}], pelo nome
+ *   GET /apps            [{"package", "label", "banner": true|false, "color": "#RRGGBB"}], pelo nome: o protocolo
+ *                        das Android TV não dá a lista de apps instaladas
  *   GET /icon/<pacote>   PNG do banner (480×270) ou, sem banner, do ícone (192×192)
+ *   POST /volume/up|down|mute
+ *                        o volume, pedido ao sistema como faz o comando físico (com HDMI-CEC vai para a TV). As
+ *                        teclas de volume do protocolo do comando rebentam o Android 11 da SHIELD quando um serviço
+ *                        de acessibilidade vê as teclas (o HomeGuardService, com botões a abrir apps).
  *
  * Abrir uma app continua a ser pelo comando (market://launch?id=<pacote>), não por aqui.
  */
-class PhoneApps(private val apps: InstalledApps, private val scope: CoroutineScope) {
+class PhoneApps(context: Context, private val apps: InstalledApps, private val scope: CoroutineScope) {
+    private val audio = context.getSystemService(AudioManager::class.java)
+
     private val pngs = HashMap<String, ByteArray>()
 
     fun start() {
@@ -46,7 +54,9 @@ class PhoneApps(private val apps: InstalledApps, private val scope: CoroutineSco
         if (!isLocal(client.inetAddress)) return
         client.soTimeout = 5000
         val line = client.getInputStream().bufferedReader().readLine() ?: return
+        val method = line.substringBefore(' ')
         val path = line.split(" ").getOrNull(1) ?: return
+        if (path.startsWith("/volume/")) return volume(client, method, path.removePrefix("/volume/"))
         val list = runBlocking { apps.load() }
         when {
             path == "/apps" -> {
@@ -79,6 +89,22 @@ class PhoneApps(private val apps: InstalledApps, private val scope: CoroutineSco
             }
             else -> reply(client, "text/plain", "GoatLauncher".toByteArray(), status = "404 Not Found")
         }
+    }
+
+    private fun volume(client: Socket, method: String, what: String) {
+        val direction = when (what) {
+            "up" -> AudioManager.ADJUST_RAISE
+            "down" -> AudioManager.ADJUST_LOWER
+            "mute" -> AudioManager.ADJUST_TOGGLE_MUTE
+            else -> null
+        }
+        if (method != "POST" || direction == null) {
+            reply(client, "text/plain", "não há".toByteArray(), status = "404 Not Found")
+            return
+        }
+        runCatching { audio.adjustSuggestedStreamVolume(direction, AudioManager.USE_DEFAULT_STREAM_TYPE, AudioManager.FLAG_SHOW_UI) }
+            .onFailure { Log.w(TAG, "Volume", it) }
+        reply(client, "text/plain", "ok".toByteArray())
     }
 
     private fun reply(client: Socket, type: String, body: ByteArray, status: String = "200 OK") {

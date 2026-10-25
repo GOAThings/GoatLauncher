@@ -10,6 +10,11 @@ object ButtonCapture {
     /** À espera de um botão: recebe (keyCode, scanCode). Null quando não há captura em curso. */
     @Volatile
     var listener: ((Int, Int) -> Unit)? = null
+        set(value) {
+            field = value
+            // O serviço só vê as teclas enquanto fazem falta.
+            HomeGuardService.instance?.updateKeyFilter()
+        }
 
     /** Os que nunca mudam: navegação, energia, volume, controlo da reprodução, canais e números. */
     private val PROTECTED = setOf(
