@@ -2,6 +2,14 @@
 
 A home screen for Android TV and Google TV, made for the NVIDIA SHIELD.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Home, Android TV style](docs/screenshots/home-android-tv.jpg) | ![Home, tvOS style](docs/screenshots/home-tvos-day.jpg) |
+| ![Home at night](docs/screenshots/home-tvos-night.jpg) | ![Appearance](docs/screenshots/appearance.jpg) |
+| ![Aurora focus effect](docs/screenshots/effect-aurora.jpg) | ![Floating ring focus effect](docs/screenshots/effect-floating-ring.jpg) |
+
 ## Install
 
 Latest version: https://github.com/GOAThings/GoatLauncher/releases/latest/download/goatlauncher.apk
