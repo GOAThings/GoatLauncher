@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
-# Publica uma versão nova do GoatLauncher no repositório público de versões (o código é privado).
+# Publica uma versão nova do GoatLauncher nas releases deste repositório (como o GoatTV).
 #   scripts/release.sh 0.2.0 "O que mudou"
 # Precisa de: keystore.properties (a chave de assinatura, fora do git) e `gh` com a conta iamSlokker.
 set -euo pipefail
 
 VERSION="${1:?Uso: scripts/release.sh <versão> [notas]}"
 NOTES="${2:-}"
-RELEASES_REPO="GOAThings/GoatLauncher-Releases"
+RELEASES_REPO="GOAThings/GoatLauncher"
+# O repositório antigo das versões: os launchers até à 0.8.7 procuram atualizações lá, e o código do Downloader
+# aponta para lá. Enquanto houver TVs com essas versões, cada versão sai também lá.
+OLD_RELEASES_REPO="GOAThings/GoatLauncher-Releases"
 cd "$(dirname "$0")/.."
 
 if [ -n "$(git status --porcelain)" ]; then
@@ -27,8 +30,8 @@ mkdir -p build
 # O mapeamento do R8 desta versão (só no PC): sem ele, os crashes das TVs vêm com nomes ofuscados (ex.: MainActivity.p).
 cp app/build/outputs/mapping/release/mapping.txt "build/mapping-$VERSION.txt"
 cp app/build/outputs/apk/release/app-release.apk "$apk"
-# Cópia com nome fixo: https://github.com/$RELEASES_REPO/releases/latest/download/goatlauncher.apk dá sempre
-# a versão mais recente (é para aí que aponta o código do Downloader, que nunca muda).
+# Cópia com nome fixo: https://github.com/<repositório>/releases/latest/download/goatlauncher.apk dá sempre a
+# versão mais recente (o código do Downloader aponta para a do repositório antigo).
 latest="build/goatlauncher.apk"
 cp "$apk" "$latest"
 
@@ -37,4 +40,6 @@ git tag -a "v$VERSION" -m "Versão $VERSION"  # anotada: o --follow-tags só env
 git push -q --follow-tags
 
 gh release create "v$VERSION" "$apk" "$latest" --repo "$RELEASES_REPO" --title "GoatLauncher $VERSION" --notes "${NOTES:-Versão $VERSION}"
+gh release create "v$VERSION" "$apk" "$latest" --repo "$OLD_RELEASES_REPO" --title "GoatLauncher $VERSION" \
+    --notes "${NOTES:-Versão $VERSION}"$'\n\n'"GoatLauncher now lives at https://github.com/$RELEASES_REPO"
 echo "Publicada a $VERSION em https://github.com/$RELEASES_REPO/releases"

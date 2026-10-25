@@ -25,9 +25,9 @@ import java.io.IOException
 class AppRelease(val version: String, val notes: String, val apkUrl: String, val size: Long)
 
 /**
- * Atualizações da app: as versões são publicadas como releases do repositório público
- * [RELEASES_REPO] (só os APKs; o código é privado). O APK descarregado vai para o instalador do Android,
- * que só o aceita se estiver assinado com a mesma chave da app instalada.
+ * Atualizações da app: as versões são publicadas como releases do próprio repositório, [RELEASES_REPO]. O APK
+ * descarregado vai para o instalador do Android, que só o aceita se estiver assinado com a mesma chave da app
+ * instalada.
  */
 class Updater(private val context: Context, private val http: OkHttpClient, private val gson: Gson) {
 
@@ -139,7 +139,7 @@ class Updater(private val context: Context, private val http: OkHttpClient, priv
     )
 
     companion object {
-        const val RELEASES_REPO = "GOAThings/GoatLauncher-Releases"
+        const val RELEASES_REPO = "GOAThings/GoatLauncher"
 
         /** "0.10.1" > "0.9.3": compara número a número (o que não é número conta como 0). */
         fun isNewer(remote: String, current: String): Boolean {
