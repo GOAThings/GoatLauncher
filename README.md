@@ -1,6 +1,6 @@
 # GoatLauncher
 
-A home screen for Android TV and Google TV, made for the NVIDIA SHIELD.
+A home screen for Android TV and Google TV.
 
 ## Screenshots
 
