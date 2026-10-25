@@ -10,6 +10,7 @@ class LauncherApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        container.phoneApps.start()
         AutoStart.watchWake(this)
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import cc.slokker.goatlauncher.data.AuthToken
 import cc.slokker.goatlauncher.data.CustomIcons
 import cc.slokker.goatlauncher.data.InstalledApps
+import cc.slokker.goatlauncher.data.PhoneApps
 import cc.slokker.goatlauncher.data.RedditWallpapers
 import cc.slokker.goatlauncher.data.SessionStore
 import cc.slokker.goatlauncher.data.SettingsRepository
@@ -51,6 +52,8 @@ class AppContainer(context: Context) {
 
     val settings = SettingsRepository(context, backend, SessionStore(context), token, scope)
     val apps = InstalledApps(context)
+    /** A lista de apps para o GoatRemote (o comando no telemóvel), na rede de casa. */
+    val phoneApps = PhoneApps(apps, scope)
     val watchNext = WatchNextSource(context)
     val icons = CustomIcons(context)
 
