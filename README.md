@@ -6,8 +6,9 @@ A home screen for Android TV and Google TV, made for the NVIDIA SHIELD.
 
 | | |
 |---|---|
-| ![Home, Android TV style](docs/screenshots/home-android-tv.jpg) | ![Home, tvOS style](docs/screenshots/home-tvos-day.jpg) |
-| ![Home at night](docs/screenshots/home-tvos-night.jpg) | ![Appearance](docs/screenshots/appearance.jpg) |
+| ![Home, Android TV style, Spotlight](docs/screenshots/home-android-tv.jpg) | ![Home, Android TV style, row of cards](docs/screenshots/home-android-tv-cards.jpg) |
+| ![Home, tvOS style](docs/screenshots/home-tvos-day.jpg) | ![Home at night](docs/screenshots/home-tvos-night.jpg) |
+| ![Appearance, Android TV style](docs/screenshots/appearance-android-tv.jpg) | ![Appearance, tvOS style](docs/screenshots/appearance-tvos.jpg) |
 | ![Aurora focus effect](docs/screenshots/effect-aurora.jpg) | ![Floating ring focus effect](docs/screenshots/effect-floating-ring.jpg) |
 
 ## Install
