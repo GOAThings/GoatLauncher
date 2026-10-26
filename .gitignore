@@ -21,8 +21,8 @@ keystore.properties
 /.idea/vcs.xml
 
 
-# Ficheiros do Android Studio (têm caminhos do PC de quem desenvolve)
+# Android Studio files (contain local machine paths)
 /.idea
 
-# O script de publicação fica só no PC (como no GoatTV).
+# Local release script, not part of the source.
 /scripts/release.sh
