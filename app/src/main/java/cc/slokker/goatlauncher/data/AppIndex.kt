@@ -78,6 +78,7 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
         }
         // Com um ícone em falta, tenta-se de novo na próxima vez (o servidor volta a dizer quais faltam).
         if (allSent) prefs.edit().putString("hash", hash).putString("account", key).apply()
+        Log.i(TAG, "Índice das apps enviado: ${list.size()} apps, ${missing.size} ícones")
     }
 
     /** O banner (480×270) ou o ícone (192×192) em PNG, como no PhoneApps, a caber nos 200 KB do servidor. */

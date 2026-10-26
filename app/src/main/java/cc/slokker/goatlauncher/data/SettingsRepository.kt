@@ -150,6 +150,7 @@ class SettingsRepository(
             }
             pushLocked()
             val res = api.settings(etag.takeIf { accountBase != null || deviceBase != null })
+            if (res.code() == 304) Log.i(TAG, "Definições: sem alterações (304)")
             if (res.code() != 304) {
                 val remote = res.body() ?: throw HttpException(res)
                 etag = res.headers()["ETag"]
@@ -218,6 +219,7 @@ class SettingsRepository(
             val reply = res.body() ?: res.errorBody()?.string()?.let { parse(it) }
             when {
                 res.isSuccessful -> {
+                    Log.i(TAG, "Gravado: ${body.keySet()}")
                     // Só fica limpo se não houve outra alteração entretanto (essa segue no próximo envio).
                     if (_account.value == sentAccount) accountDirty = false
                     if (_device.value == sentDevice) deviceDirty = false
@@ -226,6 +228,7 @@ class SettingsRepository(
                     return
                 }
                 res.code() == 409 && reply != null -> {
+                    Log.i(TAG, "409: a juntar com o que a conta tem e a tentar outra vez")
                     adopt(reply)
                     persist()
                 }
