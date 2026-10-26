@@ -21,8 +21,8 @@ android {
         // As bibliotecas AndroidX atuais (Compose, tv-material) exigem minSdk 23.
         minSdk = 23
         targetSdk = 34
-        versionCode = 30
-        versionName = "0.8.9"
+        versionCode = 31
+        versionName = "0.9.0"
     }
 
     signingConfigs {
