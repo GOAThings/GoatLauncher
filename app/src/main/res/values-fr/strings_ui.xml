@@ -257,4 +257,12 @@
     <string name="night_auto">Jour et nuit automatiques</string>
     <string name="night_auto_hint">Nuit de 20:00 à 07:00, selon l\'heure de la TV</string>
     <string name="night_auto_sun">Nuit du coucher du soleil (%1$s) au lever du soleil (%2$s)</string>
+    <string name="send_report">Envoyer un rapport</string>
+    <string name="send_report_sub">Envoie le journal de cette TV pour voir ce qui n\'a pas marché</string>
+    <string name="report_what">Que s\'est-il passé ? (facultatif)</string>
+    <string name="report_send">Envoyer</string>
+    <string name="report_sending">Envoi…</string>
+    <string name="report_sent">Envoyé. Rapport %1$s</string>
+    <string name="report_too_many">Trop de rapports. Réessayez plus tard.</string>
+    <string name="report_failed">Envoi impossible : %1$s</string>
 </resources>

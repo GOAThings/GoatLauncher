@@ -255,4 +255,12 @@
     <string name="night_auto">अपने-आप दिन और रात</string>
     <string name="night_auto_hint">TV की घड़ी के अनुसार रात 20:00 से 07:00 तक</string>
     <string name="night_auto_sun">सूर्यास्त (%1$s) से सूर्योदय (%2$s) तक रात</string>
+    <string name="send_report">रिपोर्ट भेजें</string>
+    <string name="send_report_sub">इस टीवी का लॉग भेजता है ताकि हम देख सकें कि क्या गलत हुआ</string>
+    <string name="report_what">क्या हुआ? (वैकल्पिक)</string>
+    <string name="report_send">भेजें</string>
+    <string name="report_sending">भेजा जा रहा है…</string>
+    <string name="report_sent">भेज दी गई। रिपोर्ट %1$s</string>
+    <string name="report_too_many">बहुत सारी रिपोर्ट। बाद में फिर कोशिश करें।</string>
+    <string name="report_failed">भेजा नहीं जा सका: %1$s</string>
 </resources>

@@ -255,4 +255,12 @@
     <string name="night_auto">Automatic day and night</string>
     <string name="night_auto_hint">Night from 20:00 to 07:00, by the TV\'s clock</string>
     <string name="night_auto_sun">Night from sunset (%1$s) to sunrise (%2$s)</string>
+    <string name="send_report">Send a report</string>
+    <string name="send_report_sub">Sends this TV\'s log so we can see what went wrong</string>
+    <string name="report_what">What happened? (optional)</string>
+    <string name="report_send">Send</string>
+    <string name="report_sending">Sending…</string>
+    <string name="report_sent">Sent. Report %1$s</string>
+    <string name="report_too_many">Too many reports. Try again later.</string>
+    <string name="report_failed">Couldn\'t send: %1$s</string>
 </resources>

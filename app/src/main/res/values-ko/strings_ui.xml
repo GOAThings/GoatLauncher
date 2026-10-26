@@ -253,4 +253,12 @@
     <string name="night_auto">낮과 밤 자동 전환</string>
     <string name="night_auto_hint">TV 시계 기준 20:00~07:00은 밤</string>
     <string name="night_auto_sun">일몰(%1$s)부터 일출(%2$s)까지 밤</string>
+    <string name="send_report">보고서 보내기</string>
+    <string name="send_report_sub">문제를 확인할 수 있도록 이 TV의 로그를 보냅니다</string>
+    <string name="report_what">무슨 일이 있었나요? (선택)</string>
+    <string name="report_send">보내기</string>
+    <string name="report_sending">보내는 중…</string>
+    <string name="report_sent">보냈습니다. 보고서 %1$s</string>
+    <string name="report_too_many">보고서가 너무 많습니다. 나중에 다시 시도하세요.</string>
+    <string name="report_failed">보낼 수 없음: %1$s</string>
 </resources>

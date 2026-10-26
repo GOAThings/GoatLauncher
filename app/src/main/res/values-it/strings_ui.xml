@@ -257,4 +257,12 @@
     <string name="night_auto">Giorno e notte automatici</string>
     <string name="night_auto_hint">Notte dalle 20:00 alle 07:00, secondo l\'ora della TV</string>
     <string name="night_auto_sun">Notte dal tramonto (%1$s) all\'alba (%2$s)</string>
+    <string name="send_report">Invia una segnalazione</string>
+    <string name="send_report_sub">Invia il registro di questa TV per capire cosa non ha funzionato</string>
+    <string name="report_what">Cos\'è successo? (facoltativo)</string>
+    <string name="report_send">Invia</string>
+    <string name="report_sending">Invio…</string>
+    <string name="report_sent">Inviata. Segnalazione %1$s</string>
+    <string name="report_too_many">Troppe segnalazioni. Riprova più tardi.</string>
+    <string name="report_failed">Impossibile inviare: %1$s</string>
 </resources>

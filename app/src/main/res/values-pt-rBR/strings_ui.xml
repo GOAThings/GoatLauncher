@@ -257,4 +257,12 @@
     <string name="night_auto">Dia e noite automáticos</string>
     <string name="night_auto_hint">Noite das 20:00 às 07:00, pelo horário da TV</string>
     <string name="night_auto_sun">Noite do pôr do sol (%1$s) ao nascer do sol (%2$s)</string>
+    <string name="send_report">Enviar relatório</string>
+    <string name="send_report_sub">Envia o registro desta TV para vermos o que deu errado</string>
+    <string name="report_what">O que aconteceu? (opcional)</string>
+    <string name="report_send">Enviar</string>
+    <string name="report_sending">Enviando…</string>
+    <string name="report_sent">Enviado. Relatório %1$s</string>
+    <string name="report_too_many">Relatórios demais. Tente mais tarde.</string>
+    <string name="report_failed">Não foi possível enviar: %1$s</string>
 </resources>

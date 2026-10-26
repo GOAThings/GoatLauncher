@@ -255,4 +255,12 @@
     <string name="night_auto">Tag und Nacht automatisch</string>
     <string name="night_auto_hint">Nacht von 20:00 bis 07:00, nach der Uhrzeit des TV</string>
     <string name="night_auto_sun">Nacht von Sonnenuntergang (%1$s) bis Sonnenaufgang (%2$s)</string>
+    <string name="send_report">Fehlerbericht senden</string>
+    <string name="send_report_sub">Sendet das Protokoll dieses Fernsehers, damit wir sehen, was schiefging</string>
+    <string name="report_what">Was ist passiert? (optional)</string>
+    <string name="report_send">Senden</string>
+    <string name="report_sending">Wird gesendet…</string>
+    <string name="report_sent">Gesendet. Bericht %1$s</string>
+    <string name="report_too_many">Zu viele Berichte. Versuche es später erneut.</string>
+    <string name="report_failed">Senden fehlgeschlagen: %1$s</string>
 </resources>

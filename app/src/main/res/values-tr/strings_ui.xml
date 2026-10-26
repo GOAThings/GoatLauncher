@@ -255,4 +255,12 @@
     <string name="night_auto">Otomatik gündüz ve gece</string>
     <string name="night_auto_hint">Gece 20:00–07:00 arası, TV saatine göre</string>
     <string name="night_auto_sun">Gün batımından (%1$s) gün doğumuna (%2$s) kadar gece</string>
+    <string name="send_report">Rapor gönder</string>
+    <string name="send_report_sub">Neyin yanlış gittiğini görmemiz için bu TV\'nin kaydını gönderir</string>
+    <string name="report_what">Ne oldu? (isteğe bağlı)</string>
+    <string name="report_send">Gönder</string>
+    <string name="report_sending">Gönderiliyor…</string>
+    <string name="report_sent">Gönderildi. Rapor %1$s</string>
+    <string name="report_too_many">Çok fazla rapor. Daha sonra tekrar deneyin.</string>
+    <string name="report_failed">Gönderilemedi: %1$s</string>
 </resources>

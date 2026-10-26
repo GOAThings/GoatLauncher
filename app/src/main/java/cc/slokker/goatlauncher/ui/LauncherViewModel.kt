@@ -15,6 +15,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cc.slokker.goatlauncher.BuildConfig
+import android.os.Build
+import com.google.gson.JsonObject
+import cc.slokker.goatlauncher.data.BugReport
 import cc.slokker.goatlauncher.LauncherApp
 import cc.slokker.goatlauncher.data.ButtonMap
 import cc.slokker.goatlauncher.data.AccountSettings
@@ -70,6 +73,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+/** O envio de um relatório (Definições → Enviar relatório). */
+sealed interface ReportState {
+    data object Idle : ReportState
+    data object Sending : ReportState
+    data class Sent(val id: String) : ReportState
+    data class Failed(val message: String) : ReportState
+}
 
 sealed interface UpdateState {
     data object Idle : UpdateState
@@ -205,6 +216,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _update = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val update: StateFlow<UpdateState> = _update.asStateFlow()
     val appVersion: String get() = c.updater.currentVersion
+
+    private val _report = MutableStateFlow<ReportState>(ReportState.Idle)
+    val report: StateFlow<ReportState> = _report.asStateFlow()
 
     private val _toast = MutableStateFlow<String?>(null)
     val toast: StateFlow<String?> = _toast.asStateFlow()
@@ -675,6 +689,45 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         c.youtube.unlink()
         _youtubeLinked.value = false
         _youtube.value = emptyList()
+    }
+
+    // ---- Relatórios ----
+
+    /**
+     * Envia um relatório para a zona admin do site: o registo do launcher (sem tokens nem email) e o que a pessoa
+     * escreveu. Com a TV ligada à conta, fica ligado a ela.
+     */
+    fun sendReport(message: String) {
+        if (_report.value == ReportState.Sending) return
+        _report.value = ReportState.Sending
+        viewModelScope.launch {
+            _report.value = try {
+                val session = session.value
+                val header = "GoatLauncher ${BuildConfig.VERSION_NAME} · ${BugReport.device}\n" +
+                    "Account: ${if (session != null) "yes" else "no"} · layout: ${account.value.layout}"
+                val secrets = listOfNotNull(session?.token, session?.email) + c.youtube.secrets()
+                val log = withContext(Dispatchers.IO) { BugReport.collect(getApplication(), header, secrets) }
+                val body = JsonObject().apply {
+                    addProperty("app", "goatlauncher")
+                    addProperty("version", BuildConfig.VERSION_NAME)
+                    addProperty("platform", if (Build.MANUFACTURER.equals("Amazon", ignoreCase = true)) "fire-tv" else "android-tv")
+                    addProperty("device", BugReport.device)
+                    message.trim().take(2000).takeIf { it.isNotEmpty() }?.let { addProperty("message", it) }
+                    addProperty("log", log)
+                }
+                val res = c.backend.sendReport(body)
+                val id = res.body()?.get("id")?.takeIf { it.isJsonPrimitive }?.asString
+                when {
+                    res.code() == 429 -> ReportState.Failed(strings.reportTooMany)
+                    res.isSuccessful && id != null -> ReportState.Sent(id)
+                    else -> ReportState.Failed(strings.reportFailed("HTTP ${res.code()}"))
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                ReportState.Failed(strings.reportFailed(e.message ?: e.javaClass.simpleName))
+            }
+        }
     }
 
     // ---- Atualizações ----

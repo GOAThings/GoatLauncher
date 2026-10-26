@@ -33,6 +33,9 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
 
     val linked: Boolean get() = prefs.contains("refresh")
 
+    /** Os tokens e o segredo guardados, para os tirar dos relatórios (BugReport). */
+    fun secrets(): List<String> = listOfNotNull(prefs.getString("refresh", null), prefs.getString("access", null), prefs.getString("client_secret", null))
+
     fun unlink() = prefs.edit {
         remove("refresh")
         remove("access")

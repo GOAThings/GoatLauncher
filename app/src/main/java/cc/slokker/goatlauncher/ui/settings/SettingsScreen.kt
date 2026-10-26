@@ -87,6 +87,7 @@ import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.ui.LauncherViewModel
 import cc.slokker.goatlauncher.ui.UpdateState
+import cc.slokker.goatlauncher.ui.ReportState
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.common.GlassButton
 import cc.slokker.goatlauncher.ui.common.GlassRow
@@ -104,7 +105,7 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
 
-private enum class Page { Main, Appearance, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Buttons, ButtonCapture, ButtonApp, Language, Location, Parental, PinSetup, LockedApps }
+private enum class Page { Main, Appearance, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Buttons, ButtonCapture, ButtonApp, Language, Location, Parental, PinSetup, LockedApps, Report }
 
 /** Definições do launcher: um painel de vidro à direita, por cima do fundo. Voltar sobe um nível. */
 @Composable
@@ -203,6 +204,7 @@ fun SettingsScreen(
                     Page.ButtonApp -> buttonKey?.let { (k, sc) -> s.buttonOpens(buttonName(k, sc, s)) } ?: s.buttons
                     Page.Parental, Page.PinSetup -> s.parental
                     Page.LockedApps -> s.lockedApps
+                    Page.Report -> s.sendReport
                 },
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
@@ -268,7 +270,38 @@ fun SettingsScreen(
                 Page.Parental -> ParentalPage(vm, first, onPage = { page = it })
                 Page.PinSetup -> PinSetupPage(vm, onDone = { page = Page.Parental })
                 Page.LockedApps -> LockedAppsPage(vm, first)
+                Page.Report -> ReportPage(vm, first)
             }
+        }
+    }
+}
+
+/** O estado do último relatório, ou o que o botão faz. */
+private fun reportStatus(state: ReportState, s: Strings): String = when (state) {
+    ReportState.Idle -> s.sendReportSub
+    ReportState.Sending -> s.reportSending
+    is ReportState.Sent -> s.reportSent(state.id)
+    is ReportState.Failed -> state.message
+}
+
+/** Enviar um relatório: o que aconteceu (opcional) e o registo do launcher, para a zona admin do site. */
+@Composable
+private fun ReportPage(vm: LauncherViewModel, first: FocusRequester) {
+    val s = LocalStrings.current
+    val report by vm.report.collectAsStateWithLifecycle()
+    var message by remember { mutableStateOf("") }
+    fun send() {
+        if (report != ReportState.Sending) vm.sendReport(message)
+    }
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        item {
+            Text(s.sendReportSub, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 6.dp))
+        }
+        item {
+            TvTextField(message, { message = it.take(2000) }, s.reportWhat, Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp).focusRequester(first), onDone = ::send)
+        }
+        item {
+            GlassRow(title = s.reportSend, subtitle = reportStatus(report, s).takeIf { report != ReportState.Idle }, onClick = ::send)
         }
     }
 }
@@ -276,7 +309,7 @@ fun SettingsScreen(
 /** A página de onde se chega a [page] (para onde Voltar leva); null na página principal. */
 private fun parentPage(page: Page, hasPin: Boolean): Page? = when (page) {
     Page.Main -> null
-    Page.Appearance, Page.HiddenApps, Page.YouTube, Page.Autostart, Page.Buttons, Page.Parental -> Page.Main
+    Page.Appearance, Page.HiddenApps, Page.YouTube, Page.Autostart, Page.Buttons, Page.Parental, Page.Report -> Page.Main
     Page.Language, Page.Location, Page.Wallpaper -> Page.Appearance
     Page.WallpaperFiles -> Page.Wallpaper
     Page.ButtonCapture, Page.ButtonApp -> Page.Buttons
@@ -457,6 +490,10 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
                 subtitle = subtitle,
                 onClick = { if (update is UpdateState.Available) vm.installUpdate() else vm.checkForUpdate(manual = true) },
             )
+        }
+        item {
+            val report by vm.report.collectAsStateWithLifecycle()
+            GlassRow(title = s.sendReport, subtitle = reportStatus(report, s), onClick = { onPage(Page.Report) }, trailing = { Chevron() })
         }
 
         item { SectionLabel(s.android) }

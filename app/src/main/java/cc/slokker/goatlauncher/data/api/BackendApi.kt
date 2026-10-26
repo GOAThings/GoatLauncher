@@ -28,6 +28,10 @@ interface BackendApi {
     @POST("api/devices/poll")
     suspend fun devicePoll(@Body body: DevicePollRequest): Response<DevicePollResponse>
 
+    /** Um relatório para a zona admin do site (ver BugReport); com o token, fica ligado à conta. Responde `{id, created_at}`. */
+    @POST("api/reports")
+    suspend fun sendReport(@Body body: JsonObject): Response<JsonObject>
+
     /** Renova o token do dispositivo. 401/404: a TV foi desligada na conta. */
     @POST("api/collections/devices/auth-refresh")
     suspend fun authRefresh(): AuthRefreshResponse
