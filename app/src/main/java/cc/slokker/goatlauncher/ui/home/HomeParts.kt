@@ -5,6 +5,11 @@ import android.text.format.DateFormat
 import android.view.ViewConfiguration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -432,7 +437,7 @@ fun AppTile(
 
 /**
  * O cartão 16:9 de uma app. Com foco fica maior e com o efeito de foco escolhido (por defeito o contorno branco,
- * como no tvOS; ver FocusEffect). Em modo "mover" ([moving]) o contorno passa a ser o gradiente da marca, com setas dos lados.
+ * como no tvOS; ver FocusEffect). Em modo "mover" ([moving]) o contorno passa a ser o gradiente da marca, e o cartão abana como na Apple TV.
  */
 @Composable
 fun AppBanner(
@@ -459,6 +464,12 @@ fun AppBanner(
     val container = if (isSeeThrough(custom)) Color.Transparent else app.color
     // A escala do foco é feita aqui (não pelo Surface) para o efeito de foco crescer com o cartão.
     val focusScale by animateFloatAsState(if (focused) FocusScale else 1f, tween(150), label = "focusScale")
+    // Em modo "mover" o cartão abana, como as apps da Apple TV: roda uns graus para cada lado, sem parar.
+    val jiggle = rememberInfiniteTransition(label = "jiggle")
+    val wobble by jiggle.animateFloat(
+        initialValue = -JiggleDegrees, targetValue = JiggleDegrees,
+        animationSpec = infiniteRepeatable(tween(JIGGLE_MS, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "wobble",
+    )
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
@@ -467,6 +478,7 @@ fun AppBanner(
             .graphicsLayer {
                 scaleX = armedScale * focusScale
                 scaleY = armedScale * focusScale
+                rotationZ = if (moving) wobble else 0f
             }
             .focusEffect(focused, app.color, moving)
             .onFocusChanged {
@@ -525,10 +537,6 @@ fun AppBanner(
                         .background(Color.White, CircleShape),
                 )
             }
-            if (moving) {
-                MoveArrow(Modifier.align(Alignment.CenterStart), left = true)
-                MoveArrow(Modifier.align(Alignment.CenterEnd), left = false)
-            }
         }
     }
 }
@@ -542,16 +550,6 @@ fun BoxScope.BannerImage(app: LauncherApp, custom: ImageBitmap?, customPending: 
         app.banner != null -> Image(app.banner, contentDescription = app.label, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         app.icon != null -> Image(app.icon, contentDescription = app.label, modifier = Modifier.align(Alignment.Center).size(52.dp))
         else -> Text(app.label, Modifier.align(Alignment.Center).padding(8.dp), maxLines = 2, overflow = TextOverflow.Ellipsis)
-    }
-}
-
-@Composable
-private fun MoveArrow(modifier: Modifier, left: Boolean) {
-    Box(
-        modifier.padding(4.dp).size(22.dp).background(Color.Black.copy(alpha = 0.55f), CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(if (left) GoatIcons.ChevronLeft else GoatIcons.ChevronRight, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
     }
 }
 
@@ -730,3 +728,7 @@ val RowGap = 24.dp
 private const val NOT_PRESSED = -1L
 private val LONG_PRESS_MS = ViewConfiguration.getLongPressTimeout().toLong()
 val RowSpacing = Arrangement.spacedBy(RowGap)
+
+/** O abanar do modo "mover": graus para cada lado e o tempo de ida. */
+private const val JiggleDegrees = 1.6f
+private const val JIGGLE_MS = 130
