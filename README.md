@@ -11,6 +11,8 @@ A home screen for Android TV and Google TV.
 | ![Appearance, Android TV style](docs/screenshots/appearance-android-tv.jpg) | ![Appearance, tvOS style](docs/screenshots/appearance-tvos.jpg) |
 | ![Aurora focus effect](docs/screenshots/effect-aurora.jpg) | ![Floating ring focus effect](docs/screenshots/effect-floating-ring.jpg) |
 
+Wallpapers: CC0 photos from Wikimedia Commons. "Big Buck Bunny" © Blender Foundation, CC BY 3.0.
+
 ## Install
 
 Latest version: https://github.com/GOAThings/GoatLauncher/releases/latest/download/goatlauncher.apk
