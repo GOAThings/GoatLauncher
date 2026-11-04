@@ -6,6 +6,8 @@ import android.media.AudioManager
 import android.util.Log
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.toArgb
+import cc.slokker.goatlauncher.AutoStart
+import cc.slokker.goatlauncher.HomeGuardService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,10 +31,11 @@ import java.net.Socket
  *                        o volume, pedido ao sistema como faz o comando físico (com HDMI-CEC vai para a TV). As
  *                        teclas de volume do protocolo do comando rebentam o Android 11 da SHIELD quando um serviço
  *                        de acessibilidade vê as teclas (o HomeGuardService, com botões a abrir apps).
- *
- * Abrir uma app continua a ser pelo comando (market://launch?id=<pacote>), não por aqui.
+ *   POST /open/<pacote>  abre a app, com o controlo parental. A SHIELD recusa o market://launch?id=<pacote> do
+ *                        protocolo do comando e fecha a ligação. Sem o serviço de acessibilidade o Android não deixa
+ *                        abrir apps a partir do fundo: responde 409, e o comando tenta pelo protocolo.
  */
-class PhoneApps(context: Context, private val apps: InstalledApps, private val scope: CoroutineScope) {
+class PhoneApps(private val context: Context, private val apps: InstalledApps, private val scope: CoroutineScope) {
     private val audio = context.getSystemService(AudioManager::class.java)
 
     private val pngs = HashMap<String, ByteArray>()
@@ -57,6 +60,7 @@ class PhoneApps(context: Context, private val apps: InstalledApps, private val s
         val method = line.substringBefore(' ')
         val path = line.split(" ").getOrNull(1) ?: return
         if (path.startsWith("/volume/")) return volume(client, method, path.removePrefix("/volume/"))
+        if (path.startsWith("/open/")) return open(client, method, path.removePrefix("/open/"))
         val list = runBlocking { apps.load() }
         when {
             path == "/apps" -> {
@@ -105,6 +109,19 @@ class PhoneApps(context: Context, private val apps: InstalledApps, private val s
         runCatching { audio.adjustSuggestedStreamVolume(direction, AudioManager.USE_DEFAULT_STREAM_TYPE, AudioManager.FLAG_SHOW_UI) }
             .onFailure { Log.w(TAG, "Volume", it) }
         reply(client, "text/plain", "ok".toByteArray())
+    }
+
+    private fun open(client: Socket, method: String, pkg: String) {
+        when {
+            method != "POST" || apps.launchIntent(pkg) == null ->
+                reply(client, "text/plain", "não há".toByteArray(), status = "404 Not Found")
+            HomeGuardService.instance == null ->
+                reply(client, "text/plain", "sem acessibilidade".toByteArray(), status = "409 Conflict")
+            else -> {
+                AutoStart.open(context, pkg)
+                reply(client, "text/plain", "ok".toByteArray())
+            }
+        }
     }
 
     private fun reply(client: Socket, type: String, body: ByteArray, status: String = "200 OK") {
