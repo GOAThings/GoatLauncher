@@ -132,6 +132,7 @@
     <string name="unlock_settings">설정 변경 코드</string>
     <string name="pin_hint">리모컨 숫자 버튼 또는 ↑ ↓ 와 OK</string>
     <string name="wrong_pin">코드가 틀렸어요</string>
+    <string name="pin_wait">시도 횟수가 너무 많아요. %1$s 후에 다시 해 보세요</string>
     <string name="set_pin">코드 설정</string>
     <string name="change_pin">코드 변경</string>
     <string name="new_pin">새 코드</string>

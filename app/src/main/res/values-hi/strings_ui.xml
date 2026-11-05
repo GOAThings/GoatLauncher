@@ -132,6 +132,7 @@
     <string name="unlock_settings">सेटिंग बदलने के लिए कोड</string>
     <string name="pin_hint">रिमोट के नंबर बटन, या ↑ ↓ और OK</string>
     <string name="wrong_pin">गलत कोड</string>
+    <string name="pin_wait">बहुत ज़्यादा कोशिशें। %1$s बाद फिर कोशिश करें</string>
     <string name="set_pin">कोड सेट करें</string>
     <string name="change_pin">कोड बदलें</string>
     <string name="new_pin">नया कोड</string>

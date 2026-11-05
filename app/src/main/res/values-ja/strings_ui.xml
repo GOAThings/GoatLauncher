@@ -132,6 +132,7 @@
     <string name="unlock_settings">設定を変更するためのコード</string>
     <string name="pin_hint">リモコンの数字キー、または ↑ ↓ と OK</string>
     <string name="wrong_pin">コードが違います</string>
+    <string name="pin_wait">試行回数が多すぎます。%1$s 後にもう一度お試しください</string>
     <string name="set_pin">コードを設定</string>
     <string name="change_pin">コードを変更</string>
     <string name="new_pin">新しいコード</string>

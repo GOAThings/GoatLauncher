@@ -819,7 +819,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                 if (pinPrompt != null) pinShown = pinPrompt
                 AnimatedVisibility(visible = pinPrompt != null, enter = fadeIn(tween(MENU_MS)), exit = fadeOut(tween(MENU_MS))) {
                     val prompt = pinShown ?: return@AnimatedVisibility
-                    PinOverlay(prompt.title, onPin = vm::submitPin)
+                    PinOverlay(prompt.title, waitMs = vm::pinWaitMs, onPin = vm::submitPin)
                 }
                 LaunchedEffect(pinPrompt) {
                     if (pinPrompt != null) {
@@ -1261,12 +1261,23 @@ private const val AMBIENT_FADE_MS = 1500
 private fun cleanRedditTitle(title: String): String =
     title.replace(Regex("""[\[(][^\])]*[\])]"""), "").replace(Regex("""\s+"""), " ").trim()
 
-/** O teclado do código por cima do ecrã (Voltar cancela: ver o ecrã). [onPin] devolve false se estiver errado. */
+/**
+ * O teclado do código por cima do ecrã (Voltar cancela: ver o ecrã). [onPin] devolve false se estiver errado.
+ * Depois de muitas tentativas erradas, [waitMs] diz quanto falta: até lá o teclado mostra o tempo e não aceita nada.
+ */
 @Composable
-private fun PinOverlay(title: String, onPin: (String) -> Boolean) {
+private fun PinOverlay(title: String, waitMs: () -> Long, onPin: (String) -> Boolean) {
     val s = LocalStrings.current
     var error by remember { mutableStateOf<String?>(null) }
     var attempt by remember { mutableIntStateOf(0) }
+    var wait by remember { mutableLongStateOf(waitMs()) }
+    LaunchedEffect(attempt) {
+        while (wait > 0) {
+            delay(wait.coerceAtMost(1000))
+            wait = waitMs()
+            if (wait == 0L) error = null
+        }
+    }
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)), contentAlignment = Alignment.Center) {
         Column(
             Modifier
@@ -1279,10 +1290,12 @@ private fun PinOverlay(title: String, onPin: (String) -> Boolean) {
             key(attempt) {
                 PinPad(
                     title = title,
-                    message = error,
+                    message = if (wait > 0) s.pinWait(waitText(wait)) else error,
+                    waiting = wait > 0,
                     onDone = { pin ->
                         if (!onPin(pin)) {
                             error = s.wrongPin
+                            wait = waitMs()
                             attempt++
                         }
                     },
@@ -1291,6 +1304,12 @@ private fun PinOverlay(title: String, onPin: (String) -> Boolean) {
             Text(s.forgotPin, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, textAlign = TextAlign.Center)
         }
     }
+}
+
+/** Minutos e segundos, arredondados para cima. */
+private fun waitText(ms: Long): String {
+    val seconds = (ms + 999) / 1000
+    return "%d:%02d".format(seconds / 60, seconds % 60)
 }
 
 /** Botão redondo da barra de cima (vidro; branco com foco), como o da rede. */

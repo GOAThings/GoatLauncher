@@ -132,6 +132,7 @@
     <string name="unlock_settings">Código para mexer nas definições</string>
     <string name="pin_hint">Números do comando, ou ↑ ↓ e OK</string>
     <string name="wrong_pin">Código errado</string>
+    <string name="pin_wait">Demasiadas tentativas. Tenta outra vez daqui a %1$s</string>
     <string name="set_pin">Definir código</string>
     <string name="change_pin">Mudar código</string>
     <string name="new_pin">Novo código</string>

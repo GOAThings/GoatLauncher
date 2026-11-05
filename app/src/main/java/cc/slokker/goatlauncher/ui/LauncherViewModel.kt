@@ -829,10 +829,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun settingsLocked(): Boolean = ParentalLock.settingsLocked(settings.device.value)
 
-    /** true se o código estiver certo (e aí corre o que estava à espera dele). */
+    /** Quanto falta para se poder tentar o código outra vez (0 = já). */
+    fun pinWaitMs(): Long = c.pinAttempts.waitMs()
+
+    /** true se o código estiver certo (e aí corre o que estava à espera dele). À espera, nem se compara. */
     fun submitPin(pin: String): Boolean {
         val prompt = _pinPrompt.value ?: return false
-        if (!ParentalLock.matches(settings.device.value.pin, pin)) return false
+        if (c.pinAttempts.waitMs() > 0) return false
+        if (!ParentalLock.matches(settings.device.value.pin, pin)) {
+            c.pinAttempts.failed()
+            return false
+        }
+        c.pinAttempts.reset()
         ParentalLock.grant()
         _unlocks.value++
         _pinPrompt.value = null

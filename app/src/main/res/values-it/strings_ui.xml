@@ -132,6 +132,7 @@
     <string name="unlock_settings">Codice per cambiare le impostazioni</string>
     <string name="pin_hint">Tasti numerici del telecomando, o ↑ ↓ e OK</string>
     <string name="wrong_pin">Codice errato</string>
+    <string name="pin_wait">Troppi tentativi. Riprova tra %1$s</string>
     <string name="set_pin">Imposta codice</string>
     <string name="change_pin">Cambia codice</string>
     <string name="new_pin">Nuovo codice</string>

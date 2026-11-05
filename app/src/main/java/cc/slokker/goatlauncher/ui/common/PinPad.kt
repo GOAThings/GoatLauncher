@@ -43,10 +43,10 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 
 /**
  * Entrada de PIN de 4 dígitos: números do comando, ou ↑/↓ para mudar o dígito e →/OK para avançar.
- * [onDone] devolve null para limpar e pedir de novo (ex.: PIN errado).
+ * [onDone] devolve null para limpar e pedir de novo (ex.: PIN errado). Com [waiting], fica com o foco mas não muda nada.
  */
 @Composable
-fun PinPad(title: String, message: String?, onDone: (String) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun PinPad(title: String, message: String?, onDone: (String) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, waiting: Boolean = false) {
     val digits = remember { mutableStateListOf(0, 0, 0, 0) }
     var index by remember { mutableIntStateOf(0) }
     var error by remember(message) { mutableStateOf(message) }
@@ -81,6 +81,7 @@ fun PinPad(title: String, message: String?, onDone: (String) -> Unit, modifier: 
             .onKeyEvent { e ->
                 if (e.type != KeyEventType.KeyDown) return@onKeyEvent false
                 val code = e.key.nativeKeyCode
+                if (waiting && code != AndroidKeyEvent.KEYCODE_BACK) return@onKeyEvent true
                 when (code) {
                     in AndroidKeyEvent.KEYCODE_0..AndroidKeyEvent.KEYCODE_9 -> {
                         digits[index] = code - AndroidKeyEvent.KEYCODE_0

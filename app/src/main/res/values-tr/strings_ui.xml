@@ -132,6 +132,7 @@
     <string name="unlock_settings">Ayarları değiştirme kodu</string>
     <string name="pin_hint">Kumandanın rakam tuşları ya da ↑ ↓ ve OK</string>
     <string name="wrong_pin">Yanlış kod</string>
+    <string name="pin_wait">Çok fazla deneme. %1$s sonra tekrar deneyin</string>
     <string name="set_pin">Kod belirle</string>
     <string name="change_pin">Kodu değiştir</string>
     <string name="new_pin">Yeni kod</string>

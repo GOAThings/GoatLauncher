@@ -132,6 +132,7 @@
     <string name="unlock_settings">Kode untuk mengubah pengaturan</string>
     <string name="pin_hint">Tombol angka remote, atau ↑ ↓ dan OK</string>
     <string name="wrong_pin">Kode salah</string>
+    <string name="pin_wait">Terlalu banyak percobaan. Coba lagi dalam %1$s</string>
     <string name="set_pin">Atur kode</string>
     <string name="change_pin">Ganti kode</string>
     <string name="new_pin">Kode baru</string>

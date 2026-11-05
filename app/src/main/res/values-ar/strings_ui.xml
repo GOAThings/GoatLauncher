@@ -132,6 +132,7 @@
     <string name="unlock_settings">الرمز لتغيير الإعدادات</string>
     <string name="pin_hint">أزرار الأرقام في جهاز التحكم، أو ↑ ↓ وOK</string>
     <string name="wrong_pin">رمز خاطئ</string>
+    <string name="pin_wait">محاولات كثيرة جدًا. حاول مرة أخرى بعد %1$s</string>
     <string name="set_pin">تعيين رمز</string>
     <string name="change_pin">تغيير الرمز</string>
     <string name="new_pin">رمز جديد</string>

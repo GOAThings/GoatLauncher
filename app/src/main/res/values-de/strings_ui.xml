@@ -132,6 +132,7 @@
     <string name="unlock_settings">Code zum Ändern der Einstellungen</string>
     <string name="pin_hint">Zifferntasten der Fernbedienung oder ↑ ↓ und OK</string>
     <string name="wrong_pin">Falscher Code</string>
+    <string name="pin_wait">Zu viele Versuche. Erneut versuchen in %1$s</string>
     <string name="set_pin">Code festlegen</string>
     <string name="change_pin">Code ändern</string>
     <string name="new_pin">Neuer Code</string>

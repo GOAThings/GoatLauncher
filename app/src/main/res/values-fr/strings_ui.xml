@@ -132,6 +132,7 @@
     <string name="unlock_settings">Code pour modifier les réglages</string>
     <string name="pin_hint">Touches numériques de la télécommande, ou ↑ ↓ et OK</string>
     <string name="wrong_pin">Code incorrect</string>
+    <string name="pin_wait">Trop de tentatives. Réessayez dans %1$s</string>
     <string name="set_pin">Définir le code</string>
     <string name="change_pin">Changer le code</string>
     <string name="new_pin">Nouveau code</string>

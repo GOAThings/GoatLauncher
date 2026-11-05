@@ -132,6 +132,7 @@
     <string name="unlock_settings">Código para cambiar los ajustes</string>
     <string name="pin_hint">Teclas numéricas del mando, o ↑ ↓ y OK</string>
     <string name="wrong_pin">Código incorrecto</string>
+    <string name="pin_wait">Demasiados intentos. Vuelve a intentarlo en %1$s</string>
     <string name="set_pin">Definir código</string>
     <string name="change_pin">Cambiar código</string>
     <string name="new_pin">Código nuevo</string>

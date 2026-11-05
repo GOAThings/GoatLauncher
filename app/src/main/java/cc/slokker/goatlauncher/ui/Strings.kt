@@ -159,6 +159,7 @@ class Strings(context: Context) {
     val unlockSettings get() = s(R.string.unlock_settings)
     val pinHint get() = s(R.string.pin_hint)
     val wrongPin get() = s(R.string.wrong_pin)
+    fun pinWait(time: String) = s(R.string.pin_wait, time)
     val setPin get() = s(R.string.set_pin)
     val changePin get() = s(R.string.change_pin)
     val newPin get() = s(R.string.new_pin)

@@ -7,6 +7,7 @@ import cc.slokker.goatlauncher.data.AuthToken
 import cc.slokker.goatlauncher.data.CustomIcons
 import cc.slokker.goatlauncher.data.InstalledApps
 import cc.slokker.goatlauncher.data.PhoneApps
+import cc.slokker.goatlauncher.data.PinAttemptStore
 import cc.slokker.goatlauncher.data.RedditWallpapers
 import cc.slokker.goatlauncher.data.SessionStore
 import cc.slokker.goatlauncher.data.SettingsRepository
@@ -57,6 +58,7 @@ class AppContainer(context: Context) {
         .create()
 
     val settings = SettingsRepository(context, backend, SessionStore(context), token, scope)
+    val pinAttempts = PinAttemptStore(context)
     val apps = InstalledApps(context)
     /** As apps desta TV para o site da conta. */
     val appIndex = AppIndex(context, backend, settings)

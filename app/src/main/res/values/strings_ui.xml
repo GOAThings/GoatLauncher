@@ -132,6 +132,7 @@
     <string name="unlock_settings">Code to change settings</string>
     <string name="pin_hint">Remote\'s number keys, or ↑ ↓ and OK</string>
     <string name="wrong_pin">Wrong code</string>
+    <string name="pin_wait">Too many tries. Try again in %1$s</string>
     <string name="set_pin">Set code</string>
     <string name="change_pin">Change code</string>
     <string name="new_pin">New code</string>
