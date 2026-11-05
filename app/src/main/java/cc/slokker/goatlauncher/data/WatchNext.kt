@@ -73,6 +73,47 @@ data class WatchNextItem(
     }
 }
 
+/** O que entra do Watch Next: as entradas vêm de outras apps, e uma não pode pesar nem estragar as das outras. */
+internal object WatchNextRows {
+    const val MAX_SCANNED = 5000
+    const val MAX_PER_APP = 40
+    const val MAX_TOTAL = 400
+
+    /**
+     * Lê até [MAX_SCANNED] entradas. A que falhar ([onBadRow]) fica de fora, e as outras seguem. De cada app guardam-se
+     * só as mais recentes, por isso muitas entradas de uma app não tiram o lugar às das outras.
+     */
+    fun read(count: Int, moveTo: (Int) -> Boolean, row: () -> WatchNextItem?, onBadRow: (Throwable) -> Unit): List<WatchNextItem> {
+        val byApp = HashMap<String, MutableList<WatchNextItem>>()
+        for (position in 0 until count.coerceAtMost(MAX_SCANNED)) {
+            val item = runCatching { if (moveTo(position)) row() else null }.onFailure(onBadRow).getOrNull() ?: continue
+            val rows = byApp.getOrPut(item.packageName) { ArrayList() }
+            rows += item
+            if (rows.size >= 2 * MAX_PER_APP) {
+                rows.sortByDescending { it.lastEngagement }
+                rows.subList(MAX_PER_APP, rows.size).clear()
+            }
+        }
+        return byApp.values.flatten()
+    }
+
+    /** Por pacote, o mais recente primeiro, sem repetidas, até [MAX_PER_APP] por app e [MAX_TOTAL] ao todo. */
+    fun newestByApp(rows: List<WatchNextItem>): Map<String, List<WatchNextItem>> {
+        val perApp = HashMap<String, Int>()
+        return rows
+            .sortedByDescending { it.lastEngagement }
+            // Entradas repetidas (ex.: a app perdeu o id da que publicou e criou outra): fica a mais recente.
+            .distinctBy { it.packageName + "\u0000" + (it.intentUri ?: it.title) }
+            .filter { item ->
+                val seen = perApp[item.packageName] ?: 0
+                perApp[item.packageName] = seen + 1
+                seen < MAX_PER_APP
+            }
+            .take(MAX_TOTAL)
+            .groupBy { it.packageName }
+    }
+}
+
 /**
  * Lê o Watch Next do TvProvider (o mesmo que o Google TV e o Projectivy usam) e agrupa-o por app.
  * Precisa de READ_TV_LISTINGS (ver o manifesto); sem ela, o sistema só devolve os programas da própria app.
@@ -82,17 +123,19 @@ class WatchNextSource(private val context: Context) {
 
     private val supported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
 
-    /** Por pacote, o mais recente primeiro. */
-    suspend fun load(): Map<String, List<WatchNextItem>> = withContext(Dispatchers.IO) {
+    /** Por pacote, o mais recente primeiro. null se não deu para ler (não quer dizer que não haja nada). */
+    suspend fun load(): Map<String, List<WatchNextItem>>? = withContext(Dispatchers.IO) {
         if (!supported) return@withContext emptyMap()
         runCatching {
+            var bad = 0
             context.contentResolver.query(TvContractCompat.WatchNextPrograms.CONTENT_URI, PROJECTION, null, null, null)
-                ?.use { c -> buildList { while (c.moveToNext()) read(c)?.let(::add) } }
+                ?.use { c ->
+                    WatchNextRows.read(c.count, c::moveToPosition, { read(c) }) {
+                        if (bad++ == 0) Log.w(TAG, "Entrada que não se lê: ${it.javaClass.simpleName}")
+                    }
+                }
                 .orEmpty()
-                .sortedByDescending { it.lastEngagement }
-                // Entradas repetidas (ex.: a app perdeu o id da que publicou e criou outra): fica a mais recente.
-                .distinctBy { it.packageName + "\u0000" + (it.intentUri ?: it.title) }
-                .groupBy { it.packageName }
+                .let(WatchNextRows::newestByApp)
                 .also { all ->
                     Log.d(TAG, "${all.values.sumOf { l -> l.size }} entradas de ${all.keys}")
                     // De onde vêm as imagens de cada app (para perceber a qualidade dos cartões). O resto do URI é da app.
@@ -100,7 +143,7 @@ class WatchNextSource(private val context: Context) {
                 }
         }.getOrElse {
             Log.w(TAG, "Ler o Watch Next", it)
-            emptyMap()
+            null
         }
     }
 
@@ -122,24 +165,24 @@ class WatchNextSource(private val context: Context) {
 
     private fun read(c: Cursor): WatchNextItem? {
         if (c.int(COL_BROWSABLE) == 0) return null // a pessoa tirou-o do "A seguir"
-        val pkg = c.str(COL_PACKAGE) ?: return null
-        val title = c.str(COL_TITLE) ?: c.str(COL_EPISODE_TITLE) ?: return null
-        val poster = c.str(COL_POSTER)
-        val thumb = c.str(COL_THUMB)
+        val pkg = c.whole(COL_PACKAGE, MAX_PACKAGE) ?: return null
+        val title = c.text(COL_TITLE) ?: c.text(COL_EPISODE_TITLE) ?: return null
+        val poster = c.whole(COL_POSTER, MAX_IMAGE_URI)
+        val thumb = c.whole(COL_THUMB, MAX_IMAGE_URI)
         return WatchNextItem(
             id = c.long(COL_ID) ?: return null,
             packageName = pkg,
             title = title,
-            episodeTitle = c.str(COL_EPISODE_TITLE),
-            season = c.str(COL_SEASON),
-            episode = c.str(COL_EPISODE),
+            episodeTitle = c.text(COL_EPISODE_TITLE),
+            season = c.text(COL_SEASON),
+            episode = c.text(COL_EPISODE),
             imageUri = sharper(poster ?: thumb),
             aspectRatio = ratio(if (poster != null) c.int(COL_POSTER_RATIO) else c.int(COL_THUMB_RATIO)),
             positionMs = c.long(COL_POSITION) ?: 0,
             durationMs = c.long(COL_DURATION) ?: 0,
             type = c.int(COL_TYPE) ?: WatchNextItem.TYPE_CONTINUE,
             lastEngagement = c.long(COL_ENGAGEMENT) ?: 0,
-            intentUri = c.str(COL_INTENT),
+            intentUri = c.whole(COL_INTENT, MAX_INTENT_URI),
             isChannel = c.int(COL_PROGRAM_TYPE) == TvContractCompat.WatchNextPrograms.TYPE_CHANNEL || c.int(COL_LIVE) == 1,
         )
     }
@@ -161,11 +204,22 @@ class WatchNextSource(private val context: Context) {
     }
 
     private fun Cursor.str(i: Int): String? = if (isNull(i)) null else getString(i)?.takeIf { it.isNotBlank() }
+
+    /** Texto para mostrar, cortado no máximo. */
+    private fun Cursor.text(i: Int): String? = str(i)?.take(MAX_TEXT)
+
+    /** Um pacote ou URI cortado já não serve: inteiro, ou nada. */
+    private fun Cursor.whole(i: Int, max: Int): String? = str(i)?.takeIf { it.length <= max }
+
     private fun Cursor.long(i: Int): Long? = if (isNull(i)) null else getLong(i)
     private fun Cursor.int(i: Int): Int? = if (isNull(i)) null else getInt(i)
 
     private companion object {
         const val TAG = "WatchNext"
+        const val MAX_TEXT = 300
+        const val MAX_PACKAGE = 255
+        const val MAX_IMAGE_URI = 4096
+        const val MAX_INTENT_URI = 8192
         private val TMDB_SIZE = Regex("""image\.tmdb\.org/t/p/(?:w\d{2,3}|h\d{2,3})/""")
 
         // Nomes das colunas do TvContract (estáveis desde o Android 8).

@@ -96,7 +96,7 @@ private fun DreamContent(c: AppContainer) {
             else -> null
         }
     }
-    val watchNext by produceState(emptyMap(), Unit) { value = runCatching { c.watchNext.load() }.getOrDefault(emptyMap()) }
+    val watchNext by produceState(emptyMap(), Unit) { value = runCatching { c.watchNext.load() }.getOrNull().orEmpty() }
     // Noite: o fundo escurece, como no ecrã inicial (verifica-se de minuto a minuto).
     val night by produceState(false, account) {
         while (true) {

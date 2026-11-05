@@ -42,6 +42,7 @@ import cc.slokker.goatlauncher.data.api.BackendDevice
 import cc.slokker.goatlauncher.data.api.BackendUser
 import cc.slokker.goatlauncher.ui.home.CardHeight
 import coil3.SingletonImageLoader
+import coil3.request.Disposable
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.size.Scale
@@ -276,7 +277,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             // As apps escrevem no Watch Next várias vezes seguidas: junta as mudanças antes de ler.
             watchNextRequests.receiveAsFlow().collectLatest {
                 delay(300)
-                val all = c.watchNext.load().let { if (demo) it + demoWatchNext() else it }
+                // Se a leitura falhar, ficam as entradas que já havia.
+                val all = (c.watchNext.load() ?: return@collectLatest).let { if (demo) it + demoWatchNext() else it }
                 _watchNext.value = all
                 prefetchImages(all)
             }
@@ -572,21 +574,25 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         if (resumed && _screen.value == Screen.Home) AutoStart.open(context, pkg)
     }
 
+    private val prefetches = HashMap<String, List<Disposable>>()
+
     /**
-     * Pede já as imagens de todos os cartões (para a cache do Coil), no tamanho em que aparecem: ao mudar de app,
-     * os cartões aparecem logo em vez de carregarem um a um.
+     * Pede já as imagens dos primeiros cartões de cada app (para a cache do Coil), no tamanho em que aparecem: ao mudar
+     * de app, os cartões aparecem logo em vez de carregarem um a um. Um novo pedido substitui o anterior dessa app.
      */
     private fun prefetchImages(all: Map<String, List<WatchNextItem>>) {
         val loader = SingletonImageLoader.get(context)
         val height = (CardHeight.value * context.resources.displayMetrics.density).toInt()
-        all.values.flatten().forEach { item ->
-            val uri = item.imageUri ?: return@forEach
-            loader.enqueue(
-                ImageRequest.Builder(context)
-                    .data(uri)
-                    .size((height * item.aspectRatio.coerceIn(0.6f, 2f)).toInt(), height)
-                    .build(),
-            )
+        for ((pkg, items) in all) {
+            prefetches.remove(pkg)?.forEach { it.dispose() }
+            prefetches[pkg] = items.filter { it.imageUri != null }.take(PREFETCH_PER_APP).map { item ->
+                loader.enqueue(
+                    ImageRequest.Builder(context)
+                        .data(item.imageUri)
+                        .size((height * item.aspectRatio.coerceIn(0.6f, 2f)).toInt(), height)
+                        .build(),
+                )
+            }
         }
     }
 
@@ -1079,6 +1085,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         const val FOLDER_TONE_TRIES = 8
         const val WEATHER_MS = 30 * 60_000L
         const val YOUTUBE_MS = 30 * 60_000L
+        /** Os cartões que se veem de uma vez numa fila; os outros carregam ao chegar lá. */
+        const val PREFETCH_PER_APP = 8
         const val YOUTUBE_STALE_MS = 10 * 60_000L
 
         /** O arranque automático só conta nos primeiros minutos depois de ligar (não depois de atualizar a app). */
