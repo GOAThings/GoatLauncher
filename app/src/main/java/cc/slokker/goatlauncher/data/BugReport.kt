@@ -57,6 +57,14 @@ object BugReport {
         return head + tail
     }
 
+    /** De um URI de outra app, só o que se pode registar: o esquema e o servidor. */
+    fun originOf(uri: String?): String {
+        val match = uri?.let { ORIGIN.find(it) } ?: return "?"
+        val scheme = match.groupValues[1]
+        val host = match.groups[2]?.value
+        return if (host == null) "$scheme:" else "$scheme://$host"
+    }
+
     /** Troca por `***` os [secrets] e o que tem cara de credencial (parâmetros, caminhos Xtream, user:pass@, tokens). */
     fun redact(text: String, secrets: Collection<String>): String {
         var out = text
@@ -68,8 +76,9 @@ object BugReport {
         return out
     }
 
-    private val QUERY = Regex("(?i)\\b(password|passwd|pass|pwd|username|user|token|access_token|auth|key|api_key|apikey)=([^&\\s\"']+)")
+    private val QUERY = Regex("(?i)\\b([\\w.-]{0,40}(?:password|passwd|pass|pwd|user|token|auth|key|secret|signature|sig|credential)[\\w.-]{0,40})=([^&\\s\"']+)")
     private val XTREAM_PATH = Regex("/(live|movie|series|timeshift)/[^/\\s]+/[^/\\s]+/")
-    private val USER_INFO = Regex("([a-zA-Z][a-zA-Z0-9+.-]*://)[^/\\s:@]+:[^/\\s@]+@")
-    private val AUTH = Regex("(?i)(authorization:?|bearer)\\s+[^\\s,]+")
+    private val USER_INFO = Regex("([a-zA-Z][a-zA-Z0-9+.-]*://)[^/\\s@]+@")
+    private val AUTH = Regex("(?i)(authorization:?|bearer)\\s+(?:(?:bearer|basic|token)\\s+)?[^\\s,]+")
+    private val ORIGIN = Regex("^([a-zA-Z][a-zA-Z0-9+.-]*):(?://(?:[^/?#@]*@)?(\\[[^\\]/?#]*]|[^/?#:]*))?")
 }

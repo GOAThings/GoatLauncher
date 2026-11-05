@@ -28,6 +28,29 @@ class BugReportTest {
     }
 
     @Test
+    fun redactsSignedAndPrefixedCredentialShapes() {
+        for (line in listOf(
+            "https://cdn.example/p.jpg?Expires=1&Signature=DUMMY&Key-Pair-Id=DUMMY",
+            "https://DUMMY@media.example/p.jpg",
+            "https://cdn.example/p.jpg?auth_token=DUMMY",
+            "https://cdn.example/p.jpg?X-Amz-Credential=DUMMY&refresh_token=DUMMY",
+            "Authorization: Bearer DUMMY",
+        )) assertFalse(line, BugReport.redact(line, emptyList()).contains("DUMMY"))
+    }
+
+    @Test
+    fun otherAppsUrisAreReducedToSchemeAndHost() {
+        assertEquals("https://cdn.example", BugReport.originOf("https://cdn.example/p.jpg?Signature=DUMMY"))
+        assertEquals("http://media.example", BugReport.originOf("http://media.example:8080/U/DUMMY/1.jpg"))
+        assertEquals("https://media.example", BugReport.originOf("https://DUMMY:DUMMY@media.example/p.jpg"))
+        assertEquals("http://[fd00::1]", BugReport.originOf("http://[fd00::1]:80/DUMMY"))
+        assertEquals("content://app.provider", BugReport.originOf("content://app.provider/DUMMY/1"))
+        assertEquals("data:", BugReport.originOf("data:image/png;base64,DUMMY"))
+        assertEquals("?", BugReport.originOf("DUMMY"))
+        assertEquals("?", BugReport.originOf(null))
+    }
+
+    @Test
     fun keepsTheNewestLinesThatFit() {
         val log = (1..100).joinToString("\n") { "line $it" }
         val out = BugReport.trim("HEAD\n", log, max = 60)

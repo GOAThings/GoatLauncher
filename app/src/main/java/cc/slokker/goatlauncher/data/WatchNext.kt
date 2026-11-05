@@ -45,7 +45,7 @@ data class WatchNextItem(
     fun intent(): Intent? {
         val uri = intentUri ?: return null
         return runCatching { Intent.parseUri(uri, Intent.URI_INTENT_SCHEME) }
-            .onFailure { Log.w("WatchNext", "intent_uri inválido de $packageName: $uri") }
+            .onFailure { Log.w("WatchNext", "intent_uri inválido de $packageName") }
             .getOrNull()
             ?.apply {
                 // Um link simples (https://…) abriria o seletor ou o browser: vai para a app que o publicou.
@@ -87,8 +87,8 @@ class WatchNextSource(private val context: Context) {
                 .groupBy { it.packageName }
                 .also { all ->
                     Log.d(TAG, "${all.values.sumOf { l -> l.size }} entradas de ${all.keys}")
-                    // Que imagens publica cada app (para perceber de onde vem a qualidade dos cartões).
-                    all.forEach { (pkg, items) -> items.firstOrNull()?.let { Log.d(TAG, "$pkg: ${it.imageUri}") } }
+                    // De onde vêm as imagens de cada app (para perceber a qualidade dos cartões). O resto do URI é da app.
+                    all.forEach { (pkg, items) -> items.firstOrNull()?.let { Log.d(TAG, "$pkg: ${BugReport.originOf(it.imageUri)}") } }
                 }
         }.getOrElse {
             Log.w(TAG, "Ler o Watch Next", it)
