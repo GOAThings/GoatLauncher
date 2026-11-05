@@ -62,7 +62,10 @@ interface BackendApi {
     @PUT("api/launcher/apps")
     suspend fun putApps(@Body body: JsonObject): Response<JsonObject>
 
-    /** O banner ou ícone (PNG, até 200 KB) de uma app do último índice; o SHA-1 tem de ser o `icon_hash` dela. */
+    /**
+     * O banner ou ícone (PNG, até 1024×1024 e 200 KB) de uma app do último índice; o SHA-1 tem de ser o `icon_hash`
+     * dela. Maior: 400 `icon_too_big`.
+     */
     @PUT("api/launcher/apps/{package}/icon")
     suspend fun putAppIcon(@Path("package") pkg: String, @Body png: RequestBody): Response<JsonObject>
 }

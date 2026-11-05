@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.toArgb
 import cc.slokker.goatlauncher.data.api.BackendApi
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import kotlinx.coroutines.CancellationException
@@ -71,19 +72,30 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
         for (pkg in missing) {
             val png = images[pkg] ?: continue
             val icon = withContext(Dispatchers.IO) { api.putAppIcon(pkg, png.toRequestBody(PNG)) }
-            if (!icon.isSuccessful) {
-                allSent = false
-                Log.w(TAG, "Ícone de $pkg: HTTP ${icon.code()}")
+            when {
+                icon.isSuccessful -> Unit
+                // Grande demais para o servidor: essa app fica sem imagem no site, e não se tenta outra vez.
+                isIconTooBig(icon.code(), runCatching { icon.errorBody()?.string() }.getOrNull()) ->
+                    Log.w(TAG, "Ícone de $pkg recusado (icon_too_big, ${png.size} bytes): fica de fora")
+                else -> {
+                    allSent = false
+                    Log.w(TAG, "Ícone de $pkg: HTTP ${icon.code()}")
+                }
             }
         }
-        // Com um ícone em falta, tenta-se de novo na próxima vez (o servidor volta a dizer quais faltam).
+        // Com um ícone em falta (sem ser recusado), tenta-se de novo na próxima vez (o servidor volta a dizer quais faltam).
         if (allSent) prefs.edit().putString("hash", hash).putString("account", key).apply()
         Log.i(TAG, "Índice das apps enviado: ${list.size()} apps, ${missing.size} ícones")
     }
 
-    /** O banner (480×270) ou o ícone (192×192) em PNG, como no PhoneApps, a caber nos 200 KB do servidor. */
+    /**
+     * O banner (480×270) ou o ícone (192×192) em PNG, como no PhoneApps, a caber nos limites do servidor
+     * (1024×1024 e 200 KB): maior, reduz-se; se nem assim couber, não vai.
+     */
     private fun LauncherApp.png(): ByteArray? {
-        var bitmap = (banner ?: icon)?.asAndroidBitmap() ?: return null
+        val source = (banner ?: icon)?.asAndroidBitmap() ?: return null
+        val (width, height) = fitIconSize(source.width, source.height)
+        var bitmap = if (width == source.width && height == source.height) source else Bitmap.createScaledBitmap(source, width, height, true)
         repeat(3) {
             val bytes = ByteArrayOutputStream().also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
             if (bytes.size <= MAX_ICON_BYTES) return bytes
@@ -100,4 +112,22 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
         const val MAX_ICON_BYTES = 200 * 1024
         val PNG = "image/png".toMediaType()
     }
+}
+
+/** O maior lado que o servidor aceita num banner ou ícone. */
+internal const val MAX_ICON_SIDE = 1024
+
+/** O tamanho de uma imagem [width]×[height] reduzida (sem mudar a proporção) para caber em [max]×[max]. */
+internal fun fitIconSize(width: Int, height: Int, max: Int = MAX_ICON_SIDE): Pair<Int, Int> {
+    if (width <= max && height <= max) return width to height
+    val scale = max.toDouble() / maxOf(width, height)
+    return (width * scale).toInt().coerceIn(1, max) to (height * scale).toInt().coerceIn(1, max)
+}
+
+/** O servidor recusou a imagem por ser grande demais: 400 `icon_too_big` (o `code` pode vir dentro de `data`). */
+internal fun isIconTooBig(status: Int, body: String?): Boolean {
+    if (status != 400 || body.isNullOrBlank()) return false
+    val json = runCatching { JsonParser.parseString(body) }.getOrNull() as? JsonObject ?: return false
+    fun JsonObject.code() = get("code")?.takeIf { it.isJsonPrimitive }?.asString
+    return (json.code() ?: (json.get("data") as? JsonObject)?.code()) == "icon_too_big"
 }
