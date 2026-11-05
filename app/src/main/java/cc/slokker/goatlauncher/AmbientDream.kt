@@ -68,12 +68,17 @@ class AmbientDream : DreamService(), LifecycleOwner, SavedStateRegistryOwner {
 
     override fun onDreamingStarted() {
         super.onDreamingStarted()
-        lifecycleRegistry.currentState = Lifecycle.State.RESUMED
+        moveTo(Lifecycle.State.RESUMED)
     }
 
     override fun onDreamingStopped() {
-        lifecycleRegistry.currentState = Lifecycle.State.CREATED
+        moveTo(Lifecycle.State.CREATED)
         super.onDreamingStopped()
+    }
+
+    /** O sistema pode tirar a janela antes de parar o sonho: depois de DESTROYED já não se volta atrás (rebentava). */
+    private fun moveTo(state: Lifecycle.State) {
+        if (lifecycleRegistry.currentState != Lifecycle.State.DESTROYED) lifecycleRegistry.currentState = state
     }
 
     override fun onDetachedFromWindow() {
