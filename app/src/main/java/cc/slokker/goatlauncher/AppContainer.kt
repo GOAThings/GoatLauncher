@@ -21,11 +21,16 @@ import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
 import java.util.concurrent.TimeUnit
+
+/** O logout no servidor é só um aviso: não vale a pena esperar mais do que isto. */
+private const val LOGOUT_TIMEOUT_MS = 5_000L
 
 /** Dependências da app (injeção manual). */
 class AppContainer(context: Context) {
@@ -41,7 +46,8 @@ class AppContainer(context: Context) {
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .addInterceptor { chain ->
-            val current = token.value
+            // Um pedido que já traz o seu token (o logout) fica com ele.
+            val current = token.value.takeIf { chain.request().header("Authorization") == null }
             // Sem "Bearer": o backend espera o token tal como está. O X-Goat-Client diz ao site a app, a versão e o
             // tipo de TV (aparece em Dispositivos).
             val request = chain.request().newBuilder().header("X-Goat-Client", client)
@@ -72,6 +78,21 @@ class AppContainer(context: Context) {
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .build()
+
+    /**
+     * Avisa o servidor que esta TV se desligou da conta ([token]: o que ela tinha, lido antes de o apagar).
+     * Sem esperar e sem repetir: qualquer resposta ou erro (sem rede, 404 num servidor antigo) é ignorado,
+     * porque a TV fica sem conta na mesma.
+     */
+    fun logoutDevice(token: String) {
+        scope.launch {
+            try {
+                withTimeoutOrNull(LOGOUT_TIMEOUT_MS) { backend.deviceLogout(token) }
+            } catch (e: Exception) {
+                // Ignorado (ver acima).
+            }
+        }
+    }
 
     val reddit = RedditWallpapers(context, plainHttp)
     val updater = Updater(context, plainHttp, Gson())

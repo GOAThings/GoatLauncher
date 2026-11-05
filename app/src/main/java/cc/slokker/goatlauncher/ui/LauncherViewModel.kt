@@ -960,7 +960,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    /**
+     * "Desligar conta" pedido pela pessoa: avisa o servidor (que apaga esta TV da conta) e esquece a conta aqui.
+     * Quando a conta se perde sozinha (401/404, ver SettingsRepository) não se avisa.
+     */
     fun unlink() = withParentalUnlocked {
+        // O token antes de a sessão local ser apagada; o aviso não espera nem impede nada (ver logoutDevice).
+        settings.session.value?.token?.let(c::logoutDevice)
         viewModelScope.launch {
             settings.unlink()
             toast(strings.unlinked)
