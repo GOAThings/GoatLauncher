@@ -56,14 +56,18 @@ class PhoneApps(private val context: Context, private val apps: InstalledApps, p
                 return@launch
             }
             while (true) {
+                // Com tudo ocupado, os seguintes esperam na fila do sistema: um telemóvel pede muitos ícones de uma vez.
+                slots.acquire()
                 val client = runCatching { server.accept() }.getOrNull()
                 if (client == null) {
+                    slots.release()
                     delay(ACCEPT_RETRY_MS)
                     continue
                 }
-                // Quem não pode falar, ou chega com tudo ocupado, é fechado logo: não fica com lugar nem thread.
-                if (!runCatching { allowedPeer(client) }.getOrDefault(false) || !slots.tryAcquire()) {
+                // Quem não pode falar é fechado logo: não fica com lugar nem thread.
+                if (!runCatching { allowedPeer(client) }.getOrDefault(false)) {
                     runCatching { client.close() }
+                    slots.release()
                     continue
                 }
                 scope.launch(listener) {
