@@ -37,3 +37,62 @@ class BugReportTest {
         assertEquals(true, out.toByteArray().size <= 60)
     }
 }
+
+class LanRequestTest {
+    private fun request(vararg lines: String) =
+        LanRequest.read((lines.joinToString("\r\n") + "\r\n\r\n").byteInputStream())
+
+    @Test
+    fun acceptsWhatGoatRemoteSends() {
+        val android = request("POST /open/a.b HTTP/1.1", "User-Agent: Dalvik/2.1.0", "Host: 192.168.1.20:6470", "Connection: Keep-Alive", "Content-Length: 0")
+        assertTrue(android!!.allowed)
+        assertEquals("POST", android.method)
+        assertEquals("/open/a.b", android.path)
+        assertTrue(request("GET /apps HTTP/1.1", "Host: 192.168.1.20", "Accept: */*")!!.allowed)
+        assertTrue(request("GET /apps HTTP/1.1", "host: [fe80::1]:6470")!!.allowed)
+    }
+
+    @Test
+    fun refusesOriginAndForeignHost() {
+        assertFalse(request("POST /volume/up HTTP/1.1", "Host: 192.168.1.20:6470", "Origin: https://site.example")!!.allowed)
+        assertFalse(request("POST /volume/up HTTP/1.1", "Host: 192.168.1.20:6470", "ORIGIN: null")!!.allowed)
+        assertFalse(request("GET /apps HTTP/1.1", "Host: site.example:6470")!!.allowed)
+        assertFalse(request("GET /apps HTTP/1.1")!!.allowed)
+        assertFalse(request("GET /apps HTTP/1.1", "Host: 192.168.1.20", "Host: site.example")!!.allowed)
+    }
+
+    @Test
+    fun hostMustBeAnIpLiteral() {
+        for (host in listOf(
+            "10.0.0.1", "10.0.0.1:6470", "255.255.255.255:65535",
+            "[::1]", "[::]", "[fe80::1]:6470", "[fd12:3456::abcd]", "[fe80::1%25wlan0]:6470", "[fe80::1%wlan0]",
+            "[1:2:3:4:5:6:7:8]", "[::ffff:192.168.1.20]:6470", "[1:2:3:4:5:6:1.2.3.4]",
+        )) assertTrue(host, LanRequest.isIpHost(host))
+        for (host in listOf(
+            "", "tv", "tv.local", "tv.local:6470", "1.2.3", "1.2.3.4.5", "256.1.1.1", "1.2.3.4.site.example", "+1.2.3.4",
+            "1.2.3.4:", "1.2.3.4:x", "1.2.3.4:65536", "::1", "[", "[]", "[::1", "[::1]x", "[::1]:", "[site.example]",
+            "[1:2:3]", "[1:2:3:4:5:6:7:8:9]", "[:::]", "[1::2::3]", "[12345::]", "[g::]", "[fe80::1%]", "[1.2.3.4]",
+        )) assertFalse(host, LanRequest.isIpHost(host))
+    }
+
+    @Test
+    fun readsAtMostTheLimit() {
+        var read = 0
+        val endless = object : java.io.InputStream() {
+            override fun read(): Int {
+                read++
+                return 'a'.code
+            }
+        }
+        assertEquals(null, LanRequest.read(endless))
+        assertEquals(LanRequest.MAX_HEAD_BYTES, read)
+    }
+
+    @Test
+    fun incompleteOrMalformedRequestsAreNull() {
+        assertEquals(null, LanRequest.read("GET /apps HTTP/1.1\r\nHost: 10.0.0.1\r\n".byteInputStream()))
+        assertEquals(null, LanRequest.read("".byteInputStream()))
+        assertEquals(null, LanRequest.read("\r\n".byteInputStream()))
+        assertEquals(null, LanRequest.read("GET\r\n\r\n".byteInputStream()))
+    }
+}
