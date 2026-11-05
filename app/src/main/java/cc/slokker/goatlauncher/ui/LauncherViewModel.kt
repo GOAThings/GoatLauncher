@@ -799,22 +799,31 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         launchApp(activity, pkg)
     }
 
+    /** Corre [check] com as definições lidas: até lá não se sabe se há código, e "por ler" nunca conta como "sem código". */
+    private fun whenSettingsRead(check: () -> Unit) {
+        if (settings.ready.value) return check()
+        viewModelScope.launch {
+            settings.ready.first { it }
+            check()
+        }
+    }
+
     /** Corre [action] já, ou depois de acertar o código se [pkg] estiver bloqueada agora. */
-    private fun unlocked(pkg: String, action: () -> Unit) {
-        if (!ParentalLock.appLocked(settings.device.value, pkg)) return action()
+    private fun unlocked(pkg: String, action: () -> Unit) = whenSettingsRead {
+        if (!ParentalLock.appLocked(settings.device.value, pkg)) return@whenSettingsRead action()
         val label = allApps.value?.firstOrNull { it.packageName == pkg }?.label ?: pkg
         _pinPrompt.value = PinPrompt(strings.unlockApp(label), action)
     }
 
     /** Corre [action] já, ou depois do código se as Definições e a organização estiverem protegidas. */
-    fun withSettingsUnlocked(action: () -> Unit) {
-        if (!ParentalLock.settingsLocked(settings.device.value)) return action()
+    fun withSettingsUnlocked(action: () -> Unit) = whenSettingsRead {
+        if (!ParentalLock.settingsLocked(settings.device.value)) return@whenSettingsRead action()
         _pinPrompt.value = PinPrompt(strings.unlockSettings, action)
     }
 
     /** Corre [action] depois do código (se houver): para entrar nas definições do controlo parental. */
-    fun withParentalUnlocked(action: () -> Unit) {
-        if (!ParentalLock.parentalLocked(settings.device.value)) return action()
+    fun withParentalUnlocked(action: () -> Unit) = whenSettingsRead {
+        if (!ParentalLock.parentalLocked(settings.device.value)) return@whenSettingsRead action()
         _pinPrompt.value = PinPrompt(strings.unlockSettings, action)
     }
 

@@ -8,6 +8,7 @@ import android.util.Log
 import cc.slokker.goatlauncher.data.ParentalLock
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -38,15 +39,21 @@ object AutoStart {
         }, IntentFilter(Intent.ACTION_SCREEN_ON))
     }
 
-    /** Abre [pkg]; se estiver bloqueada, abre antes o launcher a pedir o código. */
+    /**
+     * Abre [pkg]; se estiver bloqueada, abre antes o launcher a pedir o código. Só decide com as definições lidas:
+     * até lá não se sabe se há código, e nada abre.
+     */
     fun open(context: Context, pkg: String) {
-        val device = (context.applicationContext as LauncherApp).container.settings.device.value
-        val intent = if (ParentalLock.appLocked(device, pkg)) {
-            unlockIntent(context, pkg)
-        } else {
-            (context.applicationContext as LauncherApp).container.apps.launchIntent(pkg) ?: return
+        val container = (context.applicationContext as LauncherApp).container
+        container.scope.launch {
+            container.settings.ready.first { it }
+            val intent = if (ParentalLock.appLocked(container.settings.device.value, pkg)) {
+                unlockIntent(context, pkg)
+            } else {
+                container.apps.launchIntent(pkg) ?: return@launch
+            }
+            start(context, intent)
         }
-        start(context, intent)
     }
 
     fun unlockIntent(context: Context, pkg: String): Intent =

@@ -12,6 +12,7 @@ import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import cc.slokker.goatlauncher.data.ParentalLock
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -103,13 +104,26 @@ class HomeGuardService : AccessibilityService() {
         if (pkg == packageName) return
         // O ecrã inicial do sistema pode ter mudado (outro launcher instalado): volta a ver se as teclas fazem falta.
         updateKeyFilter()
-        val device = (application as LauncherApp).container.settings.device.value
-        if (ParentalLock.appLocked(device, pkg)) {
-            AutoStart.start(this, AutoStart.unlockIntent(this, pkg))
-            return
+        val container = (application as LauncherApp).container
+        if (container.settings.ready.value) {
+            if (askForCode(pkg)) return
+        } else {
+            // Definições ainda por ler não querem dizer "sem código": decide-se assim que forem lidas.
+            container.scope.launch {
+                container.settings.ready.first { it }
+                askForCode(pkg)
+            }
         }
         val activity = ComponentName(pkg, event.className?.toString() ?: return)
         if (activity in homeActivities() && !isDefaultHome(this)) openLauncher()
+    }
+
+    /** Se [pkg] estiver bloqueada, dá lugar ao launcher a pedir o código. */
+    private fun askForCode(pkg: String): Boolean {
+        val device = (application as LauncherApp).container.settings.device.value
+        if (!ParentalLock.appLocked(device, pkg)) return false
+        AutoStart.start(this, AutoStart.unlockIntent(this, pkg))
+        return true
     }
 
     /** O ecrã inicial dos outros launchers (o de origem, o Projectivy…): só esse é substituído, não a app toda. */

@@ -91,25 +91,29 @@ class SettingsRepository(
 
     private val diskMutex = Mutex()
     private val syncMutex = Mutex()
+    private val initMutex = Mutex()
 
+    /** Lê a cópia do disco uma só vez; quem chama enquanto outro lê espera por essa leitura. */
     suspend fun init() {
-        if (_ready.value) return
-        runCatching {
-            val p = context.settingsStore.data.first()
-            _account.value = AccountSettings.fromJson(parse(p[Keys.ACCOUNT]))
-            _device.value = DeviceSettings.fromJson(parse(p[Keys.DEVICE]))
-            accountDirty = p[Keys.ACCOUNT_DIRTY] ?: false
-            deviceDirty = p[Keys.DEVICE_DIRTY] ?: false
-            accountBase = parse(p[Keys.ACCOUNT_BASE])
-            deviceBase = parse(p[Keys.DEVICE_BASE])
-            accountRev = p[Keys.ACCOUNT_REV]
-            deviceRev = p[Keys.DEVICE_REV]
-            etag = p[Keys.ETAG]
-            val s = sessions.load()
-            token.value = s?.token
-            _session.value = s
-        }.onFailure { Log.w(TAG, "Cache das definições", it) }
-        _ready.value = true
+        initMutex.withLock {
+            if (_ready.value) return
+            runCatching {
+                val p = context.settingsStore.data.first()
+                _account.value = AccountSettings.fromJson(parse(p[Keys.ACCOUNT]))
+                _device.value = DeviceSettings.fromJson(parse(p[Keys.DEVICE]))
+                accountDirty = p[Keys.ACCOUNT_DIRTY] ?: false
+                deviceDirty = p[Keys.DEVICE_DIRTY] ?: false
+                accountBase = parse(p[Keys.ACCOUNT_BASE])
+                deviceBase = parse(p[Keys.DEVICE_BASE])
+                accountRev = p[Keys.ACCOUNT_REV]
+                deviceRev = p[Keys.DEVICE_REV]
+                etag = p[Keys.ETAG]
+                val s = sessions.load()
+                token.value = s?.token
+                _session.value = s
+            }.onFailure { Log.w(TAG, "Cache das definições", it) }
+            _ready.value = true
+        }
     }
 
     fun updateAccount(transform: (AccountSettings) -> AccountSettings) {
