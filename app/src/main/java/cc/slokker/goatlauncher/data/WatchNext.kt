@@ -52,12 +52,13 @@ data class WatchNextItem(
                     .also { if (!it) Log.w("WatchNext", "intent_uri de $packageName aponta para outra app") }
             }
             ?.apply {
+                // Primeiro: com seletor, setPackage rebenta.
+                selector = null
                 // Um link simples (https://…) abriria o seletor ou o browser: vai para a app que o publicou.
                 if (`package` == null && component == null) setPackage(packageName)
                 // Nunca dar a outras apps acesso a URIs nossos por um intent vindo de fora.
                 flags = (flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION).inv()) or
                     Intent.FLAG_ACTIVITY_NEW_TASK
-                selector = null
             }
     }
 

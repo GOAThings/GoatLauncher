@@ -96,6 +96,8 @@ class LanRequestTest {
             "1.2.3.4:", "1.2.3.4:x", "1.2.3.4:65536", "::1", "[", "[]", "[::1", "[::1]x", "[::1]:", "[site.example]",
             "[1:2:3]", "[1:2:3:4:5:6:7:8:9]", "[:::]", "[1::2::3]", "[12345::]", "[g::]", "[fe80::1%]", "[1.2.3.4]",
         )) assertFalse(host, LanRequest.isIpHost(host))
+        for (host in listOf("shield", "shield.local", "SHIELD.lan:6470", "tv.home.arpa")) assertTrue(host, LanRequest.isHomeName(host))
+        for (host in listOf("example.com", "evil.local.example.com", "a:b:c", "", "shield:port")) assertFalse(host, LanRequest.isHomeName(host))
     }
 
     @Test

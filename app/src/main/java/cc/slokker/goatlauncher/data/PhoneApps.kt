@@ -220,7 +220,7 @@ internal class LanRequest private constructor(
     private val hasOrigin: Boolean,
     private val hosts: List<String>,
 ) {
-    val allowed: Boolean get() = !hasOrigin && hosts.size == 1 && isIpHost(hosts[0])
+    val allowed: Boolean get() = !hasOrigin && hosts.size == 1 && (isIpHost(hosts[0]) || isHomeName(hosts[0]))
 
     companion object {
         const val MAX_HEAD_BYTES = 8 * 1024
@@ -268,6 +268,17 @@ internal class LanRequest private constructor(
                 else -> false
             }
         }
+
+        /** Um nome que só existe dentro de casa (uma TV juntada à mão pelo nome): um site não o consegue ter. */
+        fun isHomeName(host: String): Boolean {
+            val parts = host.lowercase().split(':')
+            if (parts.size > 2 || (parts.size == 2 && !isPort(parts[1]))) return false
+            val name = parts[0]
+            if (name.isEmpty() || !name.all { it in 'a'..'z' || it in '0'..'9' || it == '-' || it == '.' }) return false
+            return '.' !in name || HOME_SUFFIXES.any { name.endsWith(it) }
+        }
+
+        private val HOME_SUFFIXES = listOf(".local", ".lan", ".home", ".home.arpa", ".internal")
 
         private fun isPort(text: String): Boolean =
             text.length in 1..5 && text.all { it in '0'..'9' } && text.toInt() <= 65535

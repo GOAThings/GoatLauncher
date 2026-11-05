@@ -242,10 +242,12 @@ fun HomeScreen(vm: LauncherViewModel) {
         // O banner só tem o FocusRequester depois de recompor (e de a troca de separador acabar): tenta uns frames.
         repeat(30) {
             withFrameNanos { }
+            // O pedido do código fica com o foco, e devolve-o quando fechar.
+            if (vm.pinPrompt.value != null) return@LaunchedEffect
             if (target.requestFocusSafely()) {
                 // A troca de separador (fade) pode tirar-lhe o foco quando acaba: volta a pedi-lo depois dela.
                 delay(TAB_FADE_MS)
-                target.requestFocusSafely()
+                if (vm.pinPrompt.value == null) target.requestFocusSafely()
                 return@LaunchedEffect
             }
         }
