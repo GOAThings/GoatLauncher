@@ -809,7 +809,8 @@ fun HomeScreen(vm: LauncherViewModel) {
                         lock = if (device.pin != null) app.packageName in device.locked else null,
                         onToggleLock = {
                             closeMenu()
-                            vm.setLocked(app.packageName, app.packageName !in device.locked)
+                            val lock = app.packageName !in device.locked
+                            vm.withParentalUnlocked { vm.setLocked(app.packageName, lock) }
                         },
                     )
                 }
