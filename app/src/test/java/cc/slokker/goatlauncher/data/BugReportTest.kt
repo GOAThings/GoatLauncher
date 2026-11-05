@@ -119,3 +119,23 @@ class LanRequestTest {
         assertEquals(null, LanRequest.read("GET\r\n\r\n".byteInputStream()))
     }
 }
+
+class WatchNextTest {
+    private fun item(id: Long, pkg: String = "pub.app", engagement: Long = id) = WatchNextItem(
+        id = id, packageName = pkg, title = "t$id", episodeTitle = null, season = null, episode = null, imageUri = null,
+        aspectRatio = 1f, positionMs = 0, durationMs = 0, type = 0, lastEngagement = engagement, intentUri = "u$id",
+    )
+
+    @Test
+    fun aCardOnlyOpensItsPublisher() {
+        val card = item(1)
+        assertTrue(card.targetsPublisher(null, null))
+        assertTrue(card.targetsPublisher("pub.app", null))
+        assertTrue(card.targetsPublisher(null, "pub.app"))
+        assertTrue(card.targetsPublisher("pub.app", "pub.app"))
+        assertFalse(card.targetsPublisher("other.app", null))
+        assertFalse(card.targetsPublisher(null, "other.app"))
+        assertFalse(card.targetsPublisher("pub.app", "other.app"))
+        assertFalse(card.targetsPublisher("other.app", "pub.app"))
+    }
+}

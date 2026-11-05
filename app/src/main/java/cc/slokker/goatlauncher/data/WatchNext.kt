@@ -41,12 +41,16 @@ data class WatchNextItem(
     val remainingMinutes: Long?
         get() = if (durationMs > 0 && positionMs > 0) ((durationMs - positionMs).coerceAtLeast(0) + 59_999) / 60_000 else null
 
-    /** O intent que abre a app neste conteúdo, ou null se o `intent_uri` não se ler. */
+    /** O intent que abre a app neste conteúdo, ou null se o `intent_uri` não se ler ou apontar para outra app. */
     fun intent(): Intent? {
         val uri = intentUri ?: return null
         return runCatching { Intent.parseUri(uri, Intent.URI_INTENT_SCHEME) }
             .onFailure { Log.w("WatchNext", "intent_uri inválido de $packageName") }
             .getOrNull()
+            ?.takeIf { intent ->
+                targetsPublisher(intent.`package`, intent.component?.packageName)
+                    .also { if (!it) Log.w("WatchNext", "intent_uri de $packageName aponta para outra app") }
+            }
             ?.apply {
                 // Um link simples (https://…) abriria o seletor ou o browser: vai para a app que o publicou.
                 if (`package` == null && component == null) setPackage(packageName)
@@ -56,6 +60,10 @@ data class WatchNextItem(
                 selector = null
             }
     }
+
+    /** Um cartão só abre a própria app que o publicou. */
+    internal fun targetsPublisher(target: String?, componentPackage: String?): Boolean =
+        (target == null || target == packageName) && (componentPackage == null || componentPackage == packageName)
 
     companion object {
         const val TYPE_CONTINUE = TvContractCompat.WatchNextPrograms.WATCH_NEXT_TYPE_CONTINUE
