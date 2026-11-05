@@ -32,4 +32,25 @@ class SettingsMergeTest {
         val patch = json("""{"wallpaper":{"value":"aurora"},"clock_24h":null}""")
         assertEquals(json("""{"wallpaper":{"type":"builtin","value":"aurora"}}"""), SettingsMerge.apply(base, patch))
     }
+
+    @Test
+    fun linkingKeepsTheLocalParentalLockAndTakesTheRestFromTheAccount() {
+        val local = DeviceSettings(pin = "salt:hash", locked = setOf("kids.blocked"), lockSettings = true, lockFrom = 20, lockTo = 8, apps = listOf("local"))
+        val remote = json("""{"apps":["account"],"autostart":"account.app","locked":["other"],"lock_settings":false}""")
+
+        val kept = DeviceSettings.fromJson(remote).withParentalOf(local)
+
+        assertEquals(listOf("account"), kept.apps)
+        assertEquals("account.app", kept.autostart)
+        assertEquals("salt:hash", kept.pin)
+        assertEquals(setOf("kids.blocked"), kept.locked)
+        assertEquals(true, kept.lockSettings)
+        assertEquals(20, kept.lockFrom)
+        assertEquals(8, kept.lockTo)
+        // E é isso que segue para a conta: o controlo parental desta TV.
+        val patch = SettingsMerge.diff(remote, kept.toJson())
+        assertEquals("salt:hash", patch.get("pin").asString)
+        assertEquals(json("""{"l":["kids.blocked"]}""").get("l"), patch.get("locked"))
+        assertEquals(false, patch.has("apps"))
+    }
 }

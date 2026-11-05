@@ -248,6 +248,15 @@ data class DeviceSettings(
     val location: Place? = null,
     val raw: JsonObject = JsonObject(),
 ) {
+    /** Estas definições com o controlo parental de [local]: o código, as apps bloqueadas, a proteção e as horas. */
+    fun withParentalOf(local: DeviceSettings) = copy(
+        pin = local.pin,
+        locked = local.locked,
+        lockSettings = local.lockSettings,
+        lockFrom = local.lockFrom,
+        lockTo = local.lockTo,
+    )
+
     fun toJson(): JsonObject = raw.deepCopy().apply {
         add("apps", JsonArray().apply { apps.forEach(::add) })
         add("hidden", JsonArray().apply { hidden.sorted().forEach(::add) })

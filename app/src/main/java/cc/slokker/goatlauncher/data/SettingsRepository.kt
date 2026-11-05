@@ -38,7 +38,8 @@ class AuthToken {
  *   (sem rede, segue no próximo arranque ou regresso ao ecrã inicial).
  * - O que vem da conta substitui a cópia local, exceto o que ainda está pendente.
  * - Ao ligar a TV, a conta ganha se já tiver definições (é o que faz a ordem das apps e o fundo
- *   sobreviverem a reinstalar); se estiver vazia, recebe as desta TV.
+ *   sobreviverem a reinstalar); se estiver vazia, recebe as desta TV. A exceção é o controlo parental:
+ *   com um código nesta TV, fica o desta TV e a conta recebe-o.
  *
  * As alterações correm no thread principal (o [scope] é o da app); a rede e o disco são suspensos.
  */
@@ -54,6 +55,7 @@ class SettingsRepository(
         val DEVICE = stringPreferencesKey("device")
         val ACCOUNT_DIRTY = booleanPreferencesKey("account_dirty")
         val DEVICE_DIRTY = booleanPreferencesKey("device_dirty")
+        val KEEP_PARENTAL = booleanPreferencesKey("keep_parental")
         /** O que a conta tinha da última vez (a base dos patches) e as revisões e o ETag dessa leitura. */
         val ACCOUNT_BASE = stringPreferencesKey("account_base")
         val DEVICE_BASE = stringPreferencesKey("device_base")
@@ -79,6 +81,8 @@ class SettingsRepository(
 
     private var accountDirty = false
     private var deviceDirty = false
+    /** A TV foi ligada com um código: a primeira leitura da conta não mexe no controlo parental (ver [adopt]). */
+    private var keepParental = false
     private var lastSync = 0L
 
     /** O que a conta tinha da última leitura ou gravação: a base de onde se calcula o que mudou nesta TV. */
@@ -103,6 +107,7 @@ class SettingsRepository(
                 _device.value = DeviceSettings.fromJson(parse(p[Keys.DEVICE]))
                 accountDirty = p[Keys.ACCOUNT_DIRTY] ?: false
                 deviceDirty = p[Keys.DEVICE_DIRTY] ?: false
+                keepParental = p[Keys.KEEP_PARENTAL] ?: false
                 accountBase = parse(p[Keys.ACCOUNT_BASE])
                 deviceBase = parse(p[Keys.DEVICE_BASE])
                 accountRev = p[Keys.ACCOUNT_REV]
@@ -161,7 +166,10 @@ class SettingsRepository(
                 adopt(remote)
                 // Conta ainda vazia: recebe as desta TV.
                 if (remote.get("account").nonEmptyObject() == null) accountDirty = true
-                if (remote.get("device").nonEmptyObject() == null) deviceDirty = true
+                if (remote.get("device").nonEmptyObject() == null) {
+                    deviceDirty = true
+                    keepParental = false
+                }
                 persist()
                 pushLocked()
             }
@@ -183,6 +191,7 @@ class SettingsRepository(
         // A conta ganha se já tiver definições; vazia, recebe as desta TV (ver sync()).
         accountDirty = false
         deviceDirty = false
+        keepParental = _device.value.pin != null
         forgetRemote()
         persist()
         sync()
@@ -195,6 +204,7 @@ class SettingsRepository(
         _session.value = null
         accountDirty = false
         deviceDirty = false
+        keepParental = false
         forgetRemote()
         persist()
     }
@@ -268,15 +278,21 @@ class SettingsRepository(
             accountRev = remote.long("account_rev")
         }
         remote.get("device").nonEmptyObject()?.let { dev ->
-            _device.value = DeviceSettings.fromJson(
+            val merged = DeviceSettings.fromJson(
                 if (deviceDirty) {
                     SettingsMerge.rebase(dev, deviceBase ?: JsonObject(), _device.value.toJson(), ordered = setOf("apps"))
                 } else {
                     dev
                 },
             )
+            _device.value = if (keepParental) merged.withParentalOf(_device.value) else merged
             deviceBase = dev
             deviceRev = remote.long("device_rev")
+            if (keepParental) {
+                // O controlo parental desta TV segue para a conta com o próximo envio.
+                keepParental = false
+                deviceDirty = true
+            }
         }
     }
 
@@ -299,6 +315,7 @@ class SettingsRepository(
                 it[Keys.DEVICE] = _device.value.toJson().toString()
                 it[Keys.ACCOUNT_DIRTY] = accountDirty
                 it[Keys.DEVICE_DIRTY] = deviceDirty
+                it[Keys.KEEP_PARENTAL] = keepParental
                 accountBase?.let { b -> it[Keys.ACCOUNT_BASE] = b.toString() } ?: it.remove(Keys.ACCOUNT_BASE)
                 deviceBase?.let { b -> it[Keys.DEVICE_BASE] = b.toString() } ?: it.remove(Keys.DEVICE_BASE)
                 accountRev?.let { r -> it[Keys.ACCOUNT_REV] = r } ?: it.remove(Keys.ACCOUNT_REV)

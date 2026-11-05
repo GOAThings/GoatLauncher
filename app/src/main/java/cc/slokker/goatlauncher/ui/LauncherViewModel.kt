@@ -918,7 +918,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         _screen.value = Screen.Home
     }
 
-    fun openActivation() {
+    /** Ligar a outra conta mexe no controlo parental: pede o código, se houver. */
+    fun openActivation() = withParentalUnlocked {
         _screen.value = Screen.Activation
     }
 
@@ -945,7 +946,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun unlink() {
+    fun unlink() = withParentalUnlocked {
         viewModelScope.launch {
             settings.unlink()
             toast(strings.unlinked)
