@@ -94,6 +94,13 @@
     <string name="style_shelf">Destaque</string>
     <string name="layout">Disposição</string>
     <string name="layout_android_hint">Separador Apps e o estilo do Continuar a ver à escolha</string>
+    <string name="layout_spotlight">Destaque e a seguir</string>
+    <string name="layout_spotlight_hint">O mais recente da app com foco enche o ecrã, com o que vem a seguir ao lado</string>
+    <string name="layout_column">Apps ao lado</string>
+    <string name="layout_column_hint">As apps numa coluna, com o que a app com foco tem à direita</string>
+    <string name="layout_carousel">Carrossel</string>
+    <string name="layout_carousel_hint">O que está a ver em cartões grandes, com as apps por baixo</string>
+    <string name="up_next_title">A seguir</string>
     <string name="layout_apple_hint">Apps por baixo da doca dos favoritos e cartões grandes, como no tvOS</string>
     <string name="general">Geral</string>
     <string name="focused_card">Cartão com foco</string>

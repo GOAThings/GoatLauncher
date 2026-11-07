@@ -521,7 +521,7 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
     val sun by vm.sunTimes.collectAsStateWithLifecycle()
     val s = LocalStrings.current
     val account by vm.account.collectAsStateWithLifecycle()
-    val android = account.layout != AccountSettings.LAYOUT_APPLE_TV
+    val android = account.layout == AccountSettings.LAYOUT_ANDROID
 
     LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
         item { SectionLabel(s.layout) }
@@ -534,12 +534,20 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
                 modifier = Modifier.focusRequester(first),
             )
         }
-        item {
+        items(
+            listOf(
+                Triple(AccountSettings.LAYOUT_APPLE_TV, LAYOUT_APPLE_NAME, s.layoutAppleHint),
+                Triple(AccountSettings.LAYOUT_SPOTLIGHT, s.layoutSpotlight, s.layoutSpotlightHint),
+                Triple(AccountSettings.LAYOUT_COLUMN, s.layoutColumn, s.layoutColumnHint),
+                Triple(AccountSettings.LAYOUT_CAROUSEL, s.layoutCarousel, s.layoutCarouselHint),
+            ),
+            key = { it.first },
+        ) { (layout, name, hint) ->
             GlassRow(
-                title = LAYOUT_APPLE_NAME,
-                subtitle = s.layoutAppleHint,
-                onClick = { vm.setLayout(AccountSettings.LAYOUT_APPLE_TV) },
-                trailing = { if (!android) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                title = name,
+                subtitle = hint,
+                onClick = { vm.setLayout(layout) },
+                trailing = { if (account.layout == layout) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
             )
         }
         // O "Continuar a ver" logo a seguir à disposição: na Android escolhe-se o estilo (ou desliga-se); a Apple TV
@@ -810,12 +818,13 @@ private const val LAYOUT_ANDROID_NAME = "Android TV"
 private const val LAYOUT_APPLE_NAME = "Apple TV"
 
 /** "Apple TV" ou "Android TV · Destaque". */
-private fun layoutName(account: AccountSettings, s: Strings): String =
-    if (account.layout == AccountSettings.LAYOUT_APPLE_TV) {
-        LAYOUT_APPLE_NAME
-    } else {
-        "$LAYOUT_ANDROID_NAME · ${if (account.continueStyle == AccountSettings.STYLE_SHELF) s.styleShelf else s.styleRow}"
-    }
+private fun layoutName(account: AccountSettings, s: Strings): String = when (account.layout) {
+    AccountSettings.LAYOUT_APPLE_TV -> LAYOUT_APPLE_NAME
+    AccountSettings.LAYOUT_SPOTLIGHT -> s.layoutSpotlight
+    AccountSettings.LAYOUT_COLUMN -> s.layoutColumn
+    AccountSettings.LAYOUT_CAROUSEL -> s.layoutCarousel
+    else -> "$LAYOUT_ANDROID_NAME · ${if (account.continueStyle == AccountSettings.STYLE_SHELF) s.styleShelf else s.styleRow}"
+}
 
 @Composable
 private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxImages: () -> Unit) {

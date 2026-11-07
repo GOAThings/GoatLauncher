@@ -94,6 +94,13 @@
     <string name="style_shelf">Destacado</string>
     <string name="layout">Diseño</string>
     <string name="layout_android_hint">Pestaña Apps y el estilo de Seguir viendo a elegir</string>
+    <string name="layout_spotlight">Destacado y siguiente</string>
+    <string name="layout_spotlight_hint">Lo último de la app seleccionada ocupa la pantalla, con lo siguiente al lado</string>
+    <string name="layout_column">Apps al lado</string>
+    <string name="layout_column_hint">Las apps en una columna, con el contenido de la app seleccionada a la derecha</string>
+    <string name="layout_carousel">Carrusel</string>
+    <string name="layout_carousel_hint">Lo que estás viendo en tarjetas grandes, con las apps debajo</string>
+    <string name="up_next_title">A continuación</string>
     <string name="layout_apple_hint">Apps debajo del dock de favoritos y tarjetas grandes, como en tvOS</string>
     <string name="general">General</string>
     <string name="focused_card">Tarjeta enfocada</string>

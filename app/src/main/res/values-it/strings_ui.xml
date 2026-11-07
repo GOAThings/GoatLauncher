@@ -94,6 +94,13 @@
     <string name="style_shelf">In evidenza</string>
     <string name="layout">Layout</string>
     <string name="layout_android_hint">Scheda App e stile di Continua a guardare a scelta</string>
+    <string name="layout_spotlight">In evidenza e a seguire</string>
+    <string name="layout_spotlight_hint">L\'ultimo contenuto dell\'app selezionata riempie lo schermo, con il seguito accanto</string>
+    <string name="layout_column">App di lato</string>
+    <string name="layout_column_hint">Le app in colonna, con i contenuti dell\'app selezionata a destra</string>
+    <string name="layout_carousel">Carosello</string>
+    <string name="layout_carousel_hint">Quello che stai guardando in schede grandi, con le app sotto</string>
+    <string name="up_next_title">A seguire</string>
     <string name="layout_apple_hint">App sotto il dock dei preferiti e schede grandi, come su tvOS</string>
     <string name="general">Generali</string>
     <string name="focused_card">Scheda selezionata</string>

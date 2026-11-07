@@ -94,6 +94,13 @@
     <string name="style_shelf">Sorotan</string>
     <string name="layout">Tata letak</string>
     <string name="layout_android_hint">Tab Aplikasi dan gaya Lanjutkan menonton sesuai pilihan</string>
+    <string name="layout_spotlight">Sorotan dan berikutnya</string>
+    <string name="layout_spotlight_hint">Konten terbaru dari aplikasi yang dipilih memenuhi layar, dengan yang berikutnya di sampingnya</string>
+    <string name="layout_column">Aplikasi di samping</string>
+    <string name="layout_column_hint">Aplikasi dalam satu kolom, dengan konten aplikasi yang dipilih di kanan</string>
+    <string name="layout_carousel">Korsel</string>
+    <string name="layout_carousel_hint">Yang sedang Anda tonton dalam kartu besar, dengan aplikasi di bawahnya</string>
+    <string name="up_next_title">Berikutnya</string>
     <string name="layout_apple_hint">Aplikasi di bawah dok favorit dan kartu besar, seperti tvOS</string>
     <string name="general">Umum</string>
     <string name="focused_card">Kartu yang difokus</string>

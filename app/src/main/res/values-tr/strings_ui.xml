@@ -94,6 +94,13 @@
     <string name="style_shelf">Öne çıkan</string>
     <string name="layout">Düzen</string>
     <string name="layout_android_hint">Uygulamalar sekmesi ve seçilebilir İzlemeye devam et stili</string>
+    <string name="layout_spotlight">Öne çıkan ve sıradaki</string>
+    <string name="layout_spotlight_hint">Seçili uygulamanın son içeriği ekranı kaplar, yanında sıradakiler</string>
+    <string name="layout_column">Yanda uygulamalar</string>
+    <string name="layout_column_hint">Uygulamalar bir sütunda, seçili uygulamanın içeriği sağda</string>
+    <string name="layout_carousel">Atlıkarınca</string>
+    <string name="layout_carousel_hint">İzlediklerin büyük kartlarda, uygulamalar altta</string>
+    <string name="up_next_title">Sırada</string>
     <string name="layout_apple_hint">Favoriler dock\'unun altında uygulamalar ve büyük kartlar, tvOS gibi</string>
     <string name="general">Genel</string>
     <string name="focused_card">Odaktaki kart</string>

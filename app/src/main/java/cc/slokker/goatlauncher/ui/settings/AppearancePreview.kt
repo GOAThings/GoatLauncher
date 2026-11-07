@@ -101,7 +101,9 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
     val focusApp = favorites.firstOrNull { !watchNext[it.packageName].isNullOrEmpty() } ?: favorites.firstOrNull()
     val items = if (account.showContinueWatching) focusApp?.let { watchNext[it.packageName] }.orEmpty() else emptyList()
     val appleTv = account.layout == AccountSettings.LAYOUT_APPLE_TV
-    val shelf = !appleTv && account.continueStyle == AccountSettings.STYLE_SHELF
+    // As disposições novas aparecem pela mais parecida: a "Destaque e a seguir" como o destaque, as outras como a fila.
+    val shelf = account.layout == AccountSettings.LAYOUT_SPOTLIGHT ||
+        (account.layout == AccountSettings.LAYOUT_ANDROID && account.continueStyle == AccountSettings.STYLE_SHELF)
     val focusStyle = remember(account) { FocusStyle.of(account) }
     val shape = RoundedCornerShape(12.dp)
 

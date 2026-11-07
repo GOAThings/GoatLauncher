@@ -94,6 +94,13 @@
     <string name="style_shelf">В фокусе</string>
     <string name="layout">Макет</string>
     <string name="layout_android_hint">Вкладка «Приложения» и стиль «Продолжить просмотр» на выбор</string>
+    <string name="layout_spotlight">Главное и далее</string>
+    <string name="layout_spotlight_hint">Последнее из выбранного приложения на весь экран, а рядом — что дальше</string>
+    <string name="layout_column">Приложения сбоку</string>
+    <string name="layout_column_hint">Приложения в столбце, справа — содержимое выбранного приложения</string>
+    <string name="layout_carousel">Карусель</string>
+    <string name="layout_carousel_hint">То, что вы смотрите, на больших карточках, под ними приложения</string>
+    <string name="up_next_title">Далее</string>
     <string name="layout_apple_hint">Приложения под доком избранного и большие карточки, как в tvOS</string>
     <string name="general">Общие</string>
     <string name="focused_card">Карточка в фокусе</string>

@@ -190,7 +190,11 @@ fun HomeScreen(vm: LauncherViewModel) {
     val moreApps = tabApps.orEmpty().filter { app -> favorites.none { it.packageName == app.packageName } }
     val gridApps = favorites + moreApps
     val appleTv = account.layout == AccountSettings.LAYOUT_APPLE_TV
-    val shelfStyle = !appleTv && account.continueStyle == AccountSettings.STYLE_SHELF
+    val spotlight = account.layout == AccountSettings.LAYOUT_SPOTLIGHT
+    val columnLayout = account.layout == AccountSettings.LAYOUT_COLUMN
+    val carousel = account.layout == AccountSettings.LAYOUT_CAROUSEL
+    // O destaque em ecrã inteiro: o estilo "Destaque" da disposição Android, e a "Destaque e a seguir".
+    val shelfStyle = spotlight || (account.layout == AccountSettings.LAYOUT_ANDROID && account.continueStyle == AccountSettings.STYLE_SHELF)
     // Apple TV: o Início desce da doca para as outras apps (as mesmas do separador Apps, também as escondidas).
     val homeScroll = rememberScrollState()
     val scope = rememberCoroutineScope()
@@ -208,8 +212,9 @@ fun HomeScreen(vm: LauncherViewModel) {
     val sectionApp = favorites.firstOrNull { it.packageName == sectionPkg }?.takeIf { account.showContinueWatching && !onApps }
     val sectionItems = sectionApp?.let { watchNext[it.packageName] }.orEmpty()
     var shelfIndex by remember(sectionPkg) { mutableIntStateOf(0) }
-    val shelfItem = sectionItems.getOrNull(shelfIndex.coerceIn(0, (sectionItems.size - 1).coerceAtLeast(0)))
-        ?.takeIf { shelfStyle }
+    val shelfPos = shelfIndex.coerceIn(0, (sectionItems.size - 1).coerceAtLeast(0))
+    // O conteúdo que enche o fundo: o do destaque, ou (apps ao lado) o primeiro da app com foco.
+    val shelfItem = sectionItems.getOrNull(shelfPos)?.takeIf { shelfStyle || columnLayout }
 
     var menuFor by remember { mutableStateOf<LauncherApp?>(null) }
     var renameFor by remember { mutableStateOf<LauncherApp?>(null) }
@@ -310,7 +315,7 @@ fun HomeScreen(vm: LauncherViewModel) {
     }
 
     @Composable
-    fun Tile(app: LauncherApp, home: Boolean, modifier: Modifier = Modifier) {
+    fun Tile(app: LauncherApp, home: Boolean, modifier: Modifier = Modifier, width: Dp = TileWidth, label: Boolean = account.showAppName) {
         val spec = device.icons[app.packageName]
         // (ícone, já se sabe?): com um ícone escolhido, até ele carregar fica só a cor da app, para não piscar
         // o banner original antes. Se não carregar (ex.: icon pack desinstalado), aparece o original.
@@ -319,10 +324,10 @@ fun HomeScreen(vm: LauncherViewModel) {
         }
         AppTile(
             app = app,
-            width = TileWidth,
+            width = width,
             custom = custom.first,
             customPending = !custom.second,
-            showLabel = account.showAppName,
+            showLabel = label,
             hasContinue = home && account.showContinueWatching && !watchNext[app.packageName].isNullOrEmpty(),
             moving = moving == app.packageName,
             onFocused = {
@@ -392,6 +397,22 @@ fun HomeScreen(vm: LauncherViewModel) {
                             Tile(app, home = true, modifier = if (i == 0) Modifier.focusRequester(favFirst) else Modifier)
                         }
                     }
+                }
+            }
+        }
+    }
+
+    /** Apps ao lado: os favoritos numa coluna, mais pequenos e sem nome (a app com foco diz-se à direita). */
+    @Composable
+    fun FavoritesColumn() {
+        if (list.isEmpty()) return
+        Column(
+            Modifier.fillMaxHeight().focusRestorer(favFirst),
+            verticalArrangement = Arrangement.spacedBy(ColumnTileGap, Alignment.CenterVertically),
+        ) {
+            favorites.forEachIndexed { i, app ->
+                key(app.packageName) {
+                    Tile(app, home = true, modifier = if (i == 0) Modifier.focusRequester(favFirst) else Modifier, width = ColumnTileWidth, label = false)
                 }
             }
         }
@@ -681,10 +702,57 @@ fun HomeScreen(vm: LauncherViewModel) {
                                     }
                                 }
                             }
+                        } else if (columnLayout) {
+                            // ---- Início (apps ao lado): os favoritos à esquerda, o que a app com foco tem à direita ----
+                            Row(Modifier.fillMaxSize().padding(top = 12.dp)) {
+                                FavoritesColumn()
+                                Spacer(Modifier.width(48.dp))
+                                AnimatedContent(
+                                    targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() }?.let { it to sectionItems },
+                                    contentKey = { it?.first?.packageName },
+                                    transitionSpec = { fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(120)) },
+                                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                                    label = "side",
+                                ) { section ->
+                                    if (section != null) {
+                                        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
+                                            HeroText(section.first, section.second.first(), showLogo = !shelfFullBleed)
+                                            Spacer(Modifier.height(24.dp))
+                                            ContinueWatchingRow(section.first, section.second, onOpen = { vm.openWatchNext(context, it) })
+                                        }
+                                    } else {
+                                        Spacer(Modifier.fillMaxSize())
+                                    }
+                                }
+                            }
                         } else {
                             // ---- Início ----
                             Column(Modifier.fillMaxSize()) {
-                                if (shelfStyle) {
+                                if (carousel) {
+                                    // O carrossel ocupa o espaço por cima dos favoritos.
+                                    AnimatedContent(
+                                        targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() },
+                                        contentKey = { it?.packageName },
+                                        transitionSpec = { fadeIn(tween(260, delayMillis = 80)) togetherWith fadeOut(tween(140)) },
+                                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                                        label = "carousel",
+                                    ) { app ->
+                                        if (app != null && sectionItems.firstOrNull()?.packageName == app.packageName) {
+                                            CarouselShelf(
+                                                app = app,
+                                                items = sectionItems,
+                                                index = shelfPos,
+                                                onPrev = { if (shelfIndex > 0) shelfIndex-- },
+                                                onNext = { if (shelfIndex < sectionItems.size - 1) shelfIndex++ },
+                                                onOpen = { sectionItems.getOrNull(shelfPos)?.let { vm.openWatchNext(context, it) } },
+                                                modifier = Modifier.fillMaxSize().padding(vertical = 16.dp),
+                                            )
+                                        } else {
+                                            Spacer(Modifier.fillMaxSize())
+                                        }
+                                    }
+                                    Spacer(Modifier.height(12.dp))
+                                } else if (shelfStyle) {
                                     Spacer(Modifier.weight(1f))
                                     AnimatedContent(
                                         targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() },
@@ -694,15 +762,23 @@ fun HomeScreen(vm: LauncherViewModel) {
                                     ) { app ->
                                         val item = shelfItem
                                         if (app != null && item != null && item.packageName == app.packageName) {
-                                            ShelfHero(
-                                                app = app,
-                                                item = item,
-                                                count = sectionItems.size,
-                                                showLogo = !shelfFullBleed,
-                                                onPrev = { if (shelfIndex > 0) shelfIndex-- },
-                                                onNext = { if (shelfIndex < sectionItems.size - 1) shelfIndex++ },
-                                                onOpen = { vm.openWatchNext(context, item) },
-                                            )
+                                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+                                                ShelfHero(
+                                                    app = app,
+                                                    item = item,
+                                                    count = sectionItems.size,
+                                                    showLogo = !shelfFullBleed,
+                                                    onPrev = { if (shelfIndex > 0) shelfIndex-- },
+                                                    onNext = { if (shelfIndex < sectionItems.size - 1) shelfIndex++ },
+                                                    onOpen = { vm.openWatchNext(context, item) },
+                                                )
+                                                if (spotlight) {
+                                                    // Destaque e a seguir: os que vêm depois deste (e, no fim da lista, os do princípio).
+                                                    val next = (sectionItems.drop(shelfPos + 1) + sectionItems.take(shelfPos)).take(UP_NEXT_SHOWN)
+                                                    Spacer(Modifier.weight(1f))
+                                                    UpNextPanel(next, more = sectionItems.size - 1 - next.size)
+                                                }
+                                            }
                                         } else {
                                             Spacer(Modifier.fillMaxWidth())
                                         }
@@ -1008,49 +1084,7 @@ private fun ShelfHero(
             }
             .focusable(interactionSource = interaction),
     ) {
-        // Sem imagem de fundo (ex.: logo de um canal): o logo aparece num cartão, como na fila de cartões.
-        if (showLogo && item.imageUri != null) {
-            Box(
-                Modifier
-                    .padding(bottom = 16.dp)
-                    .size(width = 176.dp, height = 99.dp)
-                    .background(Color(0xFF1C2333), GoatShapes.Control)
-                    .padding(14.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                AsyncImage(model = item.imageUri, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
-            }
-        }
-        Text(
-            (if (item.type == WatchNextItem.TYPE_RECOMMENDED) s.shelfRecommended(app.label) else s.shelfLabel(app.label)).uppercase(s.locale),
-            style = MaterialTheme.typography.labelMedium.copy(letterSpacing = tracking(2f)),
-            color = GoatColors.TextDim,
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(item.title, style = ShelfTitleStyle.copy(letterSpacing = tracking(-1.2f)), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        val details = listOfNotNull(
-            s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
-            item.episodeTitle?.takeIf { it != item.title },
-            item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
-            item.onAir(System.currentTimeMillis())?.title,
-        ).joinToString(" · ")
-        if (details.isNotEmpty()) {
-            Spacer(Modifier.height(6.dp))
-            Text(
-                details,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal),
-                color = GoatColors.TextDim,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        item.progress?.let { p ->
-            Spacer(Modifier.height(12.dp))
-            Box(Modifier.width(320.dp).height(5.dp).background(Color.White.copy(alpha = 0.3f), GoatShapes.Small)) {
-                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing, GoatShapes.Small))
-            }
-        }
-        OnAirLine(item, Modifier.padding(top = 12.dp))
+        HeroText(app, item, showLogo)
         Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             // Parece um botão: com foco fica na cor da marca, com o anel do foco (o foco está no destaque inteiro).
@@ -1145,6 +1179,13 @@ private fun TopShelfRow(items: List<WatchNextItem>, onOpen: (WatchNextItem) -> U
 }
 
 private val TopShelfCardMax = 230.dp
+
+/** Apps ao lado: os favoritos em coluna, mais pequenos para os cinco caberem na altura do ecrã. */
+private val ColumnTileWidth = 116.dp
+private val ColumnTileGap = 14.dp
+
+/** Quantos conteúdos seguintes mostra o painel da "Destaque e a seguir". */
+private const val UP_NEXT_SHOWN = 3
 private val DockShape = RoundedCornerShape(30.dp)
 
 /** Depois de acabar de mover, um clique na app durante este tempo não a abre (é o OK que confirmou a posição). */
@@ -1159,7 +1200,7 @@ private val DockPadding = 30.dp
 /** O estilo "fila de cartões": o "Continuar a ver" do favorito com foco, por cima dos favoritos. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ContinueWatchingRow(app: LauncherApp, items: List<WatchNextItem>, onOpen: (WatchNextItem) -> Unit) {
+internal fun ContinueWatchingRow(app: LauncherApp, items: List<WatchNextItem>, onOpen: (WatchNextItem) -> Unit) {
     val s = LocalStrings.current
     val first = remember { FocusRequester() }
     Column {
