@@ -80,6 +80,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
+import androidx.compose.runtime.staticCompositionLocalOf
 import java.util.Calendar
 import kotlin.math.abs
 import androidx.compose.animation.core.spring
@@ -115,6 +116,16 @@ private fun rememberMinute(): Long {
         }
     }
     return minute * 60_000
+}
+
+/** Relógio de 24 horas (Definições), para as horas que aparecem fora da barra de cima. */
+val LocalClock24h = staticCompositionLocalOf { true }
+
+/** As horas de [time] no formato das Definições e da língua. */
+@Composable
+fun clockText(time: Long): String {
+    val s = LocalStrings.current
+    return SimpleDateFormat(timePattern(s, LocalClock24h.current), s.locale).format(time)
 }
 
 /** Em cima à direita: as horas. */
@@ -619,6 +630,7 @@ fun WatchNextCard(item: WatchNextItem, onClick: () -> Unit, modifier: Modifier =
         val details = listOfNotNull(
             s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() } ?: item.episodeTitle,
             item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
+            item.onAir(rememberMinute())?.title,
         ).joinToString(" · ")
         if (details.isNotEmpty()) {
             Text(details, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -695,6 +707,8 @@ fun TopShelfCard(item: WatchNextItem, height: Dp, onClick: () -> Unit, modifier:
         val details = listOfNotNull(
             s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() } ?: item.episodeTitle?.takeIf { it != item.title },
             item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
+            // Canal em direto: o programa que está a dar.
+            item.onAir(rememberMinute())?.title,
         )
         Text(
             (listOf(item.title) + details).joinToString(" · "),
@@ -703,10 +717,42 @@ fun TopShelfCard(item: WatchNextItem, height: Dp, onClick: () -> Unit, modifier:
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        OnAirLine(item, Modifier.padding(start = 4.dp, top = 8.dp).graphicsLayer { alpha = titleAlpha })
     }
 }
 
 private val TopShelfShape = RoundedCornerShape(14.dp)
+
+/**
+ * Um canal em direto (GoatTV): a parte já dada do programa e "A seguir: … · 22:00". Nada se não houver programa.
+ * A hora muda ao minuto, por isso a barra e o programa acompanham sem a app ter de voltar a publicar.
+ */
+@Composable
+fun OnAirLine(item: WatchNextItem, modifier: Modifier = Modifier) {
+    val s = LocalStrings.current
+    val air = item.onAir(rememberMinute()) ?: return
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        air.progress?.let { p ->
+            Box(Modifier.width(96.dp).height(4.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.3f))) {
+                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Color.White))
+            }
+        }
+        air.next?.let { next ->
+            // Um título comprido corta-se, mas a hora fica sempre.
+            Row(Modifier.weight(1f, fill = false)) {
+                Text(
+                    s.upNext(next),
+                    Modifier.weight(1f, fill = false),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = GoatColors.TextDim,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                air.endsAt?.let { Text(" · " + clockText(it), style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1) }
+            }
+        }
+    }
+}
 
 /** Aviso curto no topo do ecrã. */
 @Composable

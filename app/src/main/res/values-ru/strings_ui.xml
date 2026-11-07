@@ -229,6 +229,7 @@
     <string name="season_short">S%s</string>
     <string name="episode_short">E%s</string>
     <string name="minutes_left">Осталось %d мин</string>
+    <string name="up_next">Далее: %s</string>
     <string name="hours_minutes_left">Осталось %1$d ч %2$d мин</string>
     <string name="seconds_now">Сразу</string>
     <string name="seconds_n">%d с</string>

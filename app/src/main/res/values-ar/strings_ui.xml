@@ -229,6 +229,7 @@
     <string name="season_short">م%s</string>
     <string name="episode_short">ح%s</string>
     <string name="minutes_left">متبقٍ %d دقيقة</string>
+    <string name="up_next">التالي: %s</string>
     <string name="hours_minutes_left">متبقٍ %1$d س %2$d د</string>
     <string name="seconds_now">فورًا</string>
     <string name="seconds_n">%d ث</string>

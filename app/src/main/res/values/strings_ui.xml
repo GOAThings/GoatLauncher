@@ -229,6 +229,7 @@
     <string name="season_short">S%s</string>
     <string name="episode_short">E%s</string>
     <string name="minutes_left">%d min left</string>
+    <string name="up_next">Next: %s</string>
     <string name="hours_minutes_left">%1$d h %2$d min left</string>
     <string name="seconds_now">Right away</string>
     <string name="seconds_n">%d s</string>

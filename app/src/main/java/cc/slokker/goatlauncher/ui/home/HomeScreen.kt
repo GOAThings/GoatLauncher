@@ -435,6 +435,7 @@ fun HomeScreen(vm: LauncherViewModel) {
         LocalFocusStyle provides focusStyle,
         LocalIconBackground provides account.iconBackground,
         LocalFocusDim provides remember { FocusDim() },
+        LocalClock24h provides account.clock24h,
     ) {
         Box(Modifier.fillMaxSize()) {
             Box(
@@ -1026,6 +1027,7 @@ private fun ShelfHero(
             s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
             item.episodeTitle?.takeIf { it != item.title },
             item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
+            item.onAir(System.currentTimeMillis())?.title,
         ).joinToString(" · ")
         if (details.isNotEmpty()) {
             Spacer(Modifier.height(6.dp))
@@ -1043,6 +1045,7 @@ private fun ShelfHero(
                 Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Color.White, GoatShapes.Small))
             }
         }
+        OnAirLine(item, Modifier.padding(top = 12.dp))
         Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             // Parece um botão: com foco fica branco (o foco está no destaque inteiro).
@@ -1104,7 +1107,9 @@ private fun TopShelfRow(items: List<WatchNextItem>, onOpen: (WatchNextItem) -> U
     val first = remember { FocusRequester() }
     BoxWithConstraints(modifier.fillMaxSize()) {
         // O título da secção, as margens da fila (para o cartão aumentado) e o título do cartão com foco.
-        val cardHeight = (maxHeight - 74.dp).coerceIn(100.dp, TopShelfCardMax)
+        // Com canais em direto, mais uma linha por baixo do cartão (o programa seguinte).
+        val extra = if (items.any { it.isChannel && it.airing != null }) 24.dp else 0.dp
+        val cardHeight = (maxHeight - 74.dp - extra).coerceIn(100.dp, TopShelfCardMax)
         Column {
             Text(
                 s.continueWatching,

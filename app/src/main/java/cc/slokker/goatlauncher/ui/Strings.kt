@@ -41,6 +41,7 @@ class Strings(context: Context) {
     fun shelfRecommended(app: String) = s(R.string.shelf_recommended, app)
     val continueNow get() = s(R.string.continue_now)
     fun shelfMore(n: Int) = s(R.string.shelf_more, n)
+    fun upNext(title: String) = s(R.string.up_next, title)
     val settings get() = s(R.string.settings)
     fun continueIn(app: String) = s(R.string.continue_in, app)
     val noApps get() = s(R.string.no_apps)

@@ -229,6 +229,7 @@
     <string name="season_short">시즌 %s</string>
     <string name="episode_short">%s화</string>
     <string name="minutes_left">%d분 남음</string>
+    <string name="up_next">다음: %s</string>
     <string name="hours_minutes_left">%1$d시간 %2$d분 남음</string>
     <string name="seconds_now">바로</string>
     <string name="seconds_n">%d초</string>

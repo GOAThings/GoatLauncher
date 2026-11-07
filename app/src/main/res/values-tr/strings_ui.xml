@@ -229,6 +229,7 @@
     <string name="season_short">S%s</string>
     <string name="episode_short">B%s</string>
     <string name="minutes_left">%d dk kaldı</string>
+    <string name="up_next">Sırada: %s</string>
     <string name="hours_minutes_left">%1$d sa %2$d dk kaldı</string>
     <string name="seconds_now">Hemen</string>
     <string name="seconds_n">%d sn</string>

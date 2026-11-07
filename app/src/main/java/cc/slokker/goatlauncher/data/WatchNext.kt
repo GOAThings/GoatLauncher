@@ -33,7 +33,27 @@ data class WatchNextItem(
     val intentUri: String?,
     /** Um canal em direto (ex.: GoatTV): a imagem é o logo do canal, nunca uma cena do conteúdo. */
     val isChannel: Boolean = false,
+    /** Canal em direto: o programa que está a dar (a descrição), das [airStart] às [airEnd] (0 = sem horas). */
+    val airing: String? = null,
+    val airStart: Long = 0,
+    val airEnd: Long = 0,
+    /** Canal em direto do GoatTV: o programa seguinte (a descrição longa), que começa às [airEnd]. */
+    val upNext: String? = null,
 ) {
+    /**
+     * O que está a dar às [now] num canal em direto: o programa publicado, ou o seguinte se esse já acabou (a app
+     * pode não ter voltado a publicar). null sem programa, ou com os dois já passados.
+     */
+    fun onAir(now: Long): OnAir? {
+        if (!isChannel) return null
+        val title = airing ?: return null
+        if (airEnd <= 0 || now < airEnd) {
+            val progress = if (airEnd > airStart && airStart > 0) ((now - airStart).toFloat() / (airEnd - airStart)).coerceIn(0f, 1f) else null
+            return OnAir(title, progress, airEnd.takeIf { it > 0 }, upNext)
+        }
+        return upNext?.let { OnAir(it, null, null, null) }
+    }
+
     /** 0..1, ou null sem duração ou posição. */
     val progress: Float?
         get() = if (durationMs > 0 && positionMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else null
@@ -73,6 +93,9 @@ data class WatchNextItem(
         const val TYPE_RECOMMENDED = 100
     }
 }
+
+/** O programa de um canal em direto: [title], a parte já dada ([progress]), a hora a que acaba e o seguinte. */
+data class OnAir(val title: String, val progress: Float?, val endsAt: Long?, val next: String?)
 
 /** O que entra do Watch Next: as entradas vêm de outras apps, e uma não pode pesar nem estragar as das outras. */
 internal object WatchNextRows {
@@ -185,6 +208,11 @@ class WatchNextSource(private val context: Context) {
             lastEngagement = c.long(COL_ENGAGEMENT) ?: 0,
             intentUri = c.whole(COL_INTENT, MAX_INTENT_URI),
             isChannel = c.int(COL_PROGRAM_TYPE) == TvContractCompat.WatchNextPrograms.TYPE_CHANNEL || c.int(COL_LIVE) == 1,
+            airing = c.text(COL_DESCRIPTION),
+            airStart = c.long(COL_START) ?: 0,
+            airEnd = c.long(COL_END) ?: 0,
+            // Só o GoatTV põe lá o programa seguinte; nas outras apps é uma sinopse.
+            upNext = c.text(COL_LONG_DESCRIPTION).takeIf { pkg == GOATTV || pkg == "$GOATTV.debug" },
         )
     }
 
@@ -217,6 +245,7 @@ class WatchNextSource(private val context: Context) {
 
     private companion object {
         const val TAG = "WatchNext"
+        const val GOATTV = "cc.slokker.itv"
         const val MAX_TEXT = 300
         const val MAX_PACKAGE = 255
         const val MAX_IMAGE_URI = 4096
@@ -243,6 +272,10 @@ class WatchNextSource(private val context: Context) {
             "browsable",
             "type",
             "live",
+            "short_description",
+            "long_description",
+            "start_time_utc_millis",
+            "end_time_utc_millis",
         )
         const val COL_ID = 0
         const val COL_PACKAGE = 1
@@ -262,5 +295,9 @@ class WatchNextSource(private val context: Context) {
         const val COL_BROWSABLE = 15
         const val COL_PROGRAM_TYPE = 16
         const val COL_LIVE = 17
+        const val COL_DESCRIPTION = 18
+        const val COL_LONG_DESCRIPTION = 19
+        const val COL_START = 20
+        const val COL_END = 21
     }
 }
