@@ -12,6 +12,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -420,14 +422,19 @@ fun HomeScreen(vm: LauncherViewModel) {
 
     // Fundo do destaque: a imagem do conteúdo, se tiver a forma do ecrã. Os logos quadrados (ex.: canais da
     // GoatTV) não enchem o ecrã: fica o fundo normal e o logo aparece pequeno no texto.
-    val shelfPainter = rememberAsyncImagePainter(
-        ImageRequest.Builder(context).data(shelfItem?.imageUri).crossfade(400).build(),
-    )
+    val shelfPainter = rememberAsyncImagePainter(ImageRequest.Builder(context).data(shelfItem?.imageUri).build())
     val shelfState by shelfPainter.state.collectAsState()
     val shelfSize = (shelfState as? AsyncImagePainter.State.Success)?.painter?.intrinsicSize
+    // Enquanto a imagem do conteúdo seguinte carrega, vale a decisão do anterior: o fundo não cai para o papel de
+    // parede e o logo pequeno não aparece por um instante (o texto saltava).
+    val shelfPending = shelfState is AsyncImagePainter.State.Loading || shelfState is AsyncImagePainter.State.Empty
+    var lastFullBleed by remember { mutableStateOf(false) }
     // Os canais em direto (ex.: GoatTV) só têm o logo: nunca enchem o ecrã, mesmo que o logo seja largo.
-    val shelfFullBleed = shelfItem != null && !shelfItem.isChannel && shelfItem.imageUri != null && shelfSize != null && shelfSize.height > 0f &&
-        abs(shelfSize.width / shelfSize.height - 16f / 9f) < 0.25f
+    val shelfFullBleed = shelfItem != null && !shelfItem.isChannel && shelfItem.imageUri != null && (
+        if (shelfPending) lastFullBleed
+        else shelfSize != null && shelfSize.height > 0f && abs(shelfSize.width / shelfSize.height - 16f / 9f) < 0.25f
+        )
+    if (!shelfPending) lastFullBleed = shelfFullBleed
 
     // Modo ambiente: sem tocar no comando durante account.idleMinutes (com o launcher à frente), fica só o fundo
     // e as horas. Ao voltar de uma app, a contagem recomeça.
@@ -532,15 +539,16 @@ fun HomeScreen(vm: LauncherViewModel) {
             ) {
                 // O fundo mostra o último conteúdo que enche o ecrã: ao sair (fade), fica nessa imagem, em vez de mostrar
                 // por um instante, em ecrã inteiro, o logo do canal para onde se foi (o shelfPainter já mudou para ele).
-                var backdropUrl by remember { mutableStateOf<String?>(null) }
-                if (shelfFullBleed) backdropUrl = shelfItem?.imageUri
+                // Só muda para a imagem nova quando ela já carregou, e passa de uma para a outra com um crossfade.
+                var backdrop by remember { mutableStateOf<Painter?>(null) }
+                val loaded = (shelfState as? AsyncImagePainter.State.Success)?.painter
+                if (shelfFullBleed && loaded != null) backdrop = loaded
                 AnimatedVisibility(visible = shelfFullBleed && !onApps, enter = fadeIn(tween(400)), exit = fadeOut(tween(300))) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(context).data(backdropUrl).crossfade(400).build(),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                    Crossfade(targetState = backdrop, animationSpec = tween(450), label = "backdrop") { painter ->
+                        if (painter != null) {
+                            Image(painter, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                        }
+                    }
                 }
                 // Escurece o topo e o fundo (e a esquerda, com o destaque) para o texto se ler sobre qualquer imagem.
                 Box(
