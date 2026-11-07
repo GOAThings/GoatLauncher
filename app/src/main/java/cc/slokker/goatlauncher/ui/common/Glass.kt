@@ -176,7 +176,8 @@ fun GlassRow(
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(BorderStroke(2.dp, Color.White), inset = 0.dp, shape = GoatShapes.Control),
         ),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.02f),
+        // Sem aumentar (como na GoatTV): o contorno não sai da lista, que desvanece nas pontas.
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
     ) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
             if (leading != null) {

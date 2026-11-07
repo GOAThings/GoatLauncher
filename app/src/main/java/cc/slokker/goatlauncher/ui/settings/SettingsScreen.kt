@@ -53,6 +53,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -233,7 +238,8 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
                 )
-                Box(Modifier.weight(1f)) {
+                // As linhas desvanecem nas pontas em vez de ficarem cortadas a direito por baixo do título.
+                Box(Modifier.weight(1f).fadeEdges()) {
                 if (locked) {
                     ProtectedPage(vm, first)
                 } else when (shown) {
@@ -341,6 +347,21 @@ private fun pageTitle(page: Page, s: Strings, buttonKey: Pair<Int, Int>?): Strin
     Page.LockedApps -> s.lockedApps
     Page.Report -> s.sendReport
 }
+
+/** Desvanece [EdgeFade] em cima e em baixo do conteúdo (as listas que passam por baixo do título e do rodapé). */
+private fun Modifier.fadeEdges(): Modifier =
+    graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
+        drawContent()
+        val h = EdgeFade.toPx()
+        drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color.Black), startY = 0f, endY = h), size = Size(size.width, h), blendMode = BlendMode.DstIn)
+        drawRect(
+            Brush.verticalGradient(listOf(Color.Black, Color.Transparent), startY = size.height - h, endY = size.height),
+            topLeft = Offset(0f, size.height - h),
+            blendMode = BlendMode.DstIn,
+        )
+    }
+
+private val EdgeFade = 18.dp
 
 /** Um grupo de linhas num cartão, como nas Definições da GoatTV. */
 @Composable
