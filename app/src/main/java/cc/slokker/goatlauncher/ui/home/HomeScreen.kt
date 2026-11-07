@@ -727,9 +727,24 @@ fun HomeScreen(vm: LauncherViewModel) {
                                 ) { section ->
                                     if (section != null) {
                                         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
-                                            HeroText(section.first, section.second.first(), showLogo = !shelfFullBleed)
+                                            // O destaque é o cartão com foco (o primeiro, enquanto o foco está nas apps).
+                                            val hero = section.second.getOrNull(shelfPos) ?: section.second.first()
+                                            AnimatedContent(
+                                                targetState = hero,
+                                                contentKey = { it.id },
+                                                transitionSpec = {
+                                                    (fadeIn(tween(260, delayMillis = 60)) togetherWith fadeOut(tween(140)))
+                                                        .using(SizeTransform(clip = false))
+                                                },
+                                                label = "sideHero",
+                                            ) { shown -> HeroText(section.first, shown, showLogo = !shelfFullBleed) }
                                             Spacer(Modifier.height(24.dp))
-                                            ContinueWatchingRow(section.first, section.second, onOpen = { vm.openWatchNext(context, it) })
+                                            ContinueWatchingRow(
+                                                section.first,
+                                                section.second,
+                                                onOpen = { vm.openWatchNext(context, it) },
+                                                onFocusItem = { shelfIndex = it },
+                                            )
                                         }
                                     } else {
                                         Spacer(Modifier.fillMaxSize())
@@ -1226,7 +1241,13 @@ private val DockPadding = 30.dp
 /** O estilo "fila de cartões": o "Continuar a ver" do favorito com foco, por cima dos favoritos. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun ContinueWatchingRow(app: LauncherApp, items: List<WatchNextItem>, onOpen: (WatchNextItem) -> Unit) {
+internal fun ContinueWatchingRow(
+    app: LauncherApp,
+    items: List<WatchNextItem>,
+    onOpen: (WatchNextItem) -> Unit,
+    /** O cartão [i] ficou com o foco (Apps ao lado: o destaque passa para ele). */
+    onFocusItem: (Int) -> Unit = {},
+) {
     val s = LocalStrings.current
     val first = remember { FocusRequester() }
     Column {
@@ -1243,7 +1264,8 @@ internal fun ContinueWatchingRow(app: LauncherApp, items: List<WatchNextItem>, o
                     WatchNextCard(
                         item = item,
                         onClick = { onOpen(item) },
-                        modifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
+                        modifier = (if (i == 0) Modifier.focusRequester(first) else Modifier)
+                            .onFocusChanged { if (it.hasFocus) onFocusItem(i) },
                     )
                 }
             }
