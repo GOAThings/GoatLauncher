@@ -13,6 +13,7 @@ import androidx.compose.runtime.Immutable
 import androidx.tvprovider.media.tv.TvContractCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 /** Uma entrada do "Continuar a ver" (Watch Next do Android TV), publicada pela app [packageName]. */
 @Immutable
@@ -37,22 +38,31 @@ data class WatchNextItem(
     val airing: String? = null,
     val airStart: Long = 0,
     val airEnd: Long = 0,
-    /** Canal em direto do GoatTV: o programa seguinte (a descrição longa), que começa às [airEnd]. */
-    val upNext: String? = null,
+    /** Canal em direto do GoatTV: os programas depois do que está a dar (da descrição longa), o primeiro às [airEnd]. */
+    val schedule: List<Programme> = emptyList(),
 ) {
     /**
-     * O que está a dar às [now] num canal em direto: o programa publicado, ou o seguinte se esse já acabou (a app
-     * pode não ter voltado a publicar). null sem programa, ou com os dois já passados.
+     * O que está a dar às [now] num canal em direto: o programa publicado, ou um dos seguintes se esse já acabou (a
+     * app pode não ter voltado a publicar). null sem programa, ou com todos já passados.
      */
     fun onAir(now: Long): OnAir? {
         if (!isChannel) return null
         val title = airing ?: return null
         if (airEnd <= 0 || now < airEnd) {
-            val progress = if (airEnd > airStart && airStart > 0) ((now - airStart).toFloat() / (airEnd - airStart)).coerceIn(0f, 1f) else null
-            return OnAir(title, progress, airEnd.takeIf { it > 0 }, upNext)
+            return OnAir(title, progress(airStart, airEnd, now), airEnd.takeIf { it > 0 }, schedule.firstOrNull()?.title)
         }
-        return upNext?.let { OnAir(it, null, null, null) }
+        val i = schedule.indexOfLast { it.startMs in 1..now }
+        val current = schedule.getOrNull(i) ?: return null
+        val next = schedule.getOrNull(i + 1)
+        // O último da lista não tem hora de fim: fica até a app voltar a publicar.
+        return OnAir(current.title, next?.let { progress(current.startMs, it.startMs, now) }, next?.startMs, next?.title)
     }
+
+    /** Os programas que ainda não começaram às [now] (os do painel "A seguir" do destaque). */
+    fun upcoming(now: Long): List<Programme> = schedule.filter { it.startMs <= 0 || it.startMs > now }
+
+    private fun progress(start: Long, end: Long, now: Long): Float? =
+        if (end > start && start > 0) ((now - start).toFloat() / (end - start)).coerceIn(0f, 1f) else null
 
     /** 0..1, ou null sem duração ou posição. */
     val progress: Float?
@@ -96,6 +106,39 @@ data class WatchNextItem(
 
 /** O programa de um canal em direto: [title], a parte já dada ([progress]), a hora a que acaba e o seguinte. */
 data class OnAir(val title: String, val progress: Float?, val endsAt: Long?, val next: String?)
+
+/** Um programa que ainda vai dar num canal, a começar às [startMs] (0 = não se sabe). */
+@Immutable
+data class Programme(val title: String, val startMs: Long)
+
+/**
+ * A descrição longa do GoatTV: o título do programa seguinte (começa às [nextStart], o fim do atual) e depois uma
+ * linha "21:30 Título" por cada um dos outros, na hora deste aparelho. Uma linha que não seja assim acaba a lista
+ * (uma versão antiga do GoatTV só põe o título do seguinte).
+ */
+internal fun parseSchedule(text: String, nextStart: Long, now: Long): List<Programme> {
+    val lines = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
+    val first = lines.firstOrNull() ?: return emptyList()
+    val out = mutableListOf(Programme(first, nextStart))
+    var after = nextStart.takeIf { it > 0 } ?: now
+    for (line in lines.drop(1)) {
+        val m = SCHEDULE_LINE.matchEntire(line) ?: break
+        val cal = Calendar.getInstance().apply {
+            timeInMillis = after
+            set(Calendar.HOUR_OF_DAY, m.groupValues[1].toInt())
+            set(Calendar.MINUTE, m.groupValues[2].toInt())
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        // Passa da meia-noite: é no dia seguinte.
+        if (cal.timeInMillis < after) cal.add(Calendar.DAY_OF_MONTH, 1)
+        after = cal.timeInMillis
+        out += Programme(m.groupValues[3], after)
+    }
+    return out
+}
+
+private val SCHEDULE_LINE = Regex("""(\d{1,2}):(\d{2}) (.+)""")
 
 /** O que entra do Watch Next: as entradas vêm de outras apps, e uma não pode pesar nem estragar as das outras. */
 internal object WatchNextRows {
@@ -211,8 +254,9 @@ class WatchNextSource(private val context: Context) {
             airing = c.text(COL_DESCRIPTION),
             airStart = c.long(COL_START) ?: 0,
             airEnd = c.long(COL_END) ?: 0,
-            // Só o GoatTV põe lá o programa seguinte; nas outras apps é uma sinopse.
-            upNext = c.text(COL_LONG_DESCRIPTION).takeIf { pkg == GOATTV || pkg == "$GOATTV.debug" },
+            // Só o GoatTV põe lá os programas seguintes; nas outras apps é uma sinopse.
+            schedule = c.str(COL_LONG_DESCRIPTION)?.take(MAX_SCHEDULE)?.takeIf { pkg == GOATTV || pkg == "$GOATTV.debug" }
+                ?.let { parseSchedule(it, c.long(COL_END) ?: 0, System.currentTimeMillis()) }.orEmpty(),
         )
     }
 
@@ -247,6 +291,8 @@ class WatchNextSource(private val context: Context) {
         const val TAG = "WatchNext"
         const val GOATTV = "cc.slokker.itv"
         const val MAX_TEXT = 300
+        /** O GoatTV põe lá até cinco títulos, um por linha. */
+        const val MAX_SCHEDULE = 1_500
         const val MAX_PACKAGE = 255
         const val MAX_IMAGE_URI = 4096
         const val MAX_INTENT_URI = 8192

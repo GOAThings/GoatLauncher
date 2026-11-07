@@ -799,7 +799,11 @@ fun HomeScreen(vm: LauncherViewModel) {
                                                     onNext = { if (shelfIndex < sectionItems.size - 1) shelfIndex++ },
                                                     onOpen = { vm.openWatchNext(context, item) },
                                                 )
-                                                if (spotlight) {
+                                                if (spotlight && item.isChannel) {
+                                                    // Um canal: o que vai dar nele, não os outros canais da app.
+                                                    Spacer(Modifier.weight(1f))
+                                                    ChannelUpNextPanel(item)
+                                                } else if (spotlight) {
                                                     // Destaque e a seguir: os que vêm depois deste (e, no fim da lista, os do princípio).
                                                     val next = (sectionItems.drop(shelfPos + 1) + sectionItems.take(shelfPos)).take(UP_NEXT_SHOWN)
                                                     Spacer(Modifier.weight(1f))

@@ -108,7 +108,7 @@ private val CardShape = GoatShapes.Control
 
 /** A hora atual, que só muda (e recompõe) quando muda o minuto. Vê-se a cada segundo para apanhar acertos da hora. */
 @Composable
-private fun rememberMinute(): Long {
+internal fun rememberMinute(): Long {
     val minute by produceState(System.currentTimeMillis() / 60_000) {
         while (true) {
             delay(1_000)

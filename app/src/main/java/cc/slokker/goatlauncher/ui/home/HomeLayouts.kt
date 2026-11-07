@@ -60,6 +60,7 @@ import cc.slokker.goatlauncher.ui.common.glass
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.ShelfTitleStyle
+import cc.slokker.goatlauncher.ui.theme.tabular
 import cc.slokker.goatlauncher.ui.theme.tracking
 import coil3.compose.AsyncImage
 
@@ -171,7 +172,52 @@ fun UpNextPanel(items: List<WatchNextItem>, more: Int, modifier: Modifier = Modi
     }
 }
 
+/**
+ * Ao lado do destaque, quando é um canal em direto: o que vai dar a seguir nesse canal (até três programas, com a
+ * hora de início), em vez das outras entradas da app, que seriam outros canais. Sem guia não mostra nada.
+ */
+@Composable
+fun ChannelUpNextPanel(item: WatchNextItem, modifier: Modifier = Modifier) {
+    val s = LocalStrings.current
+    val shown = item.upcoming(rememberMinute()).take(UP_NEXT_PROGRAMMES)
+    if (shown.isEmpty()) return
+    Column(
+        modifier
+            .width(UpNextWidth)
+            .glass(GoatShapes.Panel, tint = Color(0x99111522))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            s.upNextTitle.uppercase(s.locale),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = tracking(1.6f)),
+            color = GoatColors.TextFaint,
+        )
+        AnimatedContent(
+            targetState = shown,
+            transitionSpec = { fadeIn(tween(260, delayMillis = 60)) togetherWith fadeOut(tween(140)) },
+            label = "channelUpNext",
+        ) { list ->
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                list.forEach { p ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            if (p.startMs > 0) clockText(p.startMs) else "",
+                            Modifier.width(64.dp),
+                            style = MaterialTheme.typography.labelLarge.tabular,
+                            color = GoatColors.TextDim,
+                            maxLines = 1,
+                        )
+                        Text(p.title, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
+        }
+    }
+}
+
 private val UpNextWidth = 340.dp
+private const val UP_NEXT_PROGRAMMES = 3
 
 /** A imagem pequena de um conteúdo: a cena a encher, ou o logo de um canal inteiro sobre fundo escuro. */
 @Composable
