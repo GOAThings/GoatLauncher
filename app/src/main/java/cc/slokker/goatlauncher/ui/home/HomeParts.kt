@@ -583,7 +583,7 @@ fun WatchNextCard(item: WatchNextItem, onClick: () -> Unit, modifier: Modifier =
             ),
             scale = ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
             border = ClickableSurfaceDefaults.border(
-                focusedBorder = Border(BorderStroke(3.dp, Color.White), inset = 0.dp, shape = CardShape),
+                focusedBorder = Border(BorderStroke(3.dp, GoatColors.FocusRing), inset = 0.dp, shape = CardShape),
             ),
             glow = ClickableSurfaceDefaults.glow(focusedGlow = Glow(elevationColor = Color.Black.copy(alpha = 0.6f), elevation = 12.dp)),
         ) {
@@ -620,7 +620,7 @@ fun WatchNextCard(item: WatchNextItem, onClick: () -> Unit, modifier: Modifier =
                             .clip(CircleShape)
                             .background(Color.White.copy(alpha = 0.35f)),
                     ) {
-                        Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Color.White))
+                        Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing))
                     }
                 }
             }
@@ -658,7 +658,7 @@ fun TopShelfCard(item: WatchNextItem, height: Dp, onClick: () -> Unit, modifier:
             ),
             scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
             border = ClickableSurfaceDefaults.border(
-                focusedBorder = Border(BorderStroke(3.dp, Color.White), inset = 0.dp, shape = TopShelfShape),
+                focusedBorder = Border(BorderStroke(3.dp, GoatColors.FocusRing), inset = 0.dp, shape = TopShelfShape),
             ),
             glow = ClickableSurfaceDefaults.glow(focusedGlow = Glow(elevationColor = Color.Black.copy(alpha = 0.6f), elevation = 16.dp)),
         ) {
@@ -698,7 +698,7 @@ fun TopShelfCard(item: WatchNextItem, height: Dp, onClick: () -> Unit, modifier:
                             .clip(CircleShape)
                             .background(Color.White.copy(alpha = 0.35f)),
                     ) {
-                        Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Color.White))
+                        Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing))
                     }
                 }
             }
@@ -734,7 +734,7 @@ fun OnAirLine(item: WatchNextItem, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         air.progress?.let { p ->
             Box(Modifier.width(96.dp).height(4.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.3f))) {
-                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Color.White))
+                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing))
             }
         }
         air.next?.let { next ->

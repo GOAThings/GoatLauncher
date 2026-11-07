@@ -41,6 +41,12 @@ object GoatColors {
     val Error = Color(0xFFFF6961)
 
     val Accent = Brush.linearGradient(listOf(Sky, Indigo))
+
+    // Paleta GOAT (a do site e das outras apps): o separador aberto e o botão principal na cor da marca, e o foco
+    // num anel azul-claro em vez de branco.
+    val Brand = Color(0xFF2B3B79)
+    val BrandHover = Color(0xFF3A4FA0)
+    val FocusRing = Color(0xFF7C92E0)
 }
 
 /** Margens de segurança de TV (overscan). */

@@ -59,7 +59,7 @@ data class FocusStyle(val effect: String, val animation: String, val color: Colo
 /** O estilo de foco em uso; o ecrã inicial e a pré-visualização das Definições é que o dão. */
 val LocalFocusStyle = staticCompositionLocalOf { FocusStyle.Default }
 
-/** As cores que se podem escolher (null = automática: contorno branco, brilho da cor da app). */
+/** As cores que se podem escolher (null = automática: contorno no azul do foco GOAT, brilho da cor da app). */
 val FocusColors: List<Color?> = listOf(
     null,
     Color.White,
@@ -158,7 +158,7 @@ fun Modifier.focusEffect(
                 else -> 1f
             }
             val shine = animation == AccountSettings.ANIM_SHINE
-            val color = style.color ?: Color.White
+            val color = style.color ?: GoatColors.FocusRing
             val stroke = 3.dp.toPx()
             val edge = Size(size.width - stroke, size.height - stroke)
             val corners = CornerRadius(radius - stroke / 2)

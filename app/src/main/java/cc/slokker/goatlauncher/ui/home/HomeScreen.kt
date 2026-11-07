@@ -22,7 +22,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.BringIntoViewSpec
@@ -99,6 +101,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
@@ -919,14 +922,16 @@ private fun TopBar(
                             if (it.isFocused) arrowed = false
                         },
                     shape = ClickableSurfaceDefaults.shape(CircleShape),
+                    // O separador aberto na cor da marca; com foco, mais claro e com o anel do foco.
                     colors = ClickableSurfaceDefaults.colors(
-                        containerColor = if (i == selected) Color.White.copy(alpha = 0.2f) else Color.Transparent,
+                        containerColor = if (i == selected) GoatColors.Brand else Color.Transparent,
                         contentColor = if (i == selected) Color.White else Color.White.copy(alpha = 0.78f),
-                        focusedContainerColor = Color.White,
-                        focusedContentColor = Color.Black,
-                        pressedContainerColor = Color.White.copy(alpha = 0.8f),
-                        pressedContentColor = Color.Black,
+                        focusedContainerColor = GoatColors.BrandHover,
+                        focusedContentColor = Color.White,
+                        pressedContainerColor = GoatColors.Brand,
+                        pressedContentColor = Color.White,
                     ),
+                    border = ClickableSurfaceDefaults.border(focusedBorder = Border(BorderStroke(2.dp, GoatColors.FocusRing), shape = CircleShape)),
                     scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
                 ) {
                     Text(
@@ -1042,22 +1047,23 @@ private fun ShelfHero(
         item.progress?.let { p ->
             Spacer(Modifier.height(12.dp))
             Box(Modifier.width(320.dp).height(5.dp).background(Color.White.copy(alpha = 0.3f), GoatShapes.Small)) {
-                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Color.White, GoatShapes.Small))
+                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing, GoatShapes.Small))
             }
         }
         OnAirLine(item, Modifier.padding(top = 12.dp))
         Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            // Parece um botão: com foco fica branco (o foco está no destaque inteiro).
+            // Parece um botão: com foco fica na cor da marca, com o anel do foco (o foco está no destaque inteiro).
             Row(
                 Modifier
-                    .background(if (focused) Color.White else Color.White.copy(alpha = 0.18f), GoatShapes.Control)
+                    .then(if (focused) Modifier.border(2.dp, GoatColors.FocusRing, GoatShapes.Control) else Modifier)
+                    .background(if (focused) GoatColors.Brand else Color.White.copy(alpha = 0.18f), GoatShapes.Control)
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(GoatIcons.Play, contentDescription = null, tint = if (focused) Color.Black else Color.White, modifier = Modifier.size(18.dp))
+                Icon(GoatIcons.Play, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text(s.continueNow, style = MaterialTheme.typography.labelLarge, color = if (focused) Color.Black else Color.White)
+                Text(s.continueNow, style = MaterialTheme.typography.labelLarge, color = Color.White)
             }
             if (count > 1) Text(s.shelfMore(count - 1), style = MaterialTheme.typography.labelMedium, color = GoatColors.TextFaint)
         }
@@ -1329,11 +1335,12 @@ private fun RoundButton(onClick: () -> Unit, content: @Composable () -> Unit) {
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.White.copy(alpha = 0.14f),
             contentColor = GoatColors.Text,
-            focusedContainerColor = Color.White,
-            focusedContentColor = Color.Black,
-            pressedContainerColor = Color.White.copy(alpha = 0.8f),
-            pressedContentColor = Color.Black,
+            focusedContainerColor = GoatColors.BrandHover,
+            focusedContentColor = Color.White,
+            pressedContainerColor = GoatColors.Brand,
+            pressedContentColor = Color.White,
         ),
+        border = ClickableSurfaceDefaults.border(focusedBorder = Border(BorderStroke(2.dp, GoatColors.FocusRing), shape = CircleShape)),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { content() }
