@@ -53,6 +53,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import cc.slokker.goatlauncher.ui.common.slidingFocusHost
+import cc.slokker.goatlauncher.ui.common.LocalSlidingFocus
+import cc.slokker.goatlauncher.ui.common.SlidingFocus
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
@@ -70,6 +74,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.LaunchedEffect
@@ -223,9 +228,15 @@ fun SettingsScreen(
                 },
                 label = "settingsPage",
             ) { shown ->
-                // A página que está a sair não pode ficar com o foco (senão ele salta ao terminar a animação).
+                // A página que está a sair não pode receber o foco (senão ele salta ao terminar a animação). Só se
+                // impede a entrada: canFocus aqui valeria para o grupo da lista, que passava a levar o foco ele próprio.
                 val leaving = transition.targetState == EnterExitState.PostExit
-                Column(Modifier.fillMaxSize().focusProperties { canFocus = !leaving }) {
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .focusProperties { onEnter = { if (leaving) cancelFocusChange() } }
+                        .focusGroup(),
+                ) {
                 // Fora da página principal, de onde se veio ("‹ Definições").
                 if (shown != Page.Main && !locked) {
                     Row(Modifier.padding(start = 10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -239,7 +250,10 @@ fun SettingsScreen(
                     modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
                 )
                 // As linhas desvanecem nas pontas em vez de ficarem cortadas a direito por baixo do título.
-                Box(Modifier.weight(1f).fadeEdges()) {
+                // Um só destaque, que desliza de linha em linha (ver SlidingFocus).
+                val sliding = remember { SlidingFocus() }
+                CompositionLocalProvider(LocalSlidingFocus provides sliding) {
+                Box(Modifier.weight(1f).fadeEdges().slidingFocusHost(sliding)) {
                 if (locked) {
                     ProtectedPage(vm, first)
                 } else when (shown) {
@@ -307,6 +321,7 @@ fun SettingsScreen(
                     Page.PinSetup -> PinSetupPage(vm, onDone = { page = Page.Parental })
                     Page.LockedApps -> LockedAppsPage(vm, first)
                     Page.Report -> ReportPage(vm, first)
+                }
                 }
                 }
                 }

@@ -19,6 +19,21 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.layout.LayoutCoordinates
+import kotlinx.coroutines.launch
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.Animatable
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.platform.LocalView
@@ -151,7 +166,69 @@ fun GlassButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
     }
 }
 
-/** Linha de lista (definições, menus). Com foco, como nas Definições da GoatTV: mais clara, com um contorno branco. */
+/**
+ * Um só destaque para as linhas de uma lista, que desliza até à que tem o foco (como nas Definições da GoatTV e na
+ * Apple TV), em vez de cada linha acender e apagar o seu. As [GlassRow] dentro de [slidingFocusHost] dizem onde estão
+ * quando têm o foco; o anfitrião desenha o destaque e anima-o até lá.
+ */
+@Stable
+class SlidingFocus {
+    /** A linha com foco, em coordenadas da janela; null sem nenhuma (o foco está noutro sítio). */
+    internal var target by mutableStateOf<Rect?>(null)
+    internal var owner: Any? = null
+}
+
+val LocalSlidingFocus = staticCompositionLocalOf<SlidingFocus?> { null }
+
+/** Desenha o destaque de [focus] por baixo e o contorno por cima do conteúdo, a deslizar para a linha com foco. */
+fun Modifier.slidingFocusHost(focus: SlidingFocus): Modifier = composed {
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    val x = remember { Animatable(0f) }
+    val y = remember { Animatable(0f) }
+    val w = remember { Animatable(0f) }
+    val h = remember { Animatable(0f) }
+    val alpha = remember { Animatable(0f) }
+    LaunchedEffect(focus) {
+        snapshotFlow { focus.target }.collect { r ->
+            if (r == null) {
+                alpha.animateTo(0f, tween(120))
+                return@collect
+            }
+            // Primeira vez (ou depois de sair da lista): aparece já no sítio, sem vir de longe.
+            if (alpha.value == 0f) {
+                x.snapTo(r.left); y.snapTo(r.top); w.snapTo(r.width); h.snapTo(r.height)
+                alpha.animateTo(1f, tween(120))
+            } else {
+                launch { x.animateTo(r.left, HighlightSpring) }
+                launch { y.animateTo(r.top, HighlightSpring) }
+                launch { w.animateTo(r.width, HighlightSpring) }
+                launch { h.animateTo(r.height, HighlightSpring) }
+                launch { alpha.animateTo(1f, tween(120)) }
+            }
+        }
+    }
+    onGloballyPositioned { origin = it.positionInWindow() }
+        .drawWithContent {
+            val a = alpha.value
+            if (a <= 0f || h.value <= 0f) return@drawWithContent drawContent()
+            val outline = GoatShapes.Control.createOutline(Size(w.value, h.value), layoutDirection, this)
+            translate(left = x.value - origin.x, top = y.value - origin.y) {
+                drawOutline(outline, Color.White.copy(alpha = 0.14f * a))
+            }
+            drawContent()
+            translate(left = x.value - origin.x, top = y.value - origin.y) {
+                drawOutline(outline, Color.White.copy(alpha = a), style = Stroke(2.dp.toPx()))
+            }
+        }
+}
+
+/** O destaque que desliza: rápido o bastante para acompanhar o comando carregado, sem ressaltar (o da GoatTV). */
+private val HighlightSpring = spring<Float>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)
+
+/**
+ * Linha de lista (definições, menus). Com foco, como nas Definições da GoatTV: mais clara, com um contorno branco;
+ * dentro de [slidingFocusHost] é o destaque do anfitrião que desliza até ela.
+ */
 @Composable
 fun GlassRow(
     onClick: () -> Unit,
@@ -161,20 +238,47 @@ fun GlassRow(
     subtitle: String? = null,
     title: String,
 ) {
+    val sliding = LocalSlidingFocus.current
+    var focused by remember { mutableStateOf(false) }
+    val token = remember { Any() }
+    // Onde a linha está agora: ao ganhar o foco diz-se logo (sem esperar que ela mexa).
+    var coords by remember { mutableStateOf<LayoutCoordinates?>(null) }
     Surface(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (sliding == null) Modifier else Modifier
+                    .onFocusChanged {
+                        focused = it.isFocused
+                        val c = coords
+                        if (it.isFocused && c != null && c.isAttached) {
+                            sliding.owner = token
+                            sliding.target = c.boundsInWindow()
+                        } else if (!it.isFocused && sliding.owner === token) {
+                            sliding.owner = null
+                            sliding.target = null
+                        }
+                    }
+                    .onGloballyPositioned { c ->
+                        coords = c
+                        if (focused) {
+                            sliding.owner = token
+                            sliding.target = c.boundsInWindow()
+                        }
+                    },
+            ),
         shape = ClickableSurfaceDefaults.shape(GoatShapes.Control),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
             contentColor = GoatColors.Text,
-            focusedContainerColor = Color.White.copy(alpha = 0.14f),
+            focusedContainerColor = if (sliding != null) Color.Transparent else Color.White.copy(alpha = 0.14f),
             focusedContentColor = GoatColors.Text,
             pressedContainerColor = Color.White.copy(alpha = 0.22f),
             pressedContentColor = GoatColors.Text,
         ),
         border = ClickableSurfaceDefaults.border(
-            focusedBorder = Border(BorderStroke(2.dp, Color.White), inset = 0.dp, shape = GoatShapes.Control),
+            focusedBorder = if (sliding != null) Border.None else Border(BorderStroke(2.dp, Color.White), inset = 0.dp, shape = GoatShapes.Control),
         ),
         // Sem aumentar (como na GoatTV): o contorno não sai da lista, que desvanece nas pontas.
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
