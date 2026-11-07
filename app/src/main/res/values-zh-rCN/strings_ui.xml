@@ -94,12 +94,9 @@
     <string name="style_shelf">聚光灯</string>
     <string name="layout">布局</string>
     <string name="layout_android_hint">“应用”标签页，可选“继续观看”样式</string>
-    <string name="layout_spotlight">焦点与接下来</string>
-    <string name="layout_spotlight_hint">所选应用的最新内容占满屏幕，旁边是接下来的内容</string>
-    <string name="layout_column">侧边应用</string>
-    <string name="layout_column_hint">应用排成一列，右侧是所选应用的内容</string>
-    <string name="layout_carousel">轮播</string>
-    <string name="layout_carousel_hint">正在观看的内容以大卡片显示，下方是应用</string>
+    <string name="style_spotlight_next">焦点与接下来</string>
+    <string name="style_column">侧边应用</string>
+    <string name="style_carousel">轮播</string>
     <string name="up_next_title">接下来</string>
     <string name="layout_apple_hint">应用位于收藏程序坞下方，大卡片，类似 tvOS</string>
     <string name="general">通用</string>

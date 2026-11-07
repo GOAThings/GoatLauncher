@@ -192,11 +192,12 @@ fun HomeScreen(vm: LauncherViewModel) {
     val moreApps = tabApps.orEmpty().filter { app -> favorites.none { it.packageName == app.packageName } }
     val gridApps = favorites + moreApps
     val appleTv = account.layout == AccountSettings.LAYOUT_APPLE_TV
-    val spotlight = account.layout == AccountSettings.LAYOUT_SPOTLIGHT
-    val columnLayout = account.layout == AccountSettings.LAYOUT_COLUMN
-    val carousel = account.layout == AccountSettings.LAYOUT_CAROUSEL
-    // O destaque em ecrã inteiro: o estilo "Destaque" da disposição Android, e a "Destaque e a seguir".
-    val shelfStyle = spotlight || (account.layout == AccountSettings.LAYOUT_ANDROID && account.continueStyle == AccountSettings.STYLE_SHELF)
+    val android = account.layout == AccountSettings.LAYOUT_ANDROID
+    val spotlight = android && account.continueStyle == AccountSettings.STYLE_SPOTLIGHT
+    val columnLayout = android && account.continueStyle == AccountSettings.STYLE_COLUMN
+    val carousel = android && account.continueStyle == AccountSettings.STYLE_CAROUSEL
+    // O destaque em ecrã inteiro: o estilo "Destaque", e o "Destaque e a seguir".
+    val shelfStyle = spotlight || (android && account.continueStyle == AccountSettings.STYLE_SHELF)
     // Apple TV: o Início desce da doca para as outras apps (as mesmas do separador Apps, também as escondidas).
     val homeScroll = rememberScrollState()
     val scope = rememberCoroutineScope()

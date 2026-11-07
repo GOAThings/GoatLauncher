@@ -9,8 +9,8 @@ import com.google.gson.JsonObject
  *
  *   "account": { "wallpaper": {"type": "builtin" | "file" | "url" | "reddit", "value": "lake" | "wall-123.jpg" | "https://…" | "EarthPorn"},
  *                "clock_24h": true, "show_greeting": true, "show_continue_watching": true, "show_app_name": true,
- *                "layout": "android" | "appletv" | "spotlight" | "column" | "carousel", "continue_style": "row" | "shelf",
- *                "show_weather": true,
+ *                "layout": "android" | "appletv",
+ *                "continue_style": "row" | "shelf" | "spotlight" | "column" | "carousel", "show_weather": true,
  *                "reddit_min_width": 1920, "idle_minutes": 0, "idle_keep_awake": false,
  *                "youtube_feed": "both" | "continue" | "recommended", "language": "auto" | "pt-PT" | …,
  *                "night_mode": false, "night_auto": false,
@@ -76,15 +76,13 @@ data class AccountSettings(
     val showAppName: Boolean = true,
     /**
      * Disposição do ecrã inicial. "android": separadores Início/Apps e o "Continuar a ver" em [continueStyle];
-     * "appletv": sem separador Apps (as apps ficam por baixo da doca dos favoritos) e cartões grandes, como no tvOS;
-     * "spotlight": o destaque em ecrã inteiro com os seguintes ao lado; "column": os favoritos numa coluna e o que a
-     * app com foco tem à direita; "carousel": o "Continuar a ver" em cartões grandes ao centro. As três últimas têm o
-     * separador Apps, como a "android".
+     * "appletv": sem separador Apps (as apps ficam por baixo da doca dos favoritos) e cartões grandes, como no tvOS.
      */
     val layout: String = LAYOUT_ANDROID,
     /**
      * Só na disposição Android. "row": fila de cartões (do favorito com foco) por cima dos favoritos;
-     * "shelf": destaque em ecrã inteiro (como o top shelf do tvOS).
+     * "shelf": destaque em ecrã inteiro (como o top shelf do tvOS); "spotlight": o destaque com os seguintes ao lado;
+     * "column": os favoritos numa coluna e o que a app com foco tem à direita; "carousel": cartões grandes ao centro.
      */
     val continueStyle: String = STYLE_ROW,
     /** O tempo (ícone e temperatura) ao lado da saudação, em cima à direita. */
@@ -147,14 +145,14 @@ data class AccountSettings(
     companion object {
         const val STYLE_ROW = "row"
         const val STYLE_SHELF = "shelf"
+        const val STYLE_SPOTLIGHT = "spotlight"
+        const val STYLE_COLUMN = "column"
+        const val STYLE_CAROUSEL = "carousel"
+        /** Pela ordem das Definições. */
+        val STYLES = listOf(STYLE_ROW, STYLE_SHELF, STYLE_SPOTLIGHT, STYLE_COLUMN, STYLE_CAROUSEL)
 
         const val LAYOUT_ANDROID = "android"
         const val LAYOUT_APPLE_TV = "appletv"
-        const val LAYOUT_SPOTLIGHT = "spotlight"
-        const val LAYOUT_COLUMN = "column"
-        const val LAYOUT_CAROUSEL = "carousel"
-        /** Pela ordem das Definições. */
-        val LAYOUTS = listOf(LAYOUT_ANDROID, LAYOUT_APPLE_TV, LAYOUT_SPOTLIGHT, LAYOUT_COLUMN, LAYOUT_CAROUSEL)
 
         /** Modo noite automático: das 20h às 7h. */
         const val AMBIENT_PHOTOS = "photos"
@@ -201,9 +199,12 @@ data class AccountSettings(
                 showGreeting = json.bool("show_greeting") ?: true,
                 showContinueWatching = json.bool("show_continue_watching") ?: true,
                 showAppName = json.bool("show_app_name") ?: true,
-                layout = json.str("layout")?.takeIf { it in LAYOUTS } ?: LAYOUT_ANDROID,
-                // O antigo "downunder" (já não existe) passa a fila de cartões.
-                continueStyle = json.str("continue_style")?.takeIf { it == STYLE_SHELF } ?: STYLE_ROW,
+                layout = json.str("layout")?.takeIf { it == LAYOUT_APPLE_TV } ?: LAYOUT_ANDROID,
+                // O antigo "downunder" (já não existe) passa a fila de cartões. Os estilos novos foram disposições
+                // durante uns dias (só em versões de teste): uma dessas disposições guardada passa a ser o estilo.
+                continueStyle = (json.str("continue_style")?.takeIf { it in STYLES } ?: STYLE_ROW).let { style ->
+                    json.str("layout")?.takeIf { it in STYLES } ?: style
+                },
                 showWeather = json.bool("show_weather") ?: true,
                 redditMinWidth = json.int("reddit_min_width")?.coerceAtLeast(0) ?: 1920,
                 idleMinutes = json.int("idle_minutes")?.coerceAtLeast(0) ?: 0,

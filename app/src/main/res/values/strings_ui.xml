@@ -94,12 +94,9 @@
     <string name="style_shelf">Spotlight</string>
     <string name="layout">Layout</string>
     <string name="layout_android_hint">Apps tab, with a choice of Continue watching style</string>
-    <string name="layout_spotlight">Spotlight + next</string>
-    <string name="layout_spotlight_hint">The latest from the focused app fills the screen, with what\'s next beside it</string>
-    <string name="layout_column">Apps on the side</string>
-    <string name="layout_column_hint">Apps in a column, with what the focused app has on the right</string>
-    <string name="layout_carousel">Carousel</string>
-    <string name="layout_carousel_hint">What you\'re watching in large cards, with the apps below</string>
+    <string name="style_spotlight_next">Spotlight + next</string>
+    <string name="style_column">Apps on the side</string>
+    <string name="style_carousel">Carousel</string>
     <string name="up_next_title">Up next</string>
     <string name="layout_apple_hint">Apps below the favorites dock and large cards, like tvOS</string>
     <string name="general">General</string>

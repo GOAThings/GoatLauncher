@@ -94,12 +94,9 @@
     <string name="style_shelf">إبراز</string>
     <string name="layout">التخطيط</string>
     <string name="layout_android_hint">تبويب التطبيقات ونمط متابعة المشاهدة حسب اختيارك</string>
-    <string name="layout_spotlight">المميز والتالي</string>
-    <string name="layout_spotlight_hint">أحدث محتوى من التطبيق المحدد يملأ الشاشة، والتالي بجانبه</string>
-    <string name="layout_column">التطبيقات جانبًا</string>
-    <string name="layout_column_hint">التطبيقات في عمود، ومحتوى التطبيق المحدد على اليمين</string>
-    <string name="layout_carousel">عرض دوّار</string>
-    <string name="layout_carousel_hint">ما تشاهده في بطاقات كبيرة، والتطبيقات أسفلها</string>
+    <string name="style_spotlight_next">المميز والتالي</string>
+    <string name="style_column">التطبيقات جانبًا</string>
+    <string name="style_carousel">عرض دوّار</string>
     <string name="up_next_title">التالي</string>
     <string name="layout_apple_hint">التطبيقات أسفل شريط المفضلة وبطاقات كبيرة، كما في tvOS</string>
     <string name="general">عام</string>

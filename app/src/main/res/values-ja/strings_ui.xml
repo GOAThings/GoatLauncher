@@ -94,12 +94,9 @@
     <string name="style_shelf">スポットライト</string>
     <string name="layout">レイアウト</string>
     <string name="layout_android_hint">アプリタブと「続きを見る」のスタイルを選択</string>
-    <string name="layout_spotlight">スポットライトと次へ</string>
-    <string name="layout_spotlight_hint">選択中のアプリの最新コンテンツを全画面に、横に次のコンテンツ</string>
-    <string name="layout_column">横にアプリ</string>
-    <string name="layout_column_hint">アプリを縦一列に、右に選択中のアプリのコンテンツ</string>
-    <string name="layout_carousel">カルーセル</string>
-    <string name="layout_carousel_hint">視聴中のコンテンツを大きなカードで、下にアプリ</string>
+    <string name="style_spotlight_next">スポットライトと次へ</string>
+    <string name="style_column">横にアプリ</string>
+    <string name="style_carousel">カルーセル</string>
     <string name="up_next_title">次は</string>
     <string name="layout_apple_hint">お気に入りのドックの下にアプリ、大きなカード（tvOS風）</string>
     <string name="general">一般</string>

@@ -94,12 +94,9 @@
     <string name="style_shelf">Destaque</string>
     <string name="layout">Layout</string>
     <string name="layout_android_hint">Aba Apps e o estilo do Continuar assistindo à sua escolha</string>
-    <string name="layout_spotlight">Destaque e a seguir</string>
-    <string name="layout_spotlight_hint">O mais recente do app em foco ocupa a tela, com o que vem a seguir ao lado</string>
-    <string name="layout_column">Apps ao lado</string>
-    <string name="layout_column_hint">Os apps em uma coluna, com o conteúdo do app em foco à direita</string>
-    <string name="layout_carousel">Carrossel</string>
-    <string name="layout_carousel_hint">O que você está assistindo em cards grandes, com os apps embaixo</string>
+    <string name="style_spotlight_next">Destaque e a seguir</string>
+    <string name="style_column">Apps ao lado</string>
+    <string name="style_carousel">Carrossel</string>
     <string name="up_next_title">A seguir</string>
     <string name="layout_apple_hint">Apps abaixo do dock dos favoritos e cards grandes, como no tvOS</string>
     <string name="general">Geral</string>

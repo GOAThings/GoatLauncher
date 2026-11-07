@@ -4,23 +4,33 @@ import com.google.gson.JsonObject
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** A disposição guardada na conta: as cinco conhecidas ficam, outra qualquer (de uma versão mais nova) volta à Android. */
+/** A disposição e o estilo do "Continuar a ver" guardados na conta. */
 class LayoutSettingTest {
-    private fun layoutOf(value: String) = AccountSettings.fromJson(JsonObject().apply { addProperty("layout", value) }).layout
+    private fun read(vararg pairs: Pair<String, String>) =
+        AccountSettings.fromJson(JsonObject().apply { pairs.forEach { (k, v) -> addProperty(k, v) } })
 
     @Test
-    fun knownLayoutsAreKept() {
-        AccountSettings.LAYOUTS.forEach { assertEquals(it, layoutOf(it)) }
+    fun knownStylesAreKept() {
+        AccountSettings.STYLES.forEach { assertEquals(it, read("continue_style" to it).continueStyle) }
     }
 
     @Test
-    fun unknownLayoutFallsBackToAndroid() {
-        assertEquals(AccountSettings.LAYOUT_ANDROID, layoutOf("downunder"))
+    fun unknownValuesFallBack() {
+        val settings = read("layout" to "somethingNew", "continue_style" to "downunder")
+        assertEquals(AccountSettings.LAYOUT_ANDROID, settings.layout)
+        assertEquals(AccountSettings.STYLE_ROW, settings.continueStyle)
     }
 
     @Test
-    fun layoutSurvivesARoundTrip() {
-        val saved = AccountSettings(layout = AccountSettings.LAYOUT_CAROUSEL).toJson()
-        assertEquals(AccountSettings.LAYOUT_CAROUSEL, AccountSettings.fromJson(saved).layout)
+    fun aStyleSavedAsALayoutBecomesTheStyle() {
+        val settings = read("layout" to "carousel", "continue_style" to "shelf")
+        assertEquals(AccountSettings.LAYOUT_ANDROID, settings.layout)
+        assertEquals(AccountSettings.STYLE_CAROUSEL, settings.continueStyle)
+    }
+
+    @Test
+    fun styleSurvivesARoundTrip() {
+        val saved = AccountSettings(continueStyle = AccountSettings.STYLE_COLUMN).toJson()
+        assertEquals(AccountSettings.STYLE_COLUMN, AccountSettings.fromJson(saved).continueStyle)
     }
 }

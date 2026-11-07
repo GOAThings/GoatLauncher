@@ -94,12 +94,9 @@
     <string name="style_shelf">Im Fokus</string>
     <string name="layout">Layout</string>
     <string name="layout_android_hint">Tab „Apps“ und wählbarer Stil von Weiterschauen</string>
-    <string name="layout_spotlight">Spotlight mit Nächstem</string>
-    <string name="layout_spotlight_hint">Das Neueste der ausgewählten App füllt den Bildschirm, daneben das Nächste</string>
-    <string name="layout_column">Apps an der Seite</string>
-    <string name="layout_column_hint">Apps in einer Spalte, rechts die Inhalte der ausgewählten App</string>
-    <string name="layout_carousel">Karussell</string>
-    <string name="layout_carousel_hint">Was du schaust in großen Karten, darunter die Apps</string>
+    <string name="style_spotlight_next">Spotlight mit Nächstem</string>
+    <string name="style_column">Apps an der Seite</string>
+    <string name="style_carousel">Karussell</string>
     <string name="up_next_title">Als Nächstes</string>
     <string name="layout_apple_hint">Apps unter dem Favoriten-Dock und große Karten, wie bei tvOS</string>
     <string name="general">Allgemein</string>

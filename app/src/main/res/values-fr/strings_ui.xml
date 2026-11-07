@@ -94,12 +94,9 @@
     <string name="style_shelf">À la une</string>
     <string name="layout">Disposition</string>
     <string name="layout_android_hint">Onglet Apps et style de Reprendre la lecture au choix</string>
-    <string name="layout_spotlight">À la une et à suivre</string>
-    <string name="layout_spotlight_hint">Le dernier contenu de l\'appli sélectionnée remplit l\'écran, avec la suite à côté</string>
-    <string name="layout_column">Applis sur le côté</string>
-    <string name="layout_column_hint">Les applis en colonne, avec le contenu de l\'appli sélectionnée à droite</string>
-    <string name="layout_carousel">Carrousel</string>
-    <string name="layout_carousel_hint">Ce que vous regardez en grandes cartes, avec les applis en dessous</string>
+    <string name="style_spotlight_next">À la une et à suivre</string>
+    <string name="style_column">Applis sur le côté</string>
+    <string name="style_carousel">Carrousel</string>
     <string name="up_next_title">À suivre</string>
     <string name="layout_apple_hint">Apps sous le dock des favoris et grandes cartes, comme sur tvOS</string>
     <string name="general">Général</string>

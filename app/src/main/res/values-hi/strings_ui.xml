@@ -94,12 +94,9 @@
     <string name="style_shelf">स्पॉटलाइट</string>
     <string name="layout">लेआउट</string>
     <string name="layout_android_hint">ऐप्स टैब और \"देखना जारी रखें\" की स्टाइल आपकी पसंद से</string>
-    <string name="layout_spotlight">स्पॉटलाइट और आगे</string>
-    <string name="layout_spotlight_hint">चुने गए ऐप की नई सामग्री पूरी स्क्रीन पर, बगल में आगे का</string>
-    <string name="layout_column">किनारे पर ऐप</string>
-    <string name="layout_column_hint">ऐप एक कॉलम में, दाईं ओर चुने गए ऐप की सामग्री</string>
-    <string name="layout_carousel">कैरोसेल</string>
-    <string name="layout_carousel_hint">जो आप देख रहे हैं वह बड़े कार्ड में, नीचे ऐप</string>
+    <string name="style_spotlight_next">स्पॉटलाइट और आगे</string>
+    <string name="style_column">किनारे पर ऐप</string>
+    <string name="style_carousel">कैरोसेल</string>
     <string name="up_next_title">आगे</string>
     <string name="layout_apple_hint">पसंदीदा डॉक के नीचे ऐप्स और बड़े कार्ड, tvOS की तरह</string>
     <string name="general">सामान्य</string>
