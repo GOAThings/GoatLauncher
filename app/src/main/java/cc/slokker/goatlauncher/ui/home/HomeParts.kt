@@ -98,6 +98,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import cc.slokker.goatlauncher.data.AccountSettings
 import kotlin.math.roundToInt
+import cc.slokker.goatlauncher.ui.theme.tabular
 
 private val BannerShape = GoatShapes.Control
 val CardHeight = 88.dp
@@ -136,7 +137,7 @@ fun TopClock(clock24h: Boolean, modifier: Modifier = Modifier) {
     Text(
         SimpleDateFormat(timePattern(s, clock24h), s.locale).format(now),
         modifier,
-        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
+        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium).tabular,
     )
 }
 
@@ -748,7 +749,7 @@ fun OnAirLine(item: WatchNextItem, modifier: Modifier = Modifier) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                air.endsAt?.let { Text(" · " + clockText(it), style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1) }
+                air.endsAt?.let { Text(" · " + clockText(it), style = MaterialTheme.typography.bodySmall.tabular, color = GoatColors.TextDim, maxLines = 1) }
             }
         }
     }
