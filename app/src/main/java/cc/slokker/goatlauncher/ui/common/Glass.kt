@@ -19,6 +19,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.composed
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -79,6 +91,51 @@ fun Modifier.glass(shape: Shape = GoatShapes.Panel, tint: Color = Color(0x991115
         drawOutline(outline, rim, style = stroke)
     }
 }
+
+/**
+ * Vidro fosco, como o das Definições da GoatTV: o fundo do ecrã ([backdrop], uma miniatura do tamanho do ecrã
+ * esticada, que fica desfocada) com as cores mais vivas, um véu escuro, o reflexo de luz no topo e o contorno fino.
+ */
+fun Modifier.frostedGlass(backdrop: ImageBitmap, shape: Shape = GoatShapes.Panel): Modifier = composed {
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    val view = LocalView.current
+    this
+        .onGloballyPositioned { origin = it.positionInWindow() }
+        .drawWithCache {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            val path = Path().apply { addOutline(outline) }
+            val highlight = Brush.verticalGradient(
+                0f to Color.White.copy(alpha = 0.16f),
+                0.3f to Color.White.copy(alpha = 0.04f),
+                1f to Color.Transparent,
+            )
+            val rim = Brush.verticalGradient(
+                listOf(Color.White.copy(alpha = 0.42f), Color.White.copy(alpha = 0.06f), Color.White.copy(alpha = 0.16f)),
+            )
+            val stroke = Stroke(width = 1.2.dp.toPx())
+            onDrawBehind {
+                clipPath(path) {
+                    drawImage(
+                        image = backdrop,
+                        srcSize = IntSize(backdrop.width, backdrop.height),
+                        dstOffset = IntOffset(-origin.x.roundToInt(), -origin.y.roundToInt()),
+                        dstSize = IntSize(view.width, view.height),
+                        filterQuality = FilterQuality.Low,
+                        colorFilter = Vibrancy,
+                    )
+                    drawRect(FrostTint)
+                    drawRect(highlight)
+                }
+                drawOutline(outline, rim, style = stroke)
+            }
+        }
+}
+
+/** O véu escuro do vidro fosco (o da GoatTV, com a opacidade por defeito dela). */
+private val FrostTint = Color(0xFF0A0D16).copy(alpha = 0.6f)
+
+/** Cores mais vivas por trás do vidro ("vibrancy"). */
+private val Vibrancy = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(1.7f) })
 
 /** Botão só com texto: fundo claro translúcido; com foco fica branco com texto escuro. */
 @Composable

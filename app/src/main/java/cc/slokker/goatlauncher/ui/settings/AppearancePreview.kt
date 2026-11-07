@@ -21,6 +21,10 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.BoxWithConstraints
+import cc.slokker.goatlauncher.ui.home.UpNextPanel
+import cc.slokker.goatlauncher.ui.home.HeroText
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -101,8 +105,12 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
     val focusApp = favorites.firstOrNull { !watchNext[it.packageName].isNullOrEmpty() } ?: favorites.firstOrNull()
     val items = if (account.showContinueWatching) focusApp?.let { watchNext[it.packageName] }.orEmpty() else emptyList()
     val appleTv = account.layout == AccountSettings.LAYOUT_APPLE_TV
-    // Os estilos novos aparecem pelo mais parecido: o "Destaque e a seguir" como o destaque, os outros como a fila.
-    val shelf = !appleTv && (account.continueStyle == AccountSettings.STYLE_SHELF || account.continueStyle == AccountSettings.STYLE_SPOTLIGHT)
+    val style = account.continueStyle.takeIf { !appleTv }
+    val spotlight = style == AccountSettings.STYLE_SPOTLIGHT
+    val column = style == AccountSettings.STYLE_COLUMN
+    val carousel = style == AccountSettings.STYLE_CAROUSEL
+    // A imagem do conteúdo enche o fundo no destaque (com ou sem "a seguir") e nas apps ao lado.
+    val shelf = style == AccountSettings.STYLE_SHELF || spotlight
     val focusStyle = remember(account) { FocusStyle.of(account) }
     val shape = RoundedCornerShape(12.dp)
 
@@ -116,9 +124,10 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
         VirtualScreen {
             WallpaperView(account.wallpaper, reddit?.url ?: folderImage)
             // Destaque: a imagem do conteúdo enche o fundo (os logos dos canais não).
-            val hero = items.firstOrNull()?.takeIf { shelf && !it.isChannel && it.imageUri != null }
+            val hero = items.firstOrNull()?.takeIf { (shelf || column) && !it.isChannel && it.imageUri != null }
             if (hero != null) {
                 AsyncImage(model = hero.imageUri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                if (column) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
             }
             Box(
                 Modifier.fillMaxSize().background(
@@ -154,6 +163,29 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
                         }
                         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
                             when {
+                                column -> Row(Modifier.fillMaxSize().padding(top = 12.dp)) {
+                                    // Apps ao lado: os favoritos em coluna, o conteúdo da app com foco à direita.
+                                    Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically)) {
+                                        favorites.forEach { app ->
+                                            PreviewTile(vm, app, device.icons[app.packageName], focused = app == focusApp, showLabel = false, width = 116.dp)
+                                        }
+                                    }
+                                    Spacer(Modifier.width(48.dp))
+                                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.Bottom) {
+                                        if (focusApp != null && items.isNotEmpty()) {
+                                            HeroText(focusApp, items.first(), showLogo = hero == null)
+                                            Spacer(Modifier.height(24.dp))
+                                            RowPreview(focusApp, items)
+                                        }
+                                    }
+                                }
+                                carousel -> {
+                                    Box(Modifier.weight(1f).fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                                        if (focusApp != null && items.isNotEmpty()) CarouselPreview(focusApp, items)
+                                    }
+                                    Spacer(Modifier.height(12.dp))
+                                    tiles()
+                                }
                                 appleTv -> {
                                     Box(Modifier.weight(1f).fillMaxWidth()) {
                                         if (items.isNotEmpty()) TopShelfPreview(items)
@@ -169,7 +201,16 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
                                 }
                                 shelf -> {
                                     Spacer(Modifier.weight(1f))
-                                    if (focusApp != null && items.isNotEmpty()) ShelfPreview(focusApp, items.first(), items.size)
+                                    if (focusApp != null && items.isNotEmpty()) {
+                                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+                                            Box(Modifier.weight(1f)) { ShelfPreview(focusApp, items.first(), items.size) }
+                                            // Destaque e a seguir: o painel com os seguintes.
+                                            if (spotlight) {
+                                                val next = items.drop(1).take(3)
+                                                UpNextPanel(next, more = items.size - 1 - next.size)
+                                            }
+                                        }
+                                    }
                                     Spacer(Modifier.height(56.dp))
                                     tiles()
                                 }
@@ -236,12 +277,12 @@ private fun PreviewTopBar(account: AccountSettings, weather: WeatherNow?, showAp
 
 /** Um favorito, como no ecrã inicial; o que tem foco aparece aumentado e com o efeito de foco. */
 @Composable
-private fun PreviewTile(vm: LauncherViewModel, app: LauncherApp, iconSpec: String?, focused: Boolean, showLabel: Boolean) {
+private fun PreviewTile(vm: LauncherViewModel, app: LauncherApp, iconSpec: String?, focused: Boolean, showLabel: Boolean, width: Dp = TileWidth) {
     val custom = remember(iconSpec) { iconSpec?.let { vm.icons.cached(it) } }
-    Column(Modifier.width(TileWidth), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.width(width), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier
-                .size(TileWidth, TileWidth * 9 / 16)
+                .size(width, width * 9 / 16)
                 .graphicsLayer {
                     if (focused) {
                         scaleX = FocusScale
@@ -363,6 +404,52 @@ private fun TopShelfPreview(items: List<WatchNextItem>) {
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(28.dp)) {
             items.take(3).forEach { PreviewCard(it, 380.dp, 214.dp, 14.dp) }
+        }
+    }
+}
+
+/** Carrossel: o primeiro conteúdo ao centro, em grande, e os vizinhos mais pequenos e escurecidos dos lados. */
+@Composable
+private fun CarouselPreview(app: LauncherApp, items: List<WatchNextItem>) {
+    val s = LocalStrings.current
+    BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        val height = maxHeight.coerceAtMost(300.dp)
+        val width = height * 16 / 9
+        val side = height * 0.72f
+        val step = width / 2 + 28.dp + side * 16 / 9 / 2
+        listOf(-1, 1).forEach { d ->
+            items.getOrNull(if (d < 0) items.size - 1 else 1)?.takeIf { items.size > 1 }?.let { item ->
+                Box(Modifier.offset(x = step * d)) {
+                    PreviewCard(item, side * 16 / 9, side, 14.dp)
+                    Box(Modifier.size(side * 16 / 9, side).clip(RoundedCornerShape(14.dp)).background(Color.Black.copy(alpha = 0.55f)))
+                }
+            }
+        }
+        Box(Modifier.size(width, height).clip(RoundedCornerShape(18.dp))) {
+            val item = items.first()
+            if (item.isChannel && item.imageUri != null) {
+                // O logo de um canal fica em cima, longe do texto (como no ecrã inicial).
+                Box(Modifier.fillMaxSize().background(Color(0xFF1C2333))) {
+                    AsyncImage(
+                        model = item.imageUri,
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize().padding(start = height / 2, end = height / 2, top = height / 8, bottom = height * 0.45f),
+                    )
+                }
+            } else {
+                PreviewCard(item, width, height, 18.dp)
+            }
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.45f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.85f))))
+            Column(Modifier.align(Alignment.BottomStart).padding(horizontal = 24.dp, vertical = 18.dp)) {
+                Text(s.shelfLabel(app.label).uppercase(s.locale), style = MaterialTheme.typography.labelSmall.copy(letterSpacing = tracking(1.6f)), color = GoatColors.TextDim)
+                Text(
+                    items.first().title,
+                    style = ShelfTitleStyle.copy(fontSize = ShelfTitleStyle.fontSize * 0.7f, lineHeight = ShelfTitleStyle.lineHeight * 0.7f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

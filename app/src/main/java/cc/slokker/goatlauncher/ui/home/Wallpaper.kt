@@ -1,6 +1,18 @@
 package cc.slokker.goatlauncher.ui.home
 
+import android.content.Context
 import androidx.compose.animation.Crossfade
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import coil3.imageLoader
+import coil3.request.SuccessResult
+import coil3.request.allowHardware
+import coil3.size.Scale
+import coil3.toBitmap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -53,14 +65,7 @@ fun WallpaperView(wallpaper: Wallpaper, rotating: Any?, modifier: Modifier = Mod
     val builtin = if (wallpaper.type == Wallpaper.TYPE_BUILTIN) Wallpapers.byId(wallpaper.value) else Wallpapers.ALL.first()
     Box(modifier.fillMaxSize()) {
         val context = LocalContext.current
-        val image: Any? = when (wallpaper.type) {
-            Wallpaper.TYPE_URL -> wallpaper.value
-            // Imagem da box copiada para a app; noutra TV da conta não existe e fica o fundo por defeito.
-            Wallpaper.TYPE_FILE -> ImageImport.wallpaperFile(context, wallpaper.value).takeIf { it.exists() }
-            // Reddit e pasta: a imagem que o ViewModel escolheu agora (URL ou ficheiro).
-            Wallpaper.TYPE_REDDIT, Wallpaper.TYPE_FOLDER -> rotating
-            else -> null
-        }
+        val image = wallpaperImage(context, wallpaper, rotating)
         // O desenho por defeito só aparece sem foto (ou se a foto falhar): enquanto ela carrega fica o fundo
         // escuro do ecrã (não pisca o desenho antes da foto). Por baixo da foto também não se desenha: são
         // caminhos em ecrã inteiro que a GPU da box desenha mal, e custavam isso em cada frame.
@@ -81,6 +86,46 @@ fun WallpaperView(wallpaper: Wallpaper, rotating: Any?, modifier: Modifier = Mod
         }
     }
 }
+
+/**
+ * A imagem do fundo (URL ou ficheiro), ou null quando é um desenho da app. Uma imagem da box só existe na TV onde
+ * foi escolhida; noutra TV da conta fica o fundo por defeito. No Reddit e na pasta, [rotating] é a de agora.
+ */
+fun wallpaperImage(context: Context, wallpaper: Wallpaper, rotating: Any?): Any? = when (wallpaper.type) {
+    Wallpaper.TYPE_URL -> wallpaper.value
+    Wallpaper.TYPE_FILE -> ImageImport.wallpaperFile(context, wallpaper.value).takeIf { it.exists() }
+    Wallpaper.TYPE_REDDIT, Wallpaper.TYPE_FOLDER -> rotating
+    else -> null
+}
+
+/**
+ * O fundo em miniatura (64×36), para o vidro das Definições: esticado por trás do painel, fica desfocado, como o
+ * vidro da GoatTV sobre o vídeo (o Android só tem desfocagem nativa a partir do 12, e a SHIELD está no 11).
+ * Sem foto, ou enquanto ela carrega, é o desenho da app em miniatura.
+ */
+@Composable
+fun rememberWallpaperBlur(wallpaper: Wallpaper, rotating: Any?): ImageBitmap {
+    val context = LocalContext.current
+    val image = wallpaperImage(context, wallpaper, rotating)
+    val builtin = if (wallpaper.type == Wallpaper.TYPE_BUILTIN) Wallpapers.byId(wallpaper.value) else Wallpapers.ALL.first()
+    val drawn = remember(builtin) {
+        ImageBitmap(BLUR_W, BLUR_H).also { bitmap ->
+            CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, androidx.compose.ui.graphics.Canvas(bitmap), Size(BLUR_W.toFloat(), BLUR_H.toFloat())) {
+                builtin.draw(this)
+            }
+        }
+    }
+    val photo by produceState<ImageBitmap?>(null, image) {
+        value = image?.let {
+            val request = ImageRequest.Builder(context).data(it).size(BLUR_W, BLUR_H).scale(Scale.FILL).allowHardware(false).build()
+            (context.imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap()?.asImageBitmap()
+        }
+    }
+    return photo ?: drawn
+}
+
+private const val BLUR_W = 64
+private const val BLUR_H = 36
 
 // ---- Desenhos ----
 

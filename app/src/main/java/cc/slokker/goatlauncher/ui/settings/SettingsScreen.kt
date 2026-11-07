@@ -53,6 +53,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.LaunchedEffect
@@ -103,6 +115,8 @@ import cc.slokker.goatlauncher.ui.common.glass
 import cc.slokker.goatlauncher.ui.common.onBackKey
 import cc.slokker.goatlauncher.ui.common.requestFocusSafely
 import cc.slokker.goatlauncher.ui.home.Wallpapers
+import cc.slokker.goatlauncher.ui.home.rememberWallpaperBlur
+import cc.slokker.goatlauncher.ui.common.frostedGlass
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
@@ -150,8 +164,15 @@ fun SettingsScreen(
         }
     }
 
+    // O vidro do painel deixa ver o fundo desfocado por trás, como nas Definições da GoatTV.
+    val account by vm.account.collectAsStateWithLifecycle()
+    val reddit by vm.redditImage.collectAsStateWithLifecycle()
+    val folderImage by vm.folderImage.collectAsStateWithLifecycle()
+    val blur = rememberWallpaperBlur(account.wallpaper, reddit?.url ?: folderImage)
+
     // Na Aparência, o ecrã divide-se: à esquerda a pré-visualização do ecrã inicial, à direita as definições.
     val split = embedded && page == Page.Appearance && !locked
+    val panelWidth by animateDpAsState(if (split) SplitPanelWidth else PanelWidth, tween(300, easing = FastOutSlowInEasing), label = "panel")
     Box(
         Modifier
             .fillMaxSize()
@@ -163,11 +184,15 @@ fun SettingsScreen(
                 true
             },
     ) {
-        if (split) {
+        AnimatedVisibility(
+            visible = split,
+            modifier = Modifier.align(Alignment.CenterStart),
+            enter = fadeIn(tween(300, delayMillis = 80)) + slideInHorizontally(tween(320)) { -it / 8 },
+            exit = fadeOut(tween(160)),
+        ) {
             AppearancePreview(
                 vm,
                 Modifier
-                    .align(Alignment.CenterStart)
                     .padding(end = SplitPanelWidth + 28.dp)
                     .fillMaxWidth(),
             )
@@ -177,92 +202,108 @@ fun SettingsScreen(
                 // À direita, como nas Definições da GoatTV: o ecrã inicial fica à vista à esquerda.
                 .align(if (embedded) Alignment.TopEnd else Alignment.CenterEnd)
                 .then(if (embedded) Modifier.padding(top = 16.dp) else Modifier)
-                .width(if (split) SplitPanelWidth else PanelWidth)
+                .width(panelWidth)
                 .fillMaxHeight()
-                .glass(SettingsShape, tint = Color(0xE0111522))
+                .frostedGlass(blur, SettingsShape)
                 .padding(horizontal = 20.dp, vertical = 18.dp),
         ) {
-            // Fora da página principal, de onde se veio ("‹ Definições").
-            if (page != Page.Main && !locked) {
-                Row(Modifier.padding(start = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(GoatIcons.ChevronLeft, contentDescription = null, tint = GoatColors.TextFaint, modifier = Modifier.size(16.dp))
-                    Text(pageTitle(parentPage(page, hasPin = device.pin != null) ?: Page.Main, s, buttonKey), style = MaterialTheme.typography.labelLarge, color = GoatColors.TextFaint)
-                }
-            }
-            Text(
-                pageTitle(page, s, buttonKey),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
-            )
-            Box(Modifier.weight(1f)) {
-            if (locked) {
-                ProtectedPage(vm, first)
-            } else when (page) {
-                Page.Main -> MainPage(vm, first, onPage = { page = it })
-                Page.Appearance -> AppearancePage(vm, first, onPage = { page = it })
-                Page.Wallpaper -> WallpaperPage(vm, first, onBoxImages = {
-                    dir = null
-                    page = Page.WallpaperFiles
-                })
-                Page.WallpaperFiles -> ImageBrowser(
-                    dir = dir,
-                    onDir = { dir = it },
-                    onPick = {
-                        vm.setWallpaperFromImage(it)
-                        page = Page.Wallpaper
-                    },
-                    onPickFolder = {
-                        vm.setWallpaperFolder(it)
-                        page = Page.Wallpaper
-                    },
-                    first = first,
-                )
-                Page.Apps -> AppsPage(vm, first, onPage = { page = it })
-                Page.HiddenApps -> HiddenAppsPage(vm, first)
-                Page.Ambient -> AmbientPage(vm, first)
-                Page.Startup -> StartupPage(vm, first, onPage = { page = it })
-                Page.General -> GeneralPage(vm, first, onPage = { page = it })
-                Page.Account -> AccountPage(vm, first, onPage = { page = it })
-                Page.YouTube -> YouTubePage(vm, first, onDone = { page = Page.Account })
-                Page.Autostart -> {
-                    val device by vm.device.collectAsStateWithLifecycle()
-                    AppPickerPage(vm, first, current = device.autostart, none = s.autostartNone) {
-                        vm.setAutostart(it)
-                        page = Page.Startup
+            // Entre páginas, como nas Definições da GoatTV: a nova entra do lado para onde se vai, com um fade.
+            AnimatedContent(
+                targetState = page,
+                modifier = Modifier.weight(1f),
+                transitionSpec = {
+                    val forward = depth(targetState) >= depth(initialState)
+                    (slideInHorizontally(tween(260)) { if (forward) it / 4 else -it / 4 } + fadeIn(tween(220))) togetherWith
+                        (slideOutHorizontally(tween(260)) { if (forward) -it / 4 else it / 4 } + fadeOut(tween(160)))
+                },
+                label = "settingsPage",
+            ) { shown ->
+                // A página que está a sair não pode ficar com o foco (senão ele salta ao terminar a animação).
+                val leaving = transition.targetState == EnterExitState.PostExit
+                Column(Modifier.fillMaxSize().focusProperties { canFocus = !leaving }) {
+                // Fora da página principal, de onde se veio ("‹ Definições").
+                if (shown != Page.Main && !locked) {
+                    Row(Modifier.padding(start = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(GoatIcons.ChevronLeft, contentDescription = null, tint = GoatColors.TextFaint, modifier = Modifier.size(16.dp))
+                        Text(pageTitle(parentPage(shown, hasPin = device.pin != null) ?: Page.Main, s, buttonKey), style = MaterialTheme.typography.labelLarge, color = GoatColors.TextFaint)
                     }
                 }
-                Page.Language -> LanguagePage(vm, first)
-                Page.Location -> LocationPage(vm, first)
-                Page.Buttons -> ButtonsPage(
-                    vm,
-                    first,
-                    onEdit = {
-                        buttonKey = it
-                        page = Page.ButtonApp
-                    },
-                    onAdd = { page = Page.ButtonCapture },
+                Text(
+                    pageTitle(shown, s, buttonKey),
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
                 )
-                Page.ButtonCapture -> ButtonCapturePage(
-                    first,
-                    onCaptured = {
-                        buttonKey = it
-                        page = Page.ButtonApp
-                    },
-                    onCancel = { page = Page.Buttons },
-                )
-                Page.ButtonApp -> {
-                    val device by vm.device.collectAsStateWithLifecycle()
-                    val (k, sc) = buttonKey ?: (0 to 0)
-                    AppPickerPage(vm, first, current = device.buttons.firstOrNull { it.keyCode == k && it.scanCode == sc }?.app, none = s.removeButton) {
-                        vm.setButton(k, sc, it)
-                        page = Page.Buttons
+                Box(Modifier.weight(1f)) {
+                if (locked) {
+                    ProtectedPage(vm, first)
+                } else when (shown) {
+                    Page.Main -> MainPage(vm, first, onPage = { page = it })
+                    Page.Appearance -> AppearancePage(vm, first, onPage = { page = it })
+                    Page.Wallpaper -> WallpaperPage(vm, first, onBoxImages = {
+                        dir = null
+                        page = Page.WallpaperFiles
+                    })
+                    Page.WallpaperFiles -> ImageBrowser(
+                        dir = dir,
+                        onDir = { dir = it },
+                        onPick = {
+                            vm.setWallpaperFromImage(it)
+                            page = Page.Wallpaper
+                        },
+                        onPickFolder = {
+                            vm.setWallpaperFolder(it)
+                            page = Page.Wallpaper
+                        },
+                        first = first,
+                    )
+                    Page.Apps -> AppsPage(vm, first, onPage = { page = it })
+                    Page.HiddenApps -> HiddenAppsPage(vm, first)
+                    Page.Ambient -> AmbientPage(vm, first)
+                    Page.Startup -> StartupPage(vm, first, onPage = { page = it })
+                    Page.General -> GeneralPage(vm, first, onPage = { page = it })
+                    Page.Account -> AccountPage(vm, first, onPage = { page = it })
+                    Page.YouTube -> YouTubePage(vm, first, onDone = { page = Page.Account })
+                    Page.Autostart -> {
+                        val device by vm.device.collectAsStateWithLifecycle()
+                        AppPickerPage(vm, first, current = device.autostart, none = s.autostartNone) {
+                            vm.setAutostart(it)
+                            page = Page.Startup
+                        }
                     }
+                    Page.Language -> LanguagePage(vm, first)
+                    Page.Location -> LocationPage(vm, first)
+                    Page.Buttons -> ButtonsPage(
+                        vm,
+                        first,
+                        onEdit = {
+                            buttonKey = it
+                            page = Page.ButtonApp
+                        },
+                        onAdd = { page = Page.ButtonCapture },
+                    )
+                    Page.ButtonCapture -> ButtonCapturePage(
+                        first,
+                        onCaptured = {
+                            buttonKey = it
+                            page = Page.ButtonApp
+                        },
+                        onCancel = { page = Page.Buttons },
+                    )
+                    Page.ButtonApp -> {
+                        val device by vm.device.collectAsStateWithLifecycle()
+                        val (k, sc) = buttonKey ?: (0 to 0)
+                        AppPickerPage(vm, first, current = device.buttons.firstOrNull { it.keyCode == k && it.scanCode == sc }?.app, none = s.removeButton) {
+                            vm.setButton(k, sc, it)
+                            page = Page.Buttons
+                        }
+                    }
+                    Page.Parental -> ParentalPage(vm, first, onPage = { page = it })
+                    Page.PinSetup -> PinSetupPage(vm, onDone = { page = Page.Parental })
+                    Page.LockedApps -> LockedAppsPage(vm, first)
+                    Page.Report -> ReportPage(vm, first)
                 }
-                Page.Parental -> ParentalPage(vm, first, onPage = { page = it })
-                Page.PinSetup -> PinSetupPage(vm, onDone = { page = Page.Parental })
-                Page.LockedApps -> LockedAppsPage(vm, first)
-                Page.Report -> ReportPage(vm, first)
-            }
+                }
+                }
             }
             Text(
                 "GoatLauncher ${BuildConfig.VERSION_NAME}",
@@ -273,6 +314,9 @@ fun SettingsScreen(
         }
     }
 }
+
+/** Quantos níveis abaixo da página principal está [page] (para a transição saber se vai ou volta). */
+private fun depth(page: Page): Int = generateSequence(page) { parentPage(it, hasPin = true) }.count() - 1
 
 /** O título de [page]. */
 private fun pageTitle(page: Page, s: Strings, buttonKey: Pair<Int, Int>?): String = when (page) {
@@ -302,7 +346,7 @@ private fun pageTitle(page: Page, s: Strings, buttonKey: Pair<Int, Int>?): Strin
 @Composable
 private fun Group(content: @Composable ColumnScope.() -> Unit) {
     Column(
-        Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.06f), GroupShape).padding(4.dp),
+        Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.05f), GroupShape).padding(4.dp),
         content = content,
     )
 }
@@ -321,7 +365,7 @@ private fun IconTile(icon: ImageVector, accent: Boolean = false) {
 private val SettingsShape = RoundedCornerShape(26.dp)
 private val GroupShape = RoundedCornerShape(16.dp)
 private val TileShape = RoundedCornerShape(9.dp)
-private val PanelWidth = 560.dp
+private val PanelWidth = 520.dp
 
 /** O estado do último relatório, ou o que o botão faz. */
 private fun reportStatus(state: ReportState, s: Strings): String = when (state) {

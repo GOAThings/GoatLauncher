@@ -994,9 +994,9 @@ private fun TopBar(
     val s = LocalStrings.current
     val entries = listOfNotNull(s.tabHome to onHome, (s.tabApps to onApps).takeIf { showApps }, s.settings to onSettings)
     val tabs = remember(entries.size) { List(entries.size) { FocusRequester() } }
-    // Só se troca de separador ao andar com ← → nos separadores. Quando o sistema põe lá o foco sozinho
-    // (ex.: o elemento com foco desapareceu), não se abre nada.
-    var arrowed by remember { mutableStateOf(false) }
+    // Só se troca de separador ao andar com ← → nos separadores (acabado de carregar). Quando o sistema põe lá o
+    // foco sozinho (ex.: o elemento com foco desapareceu ao mudar de página nas Definições), não se abre nada.
+    var arrowedAt by remember { mutableLongStateOf(0L) }
     Box(Modifier.fillMaxWidth().height(48.dp)) {
         TopGreeting(showGreeting, weather, Modifier.align(Alignment.CenterStart))
         // Cápsula translúcida, sem contorno; o separador aberto é uma cápsula mais clara lá dentro.
@@ -1006,7 +1006,7 @@ private fun TopBar(
                 .align(Alignment.Center)
                 .onFocusChanged { onFocusChanged(it.hasFocus) }
                 .onPreviewKeyEvent { e ->
-                    if (e.type == KeyEventType.KeyDown && (e.key == Key.DirectionLeft || e.key == Key.DirectionRight)) arrowed = true
+                    if (e.type == KeyEventType.KeyDown && (e.key == Key.DirectionLeft || e.key == Key.DirectionRight)) arrowedAt = SystemClock.uptimeMillis()
                     false
                 }
                 .focusRestorer(tabs[selected.coerceIn(tabs.indices)])
@@ -1021,8 +1021,8 @@ private fun TopBar(
                     modifier = Modifier
                         .focusRequester(tabs[i])
                         .onFocusChanged {
-                            if (it.isFocused && arrowed && i != selected) action()
-                            if (it.isFocused) arrowed = false
+                            if (it.isFocused && SystemClock.uptimeMillis() - arrowedAt < TAB_ARROW_MS && i != selected) action()
+                            if (it.isFocused) arrowedAt = 0L
                         },
                     shape = ClickableSurfaceDefaults.shape(CircleShape),
                     colors = ClickableSurfaceDefaults.colors(
@@ -1357,6 +1357,9 @@ private fun AppMenu(
 }
 
 private const val MENU_MS = 120
+
+/** Quanto tempo depois de ← → o foco a chegar a um separador ainda conta como ter andado até ele. */
+private const val TAB_ARROW_MS = 400L
 
 private const val AMBIENT_FADE_MS = 1500
 
