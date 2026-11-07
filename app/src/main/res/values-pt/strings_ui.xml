@@ -100,6 +100,7 @@
     <string name="up_next_title">A seguir</string>
     <string name="layout_apple_hint">Apps por baixo da doca dos favoritos e cartões grandes, como no tvOS</string>
     <string name="general">Geral</string>
+    <string name="home_screen">Ecrã inicial</string>
     <string name="focused_card">Cartão com foco</string>
     <string name="focus_effect">Efeito</string>
     <string name="effect_border">Contorno</string>

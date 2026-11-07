@@ -100,6 +100,7 @@
     <string name="up_next_title">Sırada</string>
     <string name="layout_apple_hint">Favoriler dock\'unun altında uygulamalar ve büyük kartlar, tvOS gibi</string>
     <string name="general">Genel</string>
+    <string name="home_screen">Ana ekran</string>
     <string name="focused_card">Odaktaki kart</string>
     <string name="focus_effect">Efekt</string>
     <string name="effect_border">Çerçeve</string>

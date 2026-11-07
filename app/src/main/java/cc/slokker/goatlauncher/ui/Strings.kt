@@ -128,6 +128,7 @@ class Strings(context: Context) {
     val upNextTitle get() = s(R.string.up_next_title)
     val layoutAppleHint get() = s(R.string.layout_apple_hint)
     val general get() = s(R.string.general)
+    val homeScreen get() = s(R.string.home_screen)
     val focusedCard get() = s(R.string.focused_card)
     val focusEffect get() = s(R.string.focus_effect)
     val effectBorder get() = s(R.string.effect_border)

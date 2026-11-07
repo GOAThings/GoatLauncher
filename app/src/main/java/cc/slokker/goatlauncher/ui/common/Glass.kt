@@ -94,7 +94,7 @@ fun GlassButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
     }
 }
 
-/** Linha de lista (definições, menus). Com foco fica branca com texto escuro. */
+/** Linha de lista (definições, menus). Com foco, como nas Definições da GoatTV: mais clara, com um contorno branco. */
 @Composable
 fun GlassRow(
     onClick: () -> Unit,
@@ -108,7 +108,17 @@ fun GlassRow(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = ClickableSurfaceDefaults.shape(GoatShapes.Control),
-        colors = focusColors(container = Color.Transparent),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = Color.Transparent,
+            contentColor = GoatColors.Text,
+            focusedContainerColor = Color.White.copy(alpha = 0.14f),
+            focusedContentColor = GoatColors.Text,
+            pressedContainerColor = Color.White.copy(alpha = 0.22f),
+            pressedContentColor = GoatColors.Text,
+        ),
+        border = ClickableSurfaceDefaults.border(
+            focusedBorder = Border(BorderStroke(2.dp, Color.White), inset = 0.dp, shape = GoatShapes.Control),
+        ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.02f),
     ) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {

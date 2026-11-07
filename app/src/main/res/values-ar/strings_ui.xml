@@ -100,6 +100,7 @@
     <string name="up_next_title">التالي</string>
     <string name="layout_apple_hint">التطبيقات أسفل شريط المفضلة وبطاقات كبيرة، كما في tvOS</string>
     <string name="general">عام</string>
+    <string name="home_screen">الشاشة الرئيسية</string>
     <string name="focused_card">البطاقة المحددة</string>
     <string name="focus_effect">التأثير</string>
     <string name="effect_border">إطار</string>

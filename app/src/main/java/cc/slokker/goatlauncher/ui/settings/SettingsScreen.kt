@@ -53,6 +53,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.DisposableEffect
@@ -105,7 +107,10 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
 
-private enum class Page { Main, Appearance, Wallpaper, WallpaperFiles, HiddenApps, YouTube, Autostart, Buttons, ButtonCapture, ButtonApp, Language, Location, Parental, PinSetup, LockedApps, Report }
+private enum class Page {
+    Main, Appearance, Wallpaper, WallpaperFiles, Apps, HiddenApps, Ambient, Startup, Autostart, Buttons, ButtonCapture, ButtonApp,
+    Parental, PinSetup, LockedApps, General, Language, Location, Account, YouTube, Report,
+}
 
 /** Definições do launcher: um painel de vidro à direita, por cima do fundo. Voltar sobe um nível. */
 @Composable
@@ -169,46 +174,27 @@ fun SettingsScreen(
         }
         Column(
             Modifier
-                .align(
-                    when {
-                        split -> Alignment.TopEnd
-                        embedded -> Alignment.TopCenter
-                        else -> Alignment.CenterEnd
-                    },
-                )
+                // À direita, como nas Definições da GoatTV: o ecrã inicial fica à vista à esquerda.
+                .align(if (embedded) Alignment.TopEnd else Alignment.CenterEnd)
                 .then(if (embedded) Modifier.padding(top = 16.dp) else Modifier)
-                .width(
-                    when {
-                        split -> SplitPanelWidth
-                        embedded -> 640.dp
-                        else -> 520.dp
-                    },
-                )
+                .width(if (split) SplitPanelWidth else PanelWidth)
                 .fillMaxHeight()
-                .glass(GoatShapes.Panel, tint = Color(0xD9111522))
+                .glass(SettingsShape, tint = Color(0xE0111522))
                 .padding(horizontal = 20.dp, vertical = 18.dp),
         ) {
+            // Fora da página principal, de onde se veio ("‹ Definições").
+            if (page != Page.Main && !locked) {
+                Row(Modifier.padding(start = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(GoatIcons.ChevronLeft, contentDescription = null, tint = GoatColors.TextFaint, modifier = Modifier.size(16.dp))
+                    Text(pageTitle(parentPage(page, hasPin = device.pin != null) ?: Page.Main, s, buttonKey), style = MaterialTheme.typography.labelLarge, color = GoatColors.TextFaint)
+                }
+            }
             Text(
-                when (page) {
-                    Page.Main -> s.settings
-                    Page.Appearance -> s.appearance
-                    Page.Wallpaper -> s.wallpaper
-                    Page.WallpaperFiles -> s.boxImages
-                    Page.HiddenApps -> s.hiddenApps
-                    Page.YouTube -> s.youtube
-                    Page.Autostart -> s.autostart
-                    Page.Buttons -> s.buttons
-                    Page.Language -> s.language
-                    Page.Location -> s.location
-                    Page.ButtonCapture -> s.addButton
-                    Page.ButtonApp -> buttonKey?.let { (k, sc) -> s.buttonOpens(buttonName(k, sc, s)) } ?: s.buttons
-                    Page.Parental, Page.PinSetup -> s.parental
-                    Page.LockedApps -> s.lockedApps
-                    Page.Report -> s.sendReport
-                },
-                style = MaterialTheme.typography.headlineSmall,
+                pageTitle(page, s, buttonKey),
+                style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
             )
+            Box(Modifier.weight(1f)) {
             if (locked) {
                 ProtectedPage(vm, first)
             } else when (page) {
@@ -231,13 +217,18 @@ fun SettingsScreen(
                     },
                     first = first,
                 )
+                Page.Apps -> AppsPage(vm, first, onPage = { page = it })
                 Page.HiddenApps -> HiddenAppsPage(vm, first)
-                Page.YouTube -> YouTubePage(vm, first, onDone = { page = Page.Main })
+                Page.Ambient -> AmbientPage(vm, first)
+                Page.Startup -> StartupPage(vm, first, onPage = { page = it })
+                Page.General -> GeneralPage(vm, first, onPage = { page = it })
+                Page.Account -> AccountPage(vm, first, onPage = { page = it })
+                Page.YouTube -> YouTubePage(vm, first, onDone = { page = Page.Account })
                 Page.Autostart -> {
                     val device by vm.device.collectAsStateWithLifecycle()
                     AppPickerPage(vm, first, current = device.autostart, none = s.autostartNone) {
                         vm.setAutostart(it)
-                        page = Page.Main
+                        page = Page.Startup
                     }
                 }
                 Page.Language -> LanguagePage(vm, first)
@@ -272,9 +263,65 @@ fun SettingsScreen(
                 Page.LockedApps -> LockedAppsPage(vm, first)
                 Page.Report -> ReportPage(vm, first)
             }
+            }
+            Text(
+                "GoatLauncher ${BuildConfig.VERSION_NAME}",
+                style = MaterialTheme.typography.bodySmall,
+                color = GoatColors.TextFaint,
+                modifier = Modifier.padding(start = 12.dp, top = 10.dp),
+            )
         }
     }
 }
+
+/** O título de [page]. */
+private fun pageTitle(page: Page, s: Strings, buttonKey: Pair<Int, Int>?): String = when (page) {
+    Page.Main -> s.settings
+    Page.Appearance -> s.appearance
+    Page.Wallpaper -> s.wallpaper
+    Page.WallpaperFiles -> s.boxImages
+    Page.Apps -> s.apps
+    Page.HiddenApps -> s.hiddenApps
+    Page.Ambient -> s.idleMode
+    Page.Startup -> s.startup
+    Page.General -> s.general
+    Page.Account -> s.account
+    Page.YouTube -> s.youtube
+    Page.Autostart -> s.autostart
+    Page.Buttons -> s.buttons
+    Page.Language -> s.language
+    Page.Location -> s.location
+    Page.ButtonCapture -> s.addButton
+    Page.ButtonApp -> buttonKey?.let { (k, sc) -> s.buttonOpens(buttonName(k, sc, s)) } ?: s.buttons
+    Page.Parental, Page.PinSetup -> s.parental
+    Page.LockedApps -> s.lockedApps
+    Page.Report -> s.sendReport
+}
+
+/** Um grupo de linhas num cartão, como nas Definições da GoatTV. */
+@Composable
+private fun Group(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.06f), GroupShape).padding(4.dp),
+        content = content,
+    )
+}
+
+/** O ícone de uma secção, num quadrado arredondado; [accent] no gradiente da marca (a Aparência). */
+@Composable
+private fun IconTile(icon: ImageVector, accent: Boolean = false) {
+    Box(
+        Modifier.size(32.dp).background(if (accent) GoatColors.Accent else SolidColor(Color.White.copy(alpha = 0.12f)), TileShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+    }
+}
+
+private val SettingsShape = RoundedCornerShape(26.dp)
+private val GroupShape = RoundedCornerShape(16.dp)
+private val TileShape = RoundedCornerShape(9.dp)
+private val PanelWidth = 560.dp
 
 /** O estado do último relatório, ou o que o botão faz. */
 private fun reportStatus(state: ReportState, s: Strings): String = when (state) {
@@ -309,8 +356,12 @@ private fun ReportPage(vm: LauncherViewModel, first: FocusRequester) {
 /** A página de onde se chega a [page] (para onde Voltar leva); null na página principal. */
 private fun parentPage(page: Page, hasPin: Boolean): Page? = when (page) {
     Page.Main -> null
-    Page.Appearance, Page.HiddenApps, Page.YouTube, Page.Autostart, Page.Buttons, Page.Parental, Page.Report -> Page.Main
-    Page.Language, Page.Location, Page.Wallpaper -> Page.Appearance
+    Page.Appearance, Page.Wallpaper, Page.Apps, Page.Ambient, Page.Startup, Page.Buttons, Page.Parental, Page.General, Page.Account,
+    Page.Report -> Page.Main
+    Page.HiddenApps -> Page.Apps
+    Page.Autostart -> Page.Startup
+    Page.Language, Page.Location -> Page.General
+    Page.YouTube -> Page.Account
     Page.WallpaperFiles -> Page.Wallpaper
     Page.ButtonCapture, Page.ButtonApp -> Page.Buttons
     Page.LockedApps -> Page.Parental
@@ -325,192 +376,134 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
     val account by vm.account.collectAsStateWithLifecycle()
     val device by vm.device.collectAsStateWithLifecycle()
     val session by vm.session.collectAsStateWithLifecycle()
-    var confirmUnlink by remember { mutableStateOf(false) }
+    val apps by vm.allApps.collectAsStateWithLifecycle()
 
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+    // Cada secção numa página sua: aqui só a lista delas, cada uma com o que está escolhido.
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         item {
-            GlassRow(
-                title = s.appearance,
-                subtitle = layoutName(account, s),
-                onClick = { onPage(Page.Appearance) },
-                trailing = { Chevron() },
-                modifier = Modifier.focusRequester(first),
-            )
-        }
-
-        item { SectionLabel(s.apps) }
-        item {
-            GlassRow(
-                title = s.hiddenApps,
-                subtitle = s.hiddenCount(device.hidden.size),
-                onClick = { onPage(Page.HiddenApps) },
-                trailing = { Chevron() },
-            )
-        }
-        item {
-            // Liga-se nas definições de Acessibilidade do Android (uma app não o pode ligar sozinha).
-            val context = LocalContext.current
-            var guard by remember { mutableStateOf(HomeGuardService.isEnabled(context)) }
-            LifecycleResumeEffect(Unit) {
-                guard = HomeGuardService.isEnabled(context)
-                onPauseOrDispose { }
-            }
-            val stuck by vm.guardStuck.collectAsStateWithLifecycle()
-            GlassRow(
-                title = s.homeGuard,
-                subtitle = when {
-                    guard && stuck -> s.guardStuck
-                    guard -> s.homeGuardOn
-                    else -> s.homeGuardOff
-                },
-                onClick = { if (guard && stuck) vm.repairGuard() else SystemIntents.start(context, SystemIntents.accessibilitySettings()) },
-                trailing = { Toggle(guard && !stuck) },
-            )
-        }
-
-        item { SectionLabel(s.startup) }
-        item {
-            val apps by vm.allApps.collectAsStateWithLifecycle()
-            GlassRow(
-                title = s.autostart,
-                subtitle = device.autostart?.let { pkg -> apps?.firstOrNull { it.packageName == pkg }?.label ?: pkg } ?: s.autostartNone,
-                onClick = { onPage(Page.Autostart) },
-                trailing = { Chevron() },
-            )
-        }
-        if (device.autostart != null) {
-            item {
+            Group {
                 GlassRow(
-                    title = s.autostartWake,
-                    subtitle = s.autostartWakeHint,
-                    onClick = { vm.setAutostartWake(!device.autostartWake) },
-                    trailing = { Toggle(device.autostartWake) },
+                    title = s.appearance,
+                    subtitle = layoutName(account, s),
+                    leading = { IconTile(GoatIcons.Palette, accent = true) },
+                    onClick = { onPage(Page.Appearance) },
+                    trailing = { Chevron() },
+                    modifier = Modifier.focusRequester(first),
                 )
             }
-            item {
-                val next = AUTOSTART_DELAYS.getOrElse(AUTOSTART_DELAYS.indexOf(device.autostartDelay) + 1) { AUTOSTART_DELAYS.first() }
+        }
+        item { SectionLabel(s.homeScreen) }
+        item {
+            Group {
                 GlassRow(
-                    title = s.autostartDelay,
-                    subtitle = s.seconds(device.autostartDelay),
-                    onClick = { vm.setAutostartDelay(next) },
+                    title = s.wallpaper,
+                    subtitle = wallpaperName(account.wallpaper, s),
+                    leading = { IconTile(GoatIcons.Image) },
+                    onClick = { onPage(Page.Wallpaper) },
+                    trailing = { Chevron() },
+                )
+                GlassRow(
+                    title = s.apps,
+                    subtitle = s.hiddenCount(device.hidden.size),
+                    leading = { IconTile(GoatIcons.Apps) },
+                    onClick = { onPage(Page.Apps) },
+                    trailing = { Chevron() },
+                )
+                GlassRow(
+                    title = s.idleMode,
+                    subtitle = if (account.idleMinutes > 0) s.idleAfter(account.idleMinutes) else s.idleOff,
+                    leading = { IconTile(GoatIcons.Moon) },
+                    onClick = { onPage(Page.Ambient) },
                     trailing = { Chevron() },
                 )
             }
         }
-
-        item { SectionLabel(s.remote) }
+        item { SectionLabel("TV") }
         item {
-            val context = LocalContext.current
-            val n = device.buttons.size
-            GlassRow(
-                title = s.buttons,
-                // Sem o serviço de acessibilidade os botões não chegam ao launcher: diz-se logo.
-                subtitle = when {
-                    n == 0 -> s.buttonsNone
-                    !HomeGuardService.isEnabled(context) -> "${s.buttonsCount(n)} · ${s.needsGuard}"
-                    else -> s.buttonsCount(n)
-                },
-                onClick = { onPage(Page.Buttons) },
-                trailing = { Chevron() },
-            )
-        }
-
-        item { SectionLabel(s.parental) }
-        item {
-            GlassRow(
-                title = s.parental,
-                subtitle = if (device.pin == null) s.parentalOff else s.parentalOn(device.locked.size),
-                onClick = { if (device.pin == null) onPage(Page.PinSetup) else vm.withParentalUnlocked { onPage(Page.Parental) } },
-                trailing = { Chevron() },
-            )
-        }
-
-        item { SectionLabel(s.account) }
-        val current = session
-        if (current == null) {
-            item { GlassRow(title = s.linkAccount, subtitle = s.linkAccountHint, onClick = vm::openActivation, trailing = { Chevron() }) }
-        } else {
-            item { GlassRow(title = s.linkedAs(current.email), subtitle = current.deviceName, onClick = vm::syncNow) }
-            item { GlassRow(title = s.syncNow, onClick = vm::syncNow) }
-            item {
+            Group {
                 GlassRow(
-                    title = s.unlink,
-                    subtitle = if (confirmUnlink) s.pressAgainToConfirm else s.unlinkHint,
-                    onClick = {
-                        if (confirmUnlink) {
-                            confirmUnlink = false
-                            vm.unlink()
-                        } else {
-                            confirmUnlink = true
-                        }
+                    title = s.startup,
+                    subtitle = device.autostart?.let { pkg -> apps?.firstOrNull { it.packageName == pkg }?.label ?: pkg } ?: s.autostartNone,
+                    leading = { IconTile(GoatIcons.Power) },
+                    onClick = { onPage(Page.Startup) },
+                    trailing = { Chevron() },
+                )
+                val n = device.buttons.size
+                GlassRow(
+                    title = s.buttons,
+                    // Sem o serviço de acessibilidade os botões não chegam ao launcher: diz-se logo.
+                    subtitle = when {
+                        n == 0 -> s.buttonsNone
+                        !HomeGuardService.isEnabled(context) -> "${s.buttonsCount(n)} · ${s.needsGuard}"
+                        else -> s.buttonsCount(n)
                     },
+                    leading = { IconTile(GoatIcons.Remote) },
+                    onClick = { onPage(Page.Buttons) },
+                    trailing = { Chevron() },
+                )
+                GlassRow(
+                    title = s.parental,
+                    subtitle = if (device.pin == null) s.parentalOff else s.parentalOn(device.locked.size),
+                    leading = { IconTile(GoatIcons.Lock) },
+                    onClick = { if (device.pin == null) onPage(Page.PinSetup) else vm.withParentalUnlocked { onPage(Page.Parental) } },
+                    trailing = { Chevron() },
                 )
             }
         }
-
-        item { SectionLabel(s.youtube) }
+        item { SectionLabel(s.general) }
         item {
-            val linked by vm.youtubeLinked.collectAsStateWithLifecycle()
-            var confirm by remember { mutableStateOf(false) }
-            if (linked) {
-                // OK passa à seguinte: os dois → só a meio → só recomendações → os dois.
-                val (label, next) = when (account.youtubeFeed) {
-                    AccountSettings.YT_CONTINUE -> s.ytContinue to AccountSettings.YT_RECOMMENDED
-                    AccountSettings.YT_RECOMMENDED -> s.ytRecommended to AccountSettings.YT_BOTH
-                    else -> s.ytBoth to AccountSettings.YT_CONTINUE
-                }
-                GlassRow(title = s.youtubeFeed, subtitle = label, onClick = { vm.setYoutubeFeed(next) }, trailing = { Chevron() })
+            Group {
+                val code = Strings.normalize(account.language)
                 GlassRow(
-                    title = s.youtubeUnlink,
-                    subtitle = if (confirm) s.pressAgainToConfirm else s.youtubeOnHint,
-                    onClick = {
-                        if (confirm) vm.unlinkYouTube()
-                        confirm = !confirm
-                    },
+                    title = s.general,
+                    subtitle = Strings.LANGUAGES.firstOrNull { it.first == code }?.second ?: s.languageAuto,
+                    leading = { IconTile(GoatIcons.Tune) },
+                    onClick = { onPage(Page.General) },
+                    trailing = { Chevron() },
                 )
-            } else {
-                GlassRow(title = s.youtubeLink, subtitle = s.youtubeLinkHint, onClick = { onPage(Page.YouTube) }, trailing = { Chevron() })
+                GlassRow(
+                    title = s.account,
+                    subtitle = session?.let { s.linkedAs(it.email) } ?: s.linkAccountHint,
+                    leading = { IconTile(GoatIcons.Person) },
+                    onClick = { onPage(Page.Account) },
+                    trailing = { Chevron() },
+                )
             }
         }
-
         item { SectionLabel(s.updates) }
         item {
-            val update by vm.update.collectAsStateWithLifecycle()
-            val (title, subtitle) = when (val u = update) {
-                is UpdateState.Available -> s.updateReady(u.release.version) to u.release.notes.takeIf { it.isNotBlank() }
-                is UpdateState.Downloading -> s.downloading((u.progress * 100).toInt()) to null
-                is UpdateState.Installing -> s.installing to null
-                UpdateState.Checking -> s.checking to null
-                UpdateState.UpToDate -> s.checkUpdates to s.upToDate(vm.appVersion)
-                is UpdateState.Failed -> s.checkUpdates to s.updateFailed(u.message)
-                UpdateState.Idle -> s.checkUpdates to s.version(vm.appVersion)
+            Group {
+                val update by vm.update.collectAsStateWithLifecycle()
+                val (title, subtitle) = when (val u = update) {
+                    is UpdateState.Available -> s.updateReady(u.release.version) to u.release.notes.takeIf { it.isNotBlank() }
+                    is UpdateState.Downloading -> s.downloading((u.progress * 100).toInt()) to null
+                    is UpdateState.Installing -> s.installing to null
+                    UpdateState.Checking -> s.checking to null
+                    UpdateState.UpToDate -> s.checkUpdates to s.upToDate(vm.appVersion)
+                    is UpdateState.Failed -> s.checkUpdates to s.updateFailed(u.message)
+                    UpdateState.Idle -> s.checkUpdates to s.version(vm.appVersion)
+                }
+                GlassRow(
+                    title = title,
+                    subtitle = subtitle,
+                    leading = { IconTile(GoatIcons.Download) },
+                    onClick = { if (update is UpdateState.Available) vm.installUpdate() else vm.checkForUpdate(manual = true) },
+                )
+                val report by vm.report.collectAsStateWithLifecycle()
+                GlassRow(
+                    title = s.sendReport,
+                    subtitle = reportStatus(report, s),
+                    leading = { IconTile(GoatIcons.ArrowUp) },
+                    onClick = { onPage(Page.Report) },
+                    trailing = { Chevron() },
+                )
+                GlassRow(
+                    title = s.androidSettings,
+                    leading = { IconTile(GoatIcons.Settings) },
+                    onClick = { if (!SystemIntents.start(context, SystemIntents.androidSettings())) vm.toast(s.cantOpen) },
+                    trailing = { Chevron() },
+                )
             }
-            GlassRow(
-                title = title,
-                subtitle = subtitle,
-                onClick = { if (update is UpdateState.Available) vm.installUpdate() else vm.checkForUpdate(manual = true) },
-            )
-        }
-        item {
-            val report by vm.report.collectAsStateWithLifecycle()
-            GlassRow(title = s.sendReport, subtitle = reportStatus(report, s), onClick = { onPage(Page.Report) }, trailing = { Chevron() })
-        }
-
-        item { SectionLabel(s.android) }
-        item {
-            GlassRow(
-                title = s.androidSettings,
-                onClick = { if (!SystemIntents.start(context, SystemIntents.androidSettings())) vm.toast(s.cantOpen) },
-                trailing = { Chevron() },
-            )
-        }
-        item {
-            Text(
-                s.version(BuildConfig.VERSION_NAME),
-                style = MaterialTheme.typography.bodySmall,
-                color = GoatColors.TextFaint,
-                modifier = Modifier.padding(start = 12.dp, top = 16.dp),
-            )
         }
     }
 }
@@ -518,7 +511,6 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
 /** Aparência: a disposição do ecrã inicial (Android TV ou Apple TV), o estilo do "Continuar a ver" e o resto. */
 @Composable
 private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
-    val sun by vm.sunTimes.collectAsStateWithLifecycle()
     val s = LocalStrings.current
     val account by vm.account.collectAsStateWithLifecycle()
     val android = account.layout == AccountSettings.LAYOUT_ANDROID
@@ -618,51 +610,7 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
             item { FocusColorRow(account.focusColor, onPick = vm::setFocusColor) }
         }
 
-        item { SectionLabel(s.general) }
-        item {
-            val code = Strings.normalize(account.language)
-            GlassRow(
-                title = s.language,
-                subtitle = Strings.LANGUAGES.firstOrNull { it.first == code }?.second ?: s.languageAuto,
-                onClick = { onPage(Page.Language) },
-                trailing = { Chevron() },
-            )
-        }
-        item {
-            GlassRow(
-                title = s.wallpaper,
-                subtitle = wallpaperName(account.wallpaper, s),
-                onClick = { onPage(Page.Wallpaper) },
-                trailing = { Chevron() },
-            )
-        }
-        item {
-            val device by vm.device.collectAsStateWithLifecycle()
-            GlassRow(
-                title = s.location,
-                subtitle = device.location?.name ?: vm.ipCity()?.let(s::locationAutoCity) ?: s.locationAuto,
-                onClick = { onPage(Page.Location) },
-                trailing = { Chevron() },
-            )
-        }
-        item {
-            GlassRow(
-                title = s.nightAuto,
-                // Com a localização, do pôr ao nascer do sol de hoje; sem ela, a hora fixa.
-                subtitle = sun?.let { (rise, set) -> s.nightAutoSun(clockText(set, account.clock24h), clockText(rise, account.clock24h)) }
-                    ?: s.nightAutoHint,
-                onClick = { vm.setNightAuto(!account.nightAuto) },
-                trailing = { Toggle(account.nightAuto) },
-            )
-        }
-        item {
-            GlassRow(
-                title = s.navSounds,
-                subtitle = s.navSoundsHint,
-                onClick = { vm.setNavSounds(!account.navSounds) },
-                trailing = { Toggle(account.navSounds) },
-            )
-        }
+        item { SectionLabel(s.homeScreen) }
         item {
             GlassRow(title = s.clock24h, onClick = { vm.setClock24h(!account.clock24h) }, trailing = { Toggle(account.clock24h) })
         }
@@ -676,10 +624,98 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
             GlassRow(title = s.showAppName, onClick = { vm.setShowAppName(!account.showAppName) }, trailing = { Toggle(account.showAppName) })
         }
         item { IconBackgroundRow(account.iconBackground, onPick = vm::setIconBackground) }
+    }
+}
+
+/** Apps: as escondidas e "Manter como ecrã inicial". */
+@Composable
+private fun AppsPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
+    val s = LocalStrings.current
+    val device by vm.device.collectAsStateWithLifecycle()
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        item {
+            GlassRow(
+                title = s.hiddenApps,
+                subtitle = s.hiddenCount(device.hidden.size),
+                onClick = { onPage(Page.HiddenApps) },
+                trailing = { Chevron() },
+                modifier = Modifier.focusRequester(first),
+            )
+        }
+        item {
+            // Liga-se nas definições de Acessibilidade do Android (uma app não o pode ligar sozinha).
+            val context = LocalContext.current
+            var guard by remember { mutableStateOf(HomeGuardService.isEnabled(context)) }
+            LifecycleResumeEffect(Unit) {
+                guard = HomeGuardService.isEnabled(context)
+                onPauseOrDispose { }
+            }
+            val stuck by vm.guardStuck.collectAsStateWithLifecycle()
+            GlassRow(
+                title = s.homeGuard,
+                subtitle = when {
+                    guard && stuck -> s.guardStuck
+                    guard -> s.homeGuardOn
+                    else -> s.homeGuardOff
+                },
+                onClick = { if (guard && stuck) vm.repairGuard() else SystemIntents.start(context, SystemIntents.accessibilitySettings()) },
+                trailing = { Toggle(guard && !stuck) },
+            )
+        }
+
+    }
+}
+
+/** Ao ligar: a app que abre quando a TV liga (e acorda) e quanto tempo depois. */
+@Composable
+private fun StartupPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
+    val s = LocalStrings.current
+    val device by vm.device.collectAsStateWithLifecycle()
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        item {
+            val apps by vm.allApps.collectAsStateWithLifecycle()
+            GlassRow(
+                modifier = Modifier.focusRequester(first),
+                title = s.autostart,
+                subtitle = device.autostart?.let { pkg -> apps?.firstOrNull { it.packageName == pkg }?.label ?: pkg } ?: s.autostartNone,
+                onClick = { onPage(Page.Autostart) },
+                trailing = { Chevron() },
+            )
+        }
+        if (device.autostart != null) {
+            item {
+                GlassRow(
+                    title = s.autostartWake,
+                    subtitle = s.autostartWakeHint,
+                    onClick = { vm.setAutostartWake(!device.autostartWake) },
+                    trailing = { Toggle(device.autostartWake) },
+                )
+            }
+            item {
+                val next = AUTOSTART_DELAYS.getOrElse(AUTOSTART_DELAYS.indexOf(device.autostartDelay) + 1) { AUTOSTART_DELAYS.first() }
+                GlassRow(
+                    title = s.autostartDelay,
+                    subtitle = s.seconds(device.autostartDelay),
+                    onClick = { vm.setAutostartDelay(next) },
+                    trailing = { Chevron() },
+                )
+            }
+        }
+
+    }
+}
+
+/** Modo ambiente: quando entra, o que mostra, o protetor de ecrã e não deixar a TV adormecer. */
+@Composable
+private fun AmbientPage(vm: LauncherViewModel, first: FocusRequester) {
+    val s = LocalStrings.current
+    val account by vm.account.collectAsStateWithLifecycle()
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
         item {
             // OK passa ao tempo seguinte: desligado → 1 → 2 → 5 → 10 → 30 min → desligado.
             val next = IDLE_MINUTES.getOrElse(IDLE_MINUTES.indexOf(account.idleMinutes) + 1) { IDLE_MINUTES.first() }
             GlassRow(
+                modifier = Modifier.focusRequester(first),
                 title = s.idleMode,
                 subtitle = if (account.idleMinutes > 0) s.idleAfter(account.idleMinutes) else s.idleOff,
                 onClick = { vm.setIdleMinutes(next) },
@@ -715,6 +751,122 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
                 )
             }
         }
+    }
+}
+
+/** Geral: a língua, onde fica a TV (o tempo e o dia/noite), a noite automática e os sons. */
+@Composable
+private fun GeneralPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
+    val sun by vm.sunTimes.collectAsStateWithLifecycle()
+    val s = LocalStrings.current
+    val account by vm.account.collectAsStateWithLifecycle()
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        item {
+            val code = Strings.normalize(account.language)
+            GlassRow(
+                title = s.language,
+                subtitle = Strings.LANGUAGES.firstOrNull { it.first == code }?.second ?: s.languageAuto,
+                onClick = { onPage(Page.Language) },
+                trailing = { Chevron() },
+                modifier = Modifier.focusRequester(first),
+            )
+        }
+        item {
+            val device by vm.device.collectAsStateWithLifecycle()
+            GlassRow(
+                title = s.location,
+                subtitle = device.location?.name ?: vm.ipCity()?.let(s::locationAutoCity) ?: s.locationAuto,
+                onClick = { onPage(Page.Location) },
+                trailing = { Chevron() },
+            )
+        }
+        item {
+            GlassRow(
+                title = s.nightAuto,
+                // Com a localização, do pôr ao nascer do sol de hoje; sem ela, a hora fixa.
+                subtitle = sun?.let { (rise, set) -> s.nightAutoSun(clockText(set, account.clock24h), clockText(rise, account.clock24h)) }
+                    ?: s.nightAutoHint,
+                onClick = { vm.setNightAuto(!account.nightAuto) },
+                trailing = { Toggle(account.nightAuto) },
+            )
+        }
+        item {
+            GlassRow(
+                title = s.navSounds,
+                subtitle = s.navSoundsHint,
+                onClick = { vm.setNavSounds(!account.navSounds) },
+                trailing = { Toggle(account.navSounds) },
+            )
+        }
+    }
+}
+
+/** A conta GOAT e o YouTube. */
+@Composable
+private fun AccountPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
+    val s = LocalStrings.current
+    val account by vm.account.collectAsStateWithLifecycle()
+    val session by vm.session.collectAsStateWithLifecycle()
+    var confirmUnlink by remember { mutableStateOf(false) }
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        item { SectionLabel(s.account) }
+        val current = session
+        if (current == null) {
+            item {
+                GlassRow(
+                    title = s.linkAccount,
+                    subtitle = s.linkAccountHint,
+                    onClick = vm::openActivation,
+                    trailing = { Chevron() },
+                    modifier = Modifier.focusRequester(first),
+                )
+            }
+        } else {
+            item {
+                GlassRow(title = s.linkedAs(current.email), subtitle = current.deviceName, onClick = vm::syncNow, modifier = Modifier.focusRequester(first))
+            }
+            item { GlassRow(title = s.syncNow, onClick = vm::syncNow) }
+            item {
+                GlassRow(
+                    title = s.unlink,
+                    subtitle = if (confirmUnlink) s.pressAgainToConfirm else s.unlinkHint,
+                    onClick = {
+                        if (confirmUnlink) {
+                            confirmUnlink = false
+                            vm.unlink()
+                        } else {
+                            confirmUnlink = true
+                        }
+                    },
+                )
+            }
+        }
+
+        item { SectionLabel(s.youtube) }
+        item {
+            val linked by vm.youtubeLinked.collectAsStateWithLifecycle()
+            var confirm by remember { mutableStateOf(false) }
+            if (linked) {
+                // OK passa à seguinte: os dois → só a meio → só recomendações → os dois.
+                val (label, next) = when (account.youtubeFeed) {
+                    AccountSettings.YT_CONTINUE -> s.ytContinue to AccountSettings.YT_RECOMMENDED
+                    AccountSettings.YT_RECOMMENDED -> s.ytRecommended to AccountSettings.YT_BOTH
+                    else -> s.ytBoth to AccountSettings.YT_CONTINUE
+                }
+                GlassRow(title = s.youtubeFeed, subtitle = label, onClick = { vm.setYoutubeFeed(next) }, trailing = { Chevron() })
+                GlassRow(
+                    title = s.youtubeUnlink,
+                    subtitle = if (confirm) s.pressAgainToConfirm else s.youtubeOnHint,
+                    onClick = {
+                        if (confirm) vm.unlinkYouTube()
+                        confirm = !confirm
+                    },
+                )
+            } else {
+                GlassRow(title = s.youtubeLink, subtitle = s.youtubeLinkHint, onClick = { onPage(Page.YouTube) }, trailing = { Chevron() })
+            }
+        }
+
     }
 }
 

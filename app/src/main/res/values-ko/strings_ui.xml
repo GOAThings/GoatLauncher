@@ -100,6 +100,7 @@
     <string name="up_next_title">다음</string>
     <string name="layout_apple_hint">즐겨찾기 독 아래에 앱, 큰 카드 (tvOS 스타일)</string>
     <string name="general">일반</string>
+    <string name="home_screen">홈 화면</string>
     <string name="focused_card">선택된 카드</string>
     <string name="focus_effect">효과</string>
     <string name="effect_border">테두리</string>

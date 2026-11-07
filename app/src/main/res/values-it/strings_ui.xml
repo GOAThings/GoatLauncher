@@ -100,6 +100,7 @@
     <string name="up_next_title">A seguire</string>
     <string name="layout_apple_hint">App sotto il dock dei preferiti e schede grandi, come su tvOS</string>
     <string name="general">Generali</string>
+    <string name="home_screen">Schermata Home</string>
     <string name="focused_card">Scheda selezionata</string>
     <string name="focus_effect">Effetto</string>
     <string name="effect_border">Contorno</string>

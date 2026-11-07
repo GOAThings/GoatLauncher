@@ -100,6 +100,7 @@
     <string name="up_next_title">आगे</string>
     <string name="layout_apple_hint">पसंदीदा डॉक के नीचे ऐप्स और बड़े कार्ड, tvOS की तरह</string>
     <string name="general">सामान्य</string>
+    <string name="home_screen">होम स्क्रीन</string>
     <string name="focused_card">फ़ोकस वाला कार्ड</string>
     <string name="focus_effect">इफ़ेक्ट</string>
     <string name="effect_border">आउटलाइन</string>
