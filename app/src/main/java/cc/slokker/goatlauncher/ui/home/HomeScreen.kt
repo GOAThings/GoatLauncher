@@ -19,10 +19,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusGroup
@@ -101,7 +102,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
@@ -563,6 +563,9 @@ fun HomeScreen(vm: LauncherViewModel) {
                         .graphicsLayer { alpha = sideScrim }
                         .background(Brush.horizontalGradient(0f to Color.Black.copy(alpha = 0.7f), 0.45f to Color.Black.copy(alpha = 0.35f), 0.75f to Color.Transparent)),
                 )
+                // Apps ao lado: o texto fica por cima da imagem toda (não só à esquerda), por isso escurece-se mais.
+                val columnDim by animateFloatAsState(if (columnLayout && shelfFullBleed && !onApps) 1f else 0f, tween(400), label = "columnDim")
+                Box(Modifier.fillMaxSize().graphicsLayer { alpha = columnDim }.background(Color.Black.copy(alpha = 0.45f)))
                 val appsDim by animateFloatAsState(if (onApps || onSettings) 1f else 0f, tween(250), label = "dim")
                 Box(Modifier.fillMaxSize().graphicsLayer { alpha = appsDim }.background(Color.Black.copy(alpha = 0.6f)))
 
@@ -998,16 +1001,14 @@ private fun TopBar(
                             if (it.isFocused) arrowed = false
                         },
                     shape = ClickableSurfaceDefaults.shape(CircleShape),
-                    // O separador aberto na cor da marca; com foco, mais claro e com o anel do foco.
                     colors = ClickableSurfaceDefaults.colors(
-                        containerColor = if (i == selected) GoatColors.Brand else Color.Transparent,
+                        containerColor = if (i == selected) Color.White.copy(alpha = 0.2f) else Color.Transparent,
                         contentColor = if (i == selected) Color.White else Color.White.copy(alpha = 0.78f),
-                        focusedContainerColor = GoatColors.BrandHover,
-                        focusedContentColor = Color.White,
-                        pressedContainerColor = GoatColors.Brand,
-                        pressedContentColor = Color.White,
+                        focusedContainerColor = Color.White,
+                        focusedContentColor = Color.Black,
+                        pressedContainerColor = Color.White.copy(alpha = 0.8f),
+                        pressedContentColor = Color.Black,
                     ),
-                    border = ClickableSurfaceDefaults.border(focusedBorder = Border(BorderStroke(2.dp, GoatColors.FocusRing), shape = CircleShape)),
                     scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
                 ) {
                     Text(
@@ -1062,17 +1063,25 @@ private fun ShelfHero(
     val s = LocalStrings.current
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
+    // Para que lado vai a troca de conteúdo (‹ ou ›): o texto entra desse lado.
+    var direction by remember { mutableIntStateOf(1) }
     Column(
         Modifier
             .widthIn(max = 640.dp)
             .onPreviewKeyEvent { e ->
                 when (e.key) {
                     Key.DirectionLeft -> {
-                        if (e.type == KeyEventType.KeyDown) onPrev()
+                        if (e.type == KeyEventType.KeyDown) {
+                            direction = -1
+                            onPrev()
+                        }
                         true
                     }
                     Key.DirectionRight -> {
-                        if (e.type == KeyEventType.KeyDown) onNext()
+                        if (e.type == KeyEventType.KeyDown) {
+                            direction = 1
+                            onNext()
+                        }
                         true
                     }
                     Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
@@ -1084,7 +1093,16 @@ private fun ShelfHero(
             }
             .focusable(interactionSource = interaction),
     ) {
-        HeroText(app, item, showLogo)
+        AnimatedContent(
+            targetState = item,
+            contentKey = { it.id },
+            transitionSpec = {
+                (slideInHorizontally(tween(320, easing = FastOutSlowInEasing)) { it / 8 * direction } + fadeIn(tween(260, delayMillis = 40)))
+                    .togetherWith(slideOutHorizontally(tween(260, easing = FastOutSlowInEasing)) { -it / 8 * direction } + fadeOut(tween(160)))
+                    .using(SizeTransform(clip = false))
+            },
+            label = "hero",
+        ) { shown -> HeroText(app, shown, showLogo) }
         Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             // Parece um botão: com foco fica na cor da marca, com o anel do foco (o foco está no destaque inteiro).
@@ -1376,12 +1394,11 @@ private fun RoundButton(onClick: () -> Unit, content: @Composable () -> Unit) {
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.White.copy(alpha = 0.14f),
             contentColor = GoatColors.Text,
-            focusedContainerColor = GoatColors.BrandHover,
-            focusedContentColor = Color.White,
-            pressedContainerColor = GoatColors.Brand,
-            pressedContentColor = Color.White,
+            focusedContainerColor = Color.White,
+            focusedContentColor = Color.Black,
+            pressedContainerColor = Color.White.copy(alpha = 0.8f),
+            pressedContentColor = Color.Black,
         ),
-        border = ClickableSurfaceDefaults.border(focusedBorder = Border(BorderStroke(2.dp, GoatColors.FocusRing), shape = CircleShape)),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { content() }

@@ -20,7 +20,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,6 +47,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.zIndex
+import kotlin.math.abs
+import kotlin.math.min
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.data.LauncherApp
@@ -126,11 +138,19 @@ fun UpNextPanel(items: List<WatchNextItem>, more: Int, modifier: Modifier = Modi
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            (if (more > 0) "${s.upNextTitle} · ${s.shelfMore(more)}" else s.upNextTitle).uppercase(s.locale),
+            (if (more > 0) "${s.upNextTitle} · +$more" else s.upNextTitle).uppercase(s.locale),
             style = MaterialTheme.typography.labelSmall.copy(letterSpacing = tracking(1.6f)),
             color = GoatColors.TextFaint,
         )
-        items.forEach { item ->
+        // A lista muda com ‹ ›: troca com um fade, em vez de saltar.
+        AnimatedContent(
+            targetState = items,
+            contentKey = { list -> list.map { it.id } },
+            transitionSpec = { fadeIn(tween(260, delayMillis = 60)) togetherWith fadeOut(tween(140)) },
+            label = "upNext",
+        ) { shown ->
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        shown.forEach { item ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Thumb(item, Modifier.size(width = 96.dp, height = 54.dp))
                 Column(Modifier.weight(1f)) {
@@ -146,10 +166,12 @@ fun UpNextPanel(items: List<WatchNextItem>, more: Int, modifier: Modifier = Modi
                 }
             }
         }
+        }
+        }
     }
 }
 
-private val UpNextWidth = 300.dp
+private val UpNextWidth = 340.dp
 
 /** A imagem pequena de um conteúdo: a cena a encher, ou o logo de um canal inteiro sobre fundo escuro. */
 @Composable
@@ -183,7 +205,7 @@ fun CarouselShelf(
     val s = LocalStrings.current
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
-    val item = items.getOrNull(index) ?: return
+    if (items.getOrNull(index) == null) return
     BoxWithConstraints(
         modifier
             .fillMaxWidth()
@@ -209,56 +231,83 @@ fun CarouselShelf(
     ) {
         val height = maxHeight.coerceAtMost(CarouselMax)
         val width = height * 16 / 9
-        val side = height * 0.72f
-        val gap = 28.dp
-        // Os vizinhos: metade de fora, mais pequenos e escurecidos.
-        items.getOrNull(index - 1)?.let {
-            CarouselCard(it, side, Modifier.offset(x = -(width / 2 + gap + side * 16 / 9 / 2)).graphicsLayer { alpha = 0.45f })
-        }
-        items.getOrNull(index + 1)?.let {
-            CarouselCard(it, side, Modifier.offset(x = width / 2 + gap + side * 16 / 9 / 2).graphicsLayer { alpha = 0.45f })
-        }
-        Box(
-            Modifier
-                .size(width = width, height = height)
-                .then(if (focused) Modifier.border(4.dp, GoatColors.FocusRing, CarouselShape) else Modifier)
-                .clip(CarouselShape),
-        ) {
-            CarouselCard(item, height, Modifier)
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.45f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.85f))))
-            Column(Modifier.align(Alignment.BottomStart).padding(horizontal = 24.dp, vertical = 18.dp)) {
-                Text(
-                    s.shelfLabel(app.label).uppercase(s.locale),
-                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = tracking(1.6f)),
-                    color = GoatColors.TextDim,
-                )
-                Text(
-                    item.title,
-                    style = ShelfTitleStyle.copy(fontSize = ShelfTitleStyle.fontSize * 0.7f, lineHeight = ShelfTitleStyle.lineHeight * 0.7f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                val details = listOfNotNull(
-                    s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
-                    item.episodeTitle?.takeIf { it != item.title },
-                    item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
-                    item.onAir(System.currentTimeMillis())?.title,
-                ).joinToString(" · ")
-                if (details.isNotEmpty()) {
-                    Text(details, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal), color = GoatColors.TextDim, maxLines = 1)
-                }
-                item.progress?.let { p ->
-                    Spacer(Modifier.height(8.dp))
-                    Box(Modifier.width(width / 2).height(4.dp).background(Color.White.copy(alpha = 0.3f), GoatShapes.Small)) {
-                        Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing, GoatShapes.Small))
+        // Do centro de um cartão ao do vizinho (que fica a [SideScale] do tamanho).
+        val stepPx = with(LocalDensity.current) { (width / 2 + 28.dp + width * SideScale / 2).toPx() }
+        // Os cartões deslizam para o sítio novo: cada um anima a sua posição em relação ao do meio.
+        items.forEachIndexed { i, item ->
+            if (abs(i - index) > 2) return@forEachIndexed
+            key(item.id) {
+                val pos by animateFloatAsState((i - index).toFloat(), tween(380, easing = FastOutSlowInEasing), label = "carousel")
+                val side = min(abs(pos), 1f)
+                Box(
+                    Modifier
+                        .zIndex(2f - abs(pos))
+                        .graphicsLayer {
+                            translationX = pos * stepPx
+                            val scale = 1f - (1f - SideScale) * side
+                            scaleX = scale
+                            scaleY = scale
+                        }
+                        .size(width = width, height = height)
+                        .clip(CarouselShape),
+                ) {
+                    CarouselCard(item, height, Modifier)
+                    // Os vizinhos escurecidos (não transparentes: o fundo não aparece através deles).
+                    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f * side)))
+                    if (side < 1f) {
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .graphicsLayer { alpha = 1f - side }
+                                .background(Brush.verticalGradient(0.45f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.85f))),
+                        )
+                        CarouselText(app, item, width, Modifier.align(Alignment.BottomStart).graphicsLayer { alpha = 1f - side })
                     }
                 }
-                OnAirLine(item, Modifier.padding(top = 8.dp))
             }
         }
+        // O contorno do foco fica parado no meio; os cartões passam por baixo dele.
+        if (focused) Box(Modifier.zIndex(3f).size(width = width, height = height).border(4.dp, GoatColors.FocusRing, CarouselShape))
     }
 }
 
+/** O texto do cartão do meio: a app, o título, "T2 E1 · faltam 6 min" e o progresso. */
+@Composable
+private fun CarouselText(app: LauncherApp, item: WatchNextItem, width: Dp, modifier: Modifier) {
+    val s = LocalStrings.current
+    Column(modifier.padding(horizontal = 24.dp, vertical = 18.dp)) {
+        Text(
+            s.shelfLabel(app.label).uppercase(s.locale),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = tracking(1.6f)),
+            color = GoatColors.TextDim,
+        )
+        Text(
+            item.title,
+            style = ShelfTitleStyle.copy(fontSize = ShelfTitleStyle.fontSize * 0.7f, lineHeight = ShelfTitleStyle.lineHeight * 0.7f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        val details = listOfNotNull(
+            s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
+            item.episodeTitle?.takeIf { it != item.title },
+            item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
+            item.onAir(System.currentTimeMillis())?.title,
+        ).joinToString(" · ")
+        if (details.isNotEmpty()) {
+            Text(details, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal), color = GoatColors.TextDim, maxLines = 1)
+        }
+        item.progress?.let { p ->
+            Spacer(Modifier.height(8.dp))
+            Box(Modifier.width(width / 2).height(4.dp).background(Color.White.copy(alpha = 0.3f), GoatShapes.Small)) {
+                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing, GoatShapes.Small))
+            }
+        }
+        OnAirLine(item, Modifier.padding(top = 8.dp))
+    }
+}
+
+/** O tamanho dos cartões dos lados, em relação ao do meio. */
+private const val SideScale = 0.72f
 private val CarouselMax = 300.dp
 private val CarouselShape = RoundedCornerShape(18.dp)
 
@@ -271,7 +320,10 @@ private fun CarouselCard(item: WatchNextItem, height: Dp, modifier: Modifier) {
                 model = item.imageUri,
                 contentDescription = null,
                 contentScale = if (item.isChannel) ContentScale.Fit else ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().then(if (item.isChannel) Modifier.padding(height / 5) else Modifier),
+                // O logo de um canal fica em cima, longe do texto do cartão do meio.
+                modifier = Modifier.fillMaxSize().then(
+                    if (item.isChannel) Modifier.padding(start = height / 2, end = height / 2, top = height / 8, bottom = height * 0.45f) else Modifier,
+                ),
             )
         }
     }
