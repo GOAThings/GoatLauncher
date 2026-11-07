@@ -6,12 +6,14 @@ A home screen for Android TV and Google TV.
 
 | | |
 |---|---|
-| ![Home, Android TV style, Spotlight](docs/screenshots/home-android-tv.jpg) | ![Home, Android TV style, row of cards](docs/screenshots/home-android-tv-cards.jpg) |
+| ![Home, Android TV style, Spotlight](docs/screenshots/home-android-tv.jpg) | ![Home, Android TV style, carousel](docs/screenshots/home-android-tv-carousel.jpg) |
 | ![Home, tvOS style](docs/screenshots/home-tvos-day.jpg) | ![Home at night](docs/screenshots/home-tvos-night.jpg) |
+| ![Settings](docs/screenshots/settings.jpg) | ![Settings, wallpaper](docs/screenshots/settings-wallpaper.jpg) |
 | ![Appearance, Android TV style](docs/screenshots/appearance-android-tv.jpg) | ![Appearance, tvOS style](docs/screenshots/appearance-tvos.jpg) |
 | ![Aurora focus effect](docs/screenshots/effect-aurora.jpg) | ![Floating ring focus effect](docs/screenshots/effect-floating-ring.jpg) |
 
-Wallpapers: CC0 photos from Wikimedia Commons. "Big Buck Bunny" © Blender Foundation, CC BY 3.0.
+Continue watching from Nuvio. "Big Buck Bunny" and "Sintel" © Blender Foundation, CC BY 3.0; "Cosmos Laundromat"
+© Blender Foundation, CC BY 4.0. Focus effect wallpapers: CC0 photos from Wikimedia Commons.
 
 ## Install
 
@@ -29,8 +31,9 @@ Once installed, the launcher finds new versions by itself (Settings → Updates)
 
 ## Features
 
-- Favorite apps, the time and weather, and **Continue watching** from the apps on the TV (row of cards or
-  spotlight), including YouTube with a linked Google account.
+- Favorite apps, the time and weather, and **Continue watching** from the apps on the TV (row of cards,
+  spotlight, spotlight with what's next, apps on the side or carousel), including YouTube with a linked Google
+  account.
 - Two layouts: Android TV style or tvOS style.
 - Hide, rename, reorder and change the icon of any app.
 - Wallpapers: built-in, your own images or a subreddit, darker at night.
