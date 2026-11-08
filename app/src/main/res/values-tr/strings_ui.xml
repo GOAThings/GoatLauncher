@@ -257,8 +257,6 @@
     <string name="language">Dil</string>
     <string name="language_auto">Otomatik (sistem)</string>
     <string name="day_night">Gündüz veya gece</string>
-    <string name="night_on">Gece: daha koyu arka plan</string>
-    <string name="night_off">Gündüz: daha açık arka plan</string>
     <string name="night_auto">Otomatik gündüz ve gece</string>
     <string name="night_auto_hint">Gece 20:00–07:00 arası, TV saatine göre</string>
     <string name="night_auto_sun">Gün batımından (%1$s) gün doğumuna (%2$s) kadar gece</string>

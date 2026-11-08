@@ -261,8 +261,6 @@
     <string name="language">Язык</string>
     <string name="language_auto">Автоматически (как в системе)</string>
     <string name="day_night">День или ночь</string>
-    <string name="night_on">Ночь: фон темнее</string>
-    <string name="night_off">День: фон светлее</string>
     <string name="night_auto">Автоматически день и ночь</string>
     <string name="night_auto_hint">Ночь с 20:00 до 07:00 по часам ТВ</string>
     <string name="night_auto_sun">Ночь от заката (%1$s) до восхода (%2$s)</string>

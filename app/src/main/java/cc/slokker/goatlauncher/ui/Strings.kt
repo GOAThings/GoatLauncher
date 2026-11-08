@@ -265,8 +265,6 @@ class Strings(context: Context) {
     val activateQrDescription get() = s(R.string.activate_qr_description)
     val language get() = s(R.string.language)
     val dayNight get() = s(R.string.day_night)
-    val nightOn get() = s(R.string.night_on)
-    val nightOff get() = s(R.string.night_off)
     val nightAuto get() = s(R.string.night_auto)
     val nightAutoHint get() = s(R.string.night_auto_hint)
     fun nightAutoSun(sunset: String, sunrise: String) = s(R.string.night_auto_sun, sunset, sunrise)

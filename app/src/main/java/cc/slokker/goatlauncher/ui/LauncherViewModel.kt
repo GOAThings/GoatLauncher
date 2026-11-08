@@ -526,7 +526,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun toggleNight() {
         val on = !night.value
         settings.updateAccount { it.copy(nightMode = on, nightAuto = false) }
-        toast(if (on) strings.nightOn else strings.nightOff)
     }
 
     fun setNightAuto(on: Boolean) = settings.updateAccount { it.copy(nightAuto = on) }

@@ -257,8 +257,6 @@
     <string name="language">Sprache</string>
     <string name="language_auto">Automatisch (System)</string>
     <string name="day_night">Tag oder Nacht</string>
-    <string name="night_on">Nacht: dunklerer Hintergrund</string>
-    <string name="night_off">Tag: hellerer Hintergrund</string>
     <string name="night_auto">Tag und Nacht automatisch</string>
     <string name="night_auto_hint">Nacht von 20:00 bis 07:00, nach der Uhrzeit des TV</string>
     <string name="night_auto_sun">Nacht von Sonnenuntergang (%1$s) bis Sonnenaufgang (%2$s)</string>

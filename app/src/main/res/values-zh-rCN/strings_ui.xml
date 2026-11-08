@@ -255,8 +255,6 @@
     <string name="language">语言</string>
     <string name="language_auto">自动（系统）</string>
     <string name="day_night">白天或夜间</string>
-    <string name="night_on">夜间：背景更暗</string>
-    <string name="night_off">白天：背景更亮</string>
     <string name="night_auto">自动切换白天和夜间</string>
     <string name="night_auto_hint">按电视时间，20:00 至 07:00 为夜间</string>
     <string name="night_auto_sun">日落 (%1$s) 到日出 (%2$s) 为夜间</string>

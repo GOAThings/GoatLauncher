@@ -259,8 +259,6 @@
     <string name="language">Lingua</string>
     <string name="language_auto">Automatica (sistema)</string>
     <string name="day_night">Giorno o notte</string>
-    <string name="night_on">Notte: sfondo più scuro</string>
-    <string name="night_off">Giorno: sfondo più chiaro</string>
     <string name="night_auto">Giorno e notte automatici</string>
     <string name="night_auto_hint">Notte dalle 20:00 alle 07:00, secondo l\'ora della TV</string>
     <string name="night_auto_sun">Notte dal tramonto (%1$s) all\'alba (%2$s)</string>
