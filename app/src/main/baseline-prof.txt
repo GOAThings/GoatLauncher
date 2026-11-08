@@ -1,0 +1,6 @@
+# Baseline Profile do GoatLauncher: o código da app é compilado logo na instalação (pelo ART ou pelo ProfileInstaller),
+# em vez de correr interpretado até o JIT aquecer. O launcher abre a cada arranque e a cada HOME: sem isto, os
+# primeiros segundos depois de instalar ou atualizar ficam aos soluços. As bibliotecas (Compose, Coil, OkHttp…)
+# trazem os seus próprios perfis, que o AGP junta a este. (O mesmo que a GoatTV usa desde a 0.8.1.)
+HSPLcc/slokker/goatlauncher/**->**(**)**
+Lcc/slokker/goatlauncher/**;
