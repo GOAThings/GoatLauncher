@@ -1053,7 +1053,9 @@ private fun TopBar(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // Dia/noite: OK troca entre fundo claro e fundo escurecido (e fotos do tom certo).
-            DayNightToggle(night, s.dayNight, onNight)
+            TopButton(onClick = onNight) {
+                Icon(if (night) GoatIcons.Moon else GoatIcons.Sun, contentDescription = s.dayNight, modifier = Modifier.size(18.dp))
+            }
             // Estado da rede (Wi-Fi, cabo ou sem rede); OK abre as definições de rede.
             TopButton(onClick = onNetwork) {
                 Icon(
