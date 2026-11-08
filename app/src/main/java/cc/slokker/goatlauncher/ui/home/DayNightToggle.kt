@@ -1,230 +1,243 @@
 package cc.slokker.goatlauncher.ui.home
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathMeasure
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.tv.material3.Border
-import androidx.tv.material3.ClickableSurfaceDefaults
-import androidx.tv.material3.Surface
-import cc.slokker.goatlauncher.ui.theme.ControlRadius
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.max
-import kotlin.math.roundToInt
+import kotlin.math.pow
 import kotlin.math.sin
 
 /*
- * O botão de dia/noite da barra de cima, ao jeito do "Glass Light Toggle": uma calha com um botão de vidro quadrado
- * arredondado; um arco de luz contorna-lhe os cantos de baixo à noite (azul) e os de cima de dia (âmbar), e dá a
- * volta pela direita ao trocar. Dentro do vidro, a lua e o sol são píxeis: cada píxel da lua tem um par no sol e
- * voa até ele com um atraso e um remoinho seus. Desenhado em Canvas (sem shaders, para correr bem numa box).
+ * O interruptor de dia/noite da barra de cima: o mesmo do site (thegoat.systems, assets/theme.js e o CSS .lt), em
+ * Canvas. Uma calha com um botão de vidro; a luz contorna o botão em baixo à noite (azul) e em cima de dia (âmbar)
+ * e dá a volta pela direita ao trocar. Dentro do vidro, a lua e o sol numa grelha de 11 × 11: cada píxel da lua faz
+ * par com um do sol pelo ângulo, parte um pouco depois do anterior, roda um pouco e assenta com mola.
+ * t = 0 é noite (botão à esquerda), t = 1 é dia (à direita).
  */
 
+private val TrackWidth = 72.dp
 private val TrackHeight = 40.dp
-private val TrackWidth = 76.dp
-private val Inset = 4.dp
-private val TrackShape = RoundedCornerShape(ControlRadius + Inset)
+private val Knob = 34.dp
+private val Pad = 3.dp
+private val TrackRadius = 15.dp
+private val KnobRadius = 10.5.dp
 
-/** O botão de dia/noite: [night] é o estado; OK troca (como o botão redondo que veio substituir). */
+/** O botão de dia/noite: [night] é o estado; OK troca. */
 @Composable
 fun DayNightToggle(night: Boolean, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    // 0 = noite, 1 = dia.
-    val t by animateFloatAsState(if (night) 0f else 1f, tween(700, easing = FastOutSlowInEasing), label = "dayNight")
-    Surface(
-        onClick = onClick,
-        modifier = modifier.size(TrackWidth, TrackHeight).semantics { contentDescription = label },
-        shape = ClickableSurfaceDefaults.shape(TrackShape),
-        colors = ClickableSurfaceDefaults.colors(
-            containerColor = Color.Transparent,
-            focusedContainerColor = Color.Transparent,
-            pressedContainerColor = Color.Transparent,
-        ),
-        border = ClickableSurfaceDefaults.border(focusedBorder = Border(BorderStroke(2.5.dp, Color.White), inset = (-4).dp, shape = TrackShape)),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
+    val t = remember { Animatable(if (night) 0f else 1f) }
+    LaunchedEffect(night) {
+        val target = if (night) 0f else 1f
+        // Como no site: mais longo quanto mais tiver de andar, a abrandar no fim.
+        t.animateTo(target, tween((520 + 380 * abs(target - t.value)).toInt(), easing = EaseOutCubic))
+    }
+    val interaction = remember { MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    val scale by animateFloatAsState(if (focused) 1.06f else 1f, label = "dayNightFocus")
+    // Sem Surface: a luz à volta do botão sai da calha, e uma Surface cortava-a pela forma.
+    Canvas(
+        modifier
+            .size(TrackWidth, TrackHeight)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .semantics { contentDescription = label }
+            .clickable(interaction, indication = null, onClick = onClick),
     ) {
-        Canvas(Modifier.fillMaxSize()) { drawToggle(t) }
+        val glow = lerp(NightGlow, DayGlow, t.value)
+        drawToggle(t.value, day = !night, glow)
+        // O contorno de foco do site: da cor da luz, 5 dp por fora.
+        if (focused) {
+            val o = 5.dp.toPx()
+            drawRoundRect(
+                glow.copy(alpha = 0.9f),
+                Offset(-o, -o),
+                Size(size.width + o * 2, size.height + o * 2),
+                CornerRadius((TrackRadius + 5.dp).toPx()),
+                style = Stroke(2.dp.toPx()),
+            )
+        }
     }
 }
 
-private fun DrawScope.drawToggle(t: Float) {
-    val inset = Inset.toPx()
-    val knob = size.height - inset * 2
-    val trackR = (ControlRadius + Inset).toPx()
-    val knobR = ControlRadius.toPx()
+private val EaseOutCubic = Easing { 1 - (1 - it).pow(3) }
 
-    // A calha: escura à noite, clara de dia.
+private fun DrawScope.drawToggle(t: Float, day: Boolean, glow: Color) {
+    val pad = Pad.toPx()
+    val k = Knob.toPx()
+    val slide = t * (size.width - k - pad * 2)
+    val knobCenter = Offset(pad + k / 2 + slide, pad + k / 2)
+
+    // A calha, com a luz do botão a cair nela (em baixo à noite, em cima de dia).
+    val trackR = CornerRadius(TrackRadius.toPx())
+    drawRoundRect(Brush.verticalGradient(if (day) DayTrack else NightTrack), cornerRadius = trackR)
+    val spill = Offset(knobCenter.x, size.height * (1 - t))
     drawRoundRect(
-        Brush.verticalGradient(listOf(lerp(NightTrackTop, DayTrackTop, t), lerp(NightTrackBottom, DayTrackBottom, t))),
-        cornerRadius = CornerRadius(trackR),
+        Brush.radialGradient(listOf(glow.copy(alpha = if (day) 0.30f else 0.22f), Color.Transparent), spill, 28.dp.toPx()),
+        cornerRadius = trackR,
     )
-    drawRoundRect(Color.Black.copy(alpha = 0.18f * (1 - t) + 0.05f), cornerRadius = CornerRadius(trackR), style = Stroke(1.dp.toPx()))
-
-    val left = inset + (size.width - knob - inset * 2) * t
-    val glow = lerp(NightGlow, DayGlow, t)
-    val core = lerp(NightGlowCore, DayGlowCore, t)
-
-    // A luz que se espalha pela calha, do lado onde está o arco.
-    val spillY = if (t < 0.5f) size.height else 0f
-    drawCircle(
-        Brush.radialGradient(listOf(glow.copy(alpha = 0.35f * abs(1 - 2 * t)), Color.Transparent), Offset(left + knob / 2, spillY), knob),
-        radius = knob,
-        center = Offset(left + knob / 2, spillY),
+    // Sombra por dentro da calha (em cima) e o fio de luz à volta.
+    drawRoundRect(
+        Brush.verticalGradient(0f to Color.Black.copy(alpha = if (day) 0.06f else 0.45f), 0.25f to Color.Transparent),
+        cornerRadius = trackR,
     )
+    drawRoundRect(Color.White.copy(alpha = if (day) 0.6f else 0.05f), cornerRadius = trackR, style = Stroke(1.dp.toPx()))
 
-    translate(left, inset) {
-        // O vidro: a luz vem de baixo à noite e de cima de dia.
+    translate(pad + slide, pad) {
+        // A luz à volta do botão: um arco de 160° centrado em [a] (0° em cima, 180° em baixo, a andar pela direita).
+        val a = 180f - 180f * t
+        val ringInset = 4.dp.toPx()
+        val ringSize = Size(k + ringInset * 2, k + ringInset * 2)
+        val ring = ringBrush(a, glow, Offset(k / 2, k / 2))
+        // O brilho (no site, desfocado): traços largos e fracos por baixo do anel.
+        listOf(9.dp to 0.18f, 6.dp to 0.28f, 3.5.dp to 0.45f).forEach { (w, alpha) ->
+            drawRoundRect(ring, Offset(-ringInset, -ringInset), ringSize, CornerRadius(13.dp.toPx()), style = Stroke(w.toPx()), alpha = alpha)
+        }
+        drawRoundRect(ring, Offset(-ringInset, -ringInset), ringSize, CornerRadius(13.dp.toPx()), style = Stroke(1.5.dp.toPx()))
+
+        // O corpo do botão, com a luz por dentro do lado do arco, e a sombra por baixo.
+        val knobR = CornerRadius(KnobRadius.toPx())
+        drawRoundRect(Color.Black.copy(alpha = if (day) 0.12f else 0.35f), Offset(0f, 3.dp.toPx()), Size(k, k), knobR)
+        drawRoundRect(Brush.verticalGradient(if (day) DayBody else NightBody), size = Size(k, k), cornerRadius = knobR)
         drawRoundRect(
-            Brush.verticalGradient(
-                0f to lerp(NightKnob[0], DayKnob[0], t),
-                0.45f to lerp(NightKnob[1], DayKnob[1], t),
-                0.8f to lerp(NightKnob[2], DayKnob[2], t),
-                1f to lerp(NightKnob[3], DayKnob[3], t),
-            ),
-            size = Size(knob, knob),
-            cornerRadius = CornerRadius(knobR),
+            Brush.radialGradient(listOf(glow.copy(alpha = if (day) 0.75f else 0.55f), Color.Transparent), Offset(k / 2, k * (1 - t)), k * 0.7f),
+            size = Size(k, k),
+            cornerRadius = knobR,
         )
-        drawRoundRect(Color.White.copy(alpha = 0.35f), size = Size(knob, knob), cornerRadius = CornerRadius(knobR), style = Stroke(1.dp.toPx()))
 
-        drawPixels(t, knob, lerp(NightIcon, DayIcon, t))
+        drawPixels(t, k, day)
 
-        // O arco: um pedaço do contorno do vidro (um pouco por fora), centrado em baixo à noite e em cima de dia.
-        val out = 2.dp.toPx()
-        val outline = roundRectPath(Rect(-out, -out, knob + out, knob + out), knobR + out)
-        val measure = PathMeasure().apply { setPath(outline, false) }
-        val length = measure.length
-        // 0 = meio de cima, a andar no sentido dos ponteiros; à noite em 0.5 (baixo), de dia em 0 (cima), pela direita.
-        val center = 0.5f * (1 - t)
-        val arc = arcPath(measure, length, center, 0.42f)
-        listOf(9.dp to 0.12f, 6.dp to 0.22f, 3.5.dp to 0.45f).forEach { (w, a) ->
-            drawPath(arc, glow.copy(alpha = a), style = Stroke(w.toPx(), cap = StrokeCap.Round))
-        }
-        drawPath(arc, core, style = Stroke(1.6.dp.toPx(), cap = StrokeCap.Round))
-    }
-}
-
-/** Contorno de um quadrado arredondado, a começar no meio de cima e no sentido dos ponteiros. */
-private fun roundRectPath(r: Rect, radius: Float): Path = Path().apply {
-    val d = radius * 2
-    moveTo(r.center.x, r.top)
-    lineTo(r.right - radius, r.top)
-    arcTo(Rect(r.right - d, r.top, r.right, r.top + d), -90f, 90f, false)
-    lineTo(r.right, r.bottom - radius)
-    arcTo(Rect(r.right - d, r.bottom - d, r.right, r.bottom), 0f, 90f, false)
-    lineTo(r.left + radius, r.bottom)
-    arcTo(Rect(r.left, r.bottom - d, r.left + d, r.bottom), 90f, 90f, false)
-    lineTo(r.left, r.top + radius)
-    arcTo(Rect(r.left, r.top, r.left + d, r.top + d), 180f, 90f, false)
-    close()
-}
-
-/** O pedaço do contorno com [span] do comprimento, centrado em [center] (fração do contorno; dá a volta). */
-private fun arcPath(measure: PathMeasure, length: Float, center: Float, span: Float): Path {
-    val start = ((center - span / 2) % 1f + 1f) % 1f * length
-    val end = start + span * length
-    return Path().also { p ->
-        if (end <= length) {
-            measure.getSegment(start, end, p, true)
-        } else {
-            measure.getSegment(start, length, p, true)
-            measure.getSegment(0f, end - length, p, true)
-        }
-    }
-}
-
-/** Um píxel dos ícones: posição na grelha, ângulo (para os pares) e força (a sombra da lua é mais fraca). */
-private class Px(val x: Int, val y: Int, val a: Float, val w: Float)
-
-private const val Grid = 17
-
-/** Os píxeis do sol e da lua, ordenados pelo ângulo para cada um ter um par no outro. */
-private val Icons: Pair<List<Px>, List<Px>> by lazy {
-    val c = Grid / 2
-    val sun = mutableListOf<Px>()
-    val moon = mutableListOf<Px>()
-    for (y in 0 until Grid) for (x in 0 until Grid) {
-        val dx = (x - c).toFloat()
-        val dy = (y - c).toFloat()
-        val r = hypot(dx, dy)
-        val a = atan2(dy, dx)
-        // Sol: miolo cheio e raios tracejados nas 8 direções.
-        val core = max(abs(dx), abs(dy)) <= 3 && r < 4.1f
-        val dir = (a / (PI / 4)).roundToInt()
-        val onRay = abs(a - dir * PI / 4) * r < 0.55
-        val ray = onRay && if (dir % 2 == 0) r in 5.5f..8.2f else r in 5.5f..7.6f
-        if (core || ray) sun += Px(x, y, a, 1f)
-        // Lua: crescente aceso; a parte na sombra em xadrez.
-        val inDisc = hypot(dx + 1, dy) < 5.6f
-        val lit = inDisc && hypot(dx - 2.2f, dy + 1.6f) > 4.4f
-        if (lit) moon += Px(x, y, a, 1f) else if (inDisc && (x + y) % 2 == 0) moon += Px(x, y, a, 0.35f)
-    }
-    // Uma estrela pequena ao lado da lua.
-    listOf(13 to 3, 13 to 2, 13 to 4, 12 to 3, 14 to 3, 11 to 6, 15 to 6).forEach { (x, y) ->
-        moon += Px(x, y, atan2((y - c).toFloat(), (x - c).toFloat()), 0.8f)
-    }
-    sun.sortBy { it.a }
-    moon.sortBy { it.a }
-    sun to moon
-}
-
-private fun DrawScope.drawPixels(t: Float, knob: Float, color: Color) {
-    val (sun, moon) = Icons
-    val icon = knob * 0.6f
-    val cell = icon / Grid
-    val origin = (knob - icon) / 2
-    val n = max(sun.size, moon.size)
-    for (i in 0 until n) {
-        val s = sun[i * sun.size / n]
-        val m = moon[i * moon.size / n]
-        // Cada píxel parte com um atraso seu e faz um remoinho a meio do caminho.
-        val st = (t * 1.4f - i.toFloat() / n * 0.4f).coerceIn(0f, 1f)
-        val swirl = sin(st * PI).toFloat() * 1.6f
-        val x = m.x + (s.x - m.x) * st + cos(i * 1.7f) * swirl
-        val y = m.y + (s.y - m.y) * st + sin(i * 1.7f) * swirl
-        val w = m.w + (s.w - m.w) * st
-        drawRect(
-            color.copy(alpha = w),
-            topLeft = Offset(origin + x * cell + cell * 0.08f, origin + y * cell + cell * 0.08f),
-            size = Size(cell * 0.84f, cell * 0.84f),
+        // O vidro por cima: reflexo em cima à esquerda e contorno fino.
+        drawRoundRect(
+            Brush.radialGradient(listOf(Color.White.copy(alpha = 0.28f), Color.Transparent), Offset(k * 0.35f, 0f), k * 0.6f),
+            size = Size(k, k),
+            cornerRadius = knobR,
+        )
+        drawRoundRect(Color.White.copy(alpha = if (day) 0.8f else 0.14f), size = Size(k, k), cornerRadius = knobR, style = Stroke(1.dp.toPx()))
+        drawRoundRect(
+            Brush.verticalGradient(0f to Color.White.copy(alpha = if (day) 1f else 0.45f), 0.06f to Color.Transparent),
+            size = Size(k, k),
+            cornerRadius = knobR,
+            style = Stroke(1.dp.toPx()),
         )
     }
 }
 
-private val NightTrackTop = Color(0xFF0B0C11)
-private val NightTrackBottom = Color(0xFF14161D)
-private val DayTrackTop = Color(0xFFF6F4F0)
-private val DayTrackBottom = Color(0xFFE6E3DE)
-private val NightKnob = listOf(Color(0xFF3B3E47), Color(0xFF2A2D37), Color(0xFF3A4380), Color(0xFF7C8BFF))
-private val DayKnob = listOf(Color(0xFFFFC861), Color(0xFFFBF1DF), Color(0xFFF5F0E8), Color(0xFFF2EEE8))
-private val NightGlow = Color(0xFF6E7DFF)
-private val NightGlowCore = Color(0xFFD5DDFF)
-private val DayGlow = Color(0xFFFFA62B)
-private val DayGlowCore = Color(0xFFFFE6A8)
-private val NightIcon = Color(0xFFF4F6FF)
-private val DayIcon = Color(0xFF2A2620)
+/**
+ * O gradiente do anel (o "conic-gradient" do site): transparente fora de um arco de 160° à volta de [a], forte no
+ * meio. [a] em graus como no CSS (0 em cima, a rodar como os ponteiros); o Compose começa à direita.
+ */
+private fun ringBrush(a: Float, glow: Color, center: Offset): Brush {
+    val steps = 72
+    val colors = List(steps + 1) { i ->
+        val cssAngle = i * 360f / steps + 90f
+        val rel = ((cssAngle - (a - 80f)) % 360f + 360f) % 360f
+        val alpha = when {
+            rel < 30f -> 0.9f * rel / 30f
+            rel < 80f -> 0.9f + 0.1f * (rel - 30f) / 50f
+            rel < 130f -> 1f - 0.1f * (rel - 80f) / 50f
+            rel < 160f -> 0.9f * (160f - rel) / 30f
+            else -> 0f
+        }
+        glow.copy(alpha = alpha)
+    }
+    return Brush.sweepGradient(colors, center)
+}
+
+private const val N = 11
+private const val C = (N - 1) / 2f
+
+/** Píxeis da lua (com três estrelas), do resto do disco (a sombra) e do sol, e os pares lua → sol pelo ângulo. */
+private class Icons(val shade: List<Pair<Int, Int>>, val pairs: List<Triple<Pair<Int, Int>, Pair<Int, Int>, Float>>)
+
+private val PixelIcons: Icons by lazy {
+    val moon = mutableListOf<Pair<Int, Int>>()
+    val sun = mutableListOf<Pair<Int, Int>>()
+    val shade = mutableListOf<Pair<Int, Int>>()
+    for (y in 0 until N) for (x in 0 until N) {
+        val inDisc = (x - 4.6f).pow(2) + (y - 5.6f).pow(2) <= 4.5f * 4.5f
+        val bite = (x - 6.8f).pow(2) + (y - 4.4f).pow(2) <= 3.7f * 3.7f
+        if (inDisc && !bite) moon += x to y else if (inDisc) shade += x to y
+        val sx = x - C
+        val sy = y - C
+        val r = hypot(sx, sy)
+        val ray = r in 3.7f..5.2f && (abs(sx) < 0.6f || abs(sy) < 0.6f || abs(abs(sx) - abs(sy)) < 0.6f)
+        if (r <= 2.3f || ray) sun += x to y
+    }
+    moon += listOf(8 to 1, 10 to 2, 9 to 4) // estrelas
+    fun byAngle(list: List<Pair<Int, Int>>) = list.sortedBy { (x, y) -> atan2(y - C, x - C) }
+    val a = byAngle(moon)
+    val b = byAngle(sun)
+    val n = max(a.size, b.size)
+    Icons(shade, List(n) { i -> Triple(a[floor(i.toFloat() * a.size / n).toInt()], b[floor(i.toFloat() * b.size / n).toInt()], i.toFloat() / n) })
+}
+
+private fun easeBack(k: Float): Float {
+    val s = 1.6f
+    val x = k - 1
+    return x * x * ((s + 1) * x + s) + 1
+}
+
+private fun DrawScope.drawPixels(t: Float, k: Float, day: Boolean) {
+    val icons = PixelIcons
+    val cell = k / N
+    val gap = cell * 0.11f
+    fun dot(x: Float, y: Float, color: Color) = drawRect(color, Offset(x * cell + gap, y * cell + gap), Size(cell - gap * 2, cell - gap * 2))
+
+    // O resto do disco da lua, apagado; some ao passar para o sol.
+    val shadeColor = if (day) Color(0xFF28241E).copy(alpha = 0.14f * (1 - t)) else MoonPx.copy(alpha = 0.16f * (1 - t))
+    icons.shade.forEach { (x, y) -> dot(x.toFloat(), y.toFloat(), shadeColor) }
+
+    val sunPx = if (day) SunDark else SunLight
+    for ((m, s, order) in icons.pairs) {
+        // Cada píxel parte um pouco depois do anterior, roda um pouco e assenta com mola.
+        val p = ((t - order * 0.5f) / 0.5f).coerceIn(0f, 1f)
+        val e = easeBack(p)
+        val x0 = m.first + (s.first - m.first) * e
+        val y0 = m.second + (s.second - m.second) * e
+        val swirl = sin(PI * p).toFloat() * 0.9f
+        val cx = x0 - C
+        val cy = y0 - C
+        val x = C + cx * cos(swirl) - cy * sin(swirl)
+        val y = C + cx * sin(swirl) + cy * cos(swirl)
+        dot(x, y, lerp(MoonPx, sunPx, p))
+    }
+}
+
+private val NightGlow = Color(124, 146, 224)
+private val DayGlow = Color(255, 178, 64)
+private val MoonPx = Color(246, 238, 222)
+private val SunDark = Color(44, 40, 34)
+private val SunLight = Color(255, 210, 122)
+private val NightTrack = listOf(Color(0xFF08080A), Color(0xFF111216))
+private val DayTrack = listOf(Color(0xFFF4F2EE), Color(0xFFE6E3DE))
+private val NightBody = listOf(Color(0xFF2A2C33), Color(0xFF15161B))
+private val DayBody = listOf(Color(0xFFFFFFFF), Color(0xFFF1EEE9))
