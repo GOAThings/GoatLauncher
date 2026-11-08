@@ -12,6 +12,18 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.animation.AnimatedContent
+import cc.slokker.goatlauncher.ui.theme.ControlRadius
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.Crossfade
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.animation.AnimatedVisibility
@@ -129,7 +141,9 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.rememberScrollState
@@ -173,6 +187,8 @@ private val SafeH = 48.dp
 @Composable
 fun HomeScreen(vm: LauncherViewModel) {
     val dockNight by vm.night.collectAsStateWithLifecycle()
+    // Como o fundo (LauncherRoot), a cor da barra de baixo passa de dia para noite em 600 ms.
+    val dockTint by animateColorAsState(dockColor(dockNight), tween(600), label = "dockNight")
     val s = LocalStrings.current
     val context = LocalContext.current
     val screen by vm.screen.collectAsStateWithLifecycle()
@@ -439,16 +455,28 @@ fun HomeScreen(vm: LauncherViewModel) {
 
     // Modo ambiente: sem tocar no comando durante account.idleMinutes (com o launcher à frente), fica só o fundo
     // e as horas. Ao voltar de uma app, a contagem recomeça.
-    var lastInput by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    // A hora da última tecla não é estado do Compose: escrevê-la a cada tecla recompunha o ecrã inteiro (na SHIELD,
+    // 50–190 ms por tecla). O temporizador lê-a quando acorda; só "idle" muda o ecrã.
+    val lastInput = remember { longArrayOf(SystemClock.elapsedRealtime()) }
     var idle by remember { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(lastInput, account.idleMinutes) {
+    LaunchedEffect(account.idleMinutes) {
         idle = false
         if (account.idleMinutes <= 0) return@LaunchedEffect
+        val idleMs = account.idleMinutes * 60_000L
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            lastInput[0] = SystemClock.elapsedRealtime()
             idle = false
-            delay(account.idleMinutes * 60_000L)
-            idle = true
+            while (true) {
+                val left = idleMs - (SystemClock.elapsedRealtime() - lastInput[0])
+                if (left > 0) {
+                    delay(left)
+                } else {
+                    idle = true
+                    // Fica assim até uma tecla o acordar (ver onPreviewKeyEvent).
+                    snapshotFlow { idle }.first { !it }
+                }
+            }
         }
     }
     val uiAlpha by animateFloatAsState(if (idle) 0f else 1f, tween(if (idle) AMBIENT_FADE_MS else 250), label = "ambient")
@@ -476,7 +504,10 @@ fun HomeScreen(vm: LauncherViewModel) {
                     .graphicsLayer { alpha = uiAlpha }
                     .onPreviewKeyEvent { e ->
                         // Modo ambiente: qualquer tecla acorda o ecrã e não faz mais nada.
-                        if (e.type == KeyEventType.KeyDown) lastInput = SystemClock.elapsedRealtime()
+                        if (e.type == KeyEventType.KeyDown) {
+                            lastInput[0] = SystemClock.elapsedRealtime()
+                            if (idle) idle = false
+                        }
                         if (idle || uiAlpha < 1f) return@onPreviewKeyEvent true
                         val pkg = moving
                         val up = e.type == KeyEventType.KeyUp
@@ -676,7 +707,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                                         Box(
                                             Modifier
                                                 .requiredWidth(TilesRowWidth + DockPadding * 2)
-                                                .background(dockColor(dockNight), DockShape)
+                                                .background(dockTint, DockShape)
                                                 .padding(horizontal = DockPadding, vertical = 18.dp),
                                             contentAlignment = Alignment.Center,
                                         ) {
@@ -1001,49 +1032,86 @@ private fun TopBar(
     // Só se troca de separador ao andar com ← → nos separadores (acabado de carregar). Quando o sistema põe lá o
     // foco sozinho (ex.: o elemento com foco desapareceu ao mudar de página nas Definições), não se abre nada.
     var arrowedAt by remember { mutableLongStateOf(0L) }
-    Box(Modifier.fillMaxWidth().height(48.dp)) {
+    // Numa camada sua: a barra a mexer (destaque, foco) não obriga a redesenhar o resto do ecrã.
+    Box(Modifier.fillMaxWidth().height(48.dp).graphicsLayer()) {
         TopGreeting(showGreeting, weather, Modifier.align(Alignment.CenterStart))
         // Barra translúcida, sem contorno; o separador aberto é um botão mais claro lá dentro (cantos como os da GoatTV).
+        // Esse destaque é um só e desliza (com mola) para o separador aberto ou com foco; com foco fica branco.
         // Ao subir para os separadores, o foco cai no separador aberto.
-        Row(
+        var focusedTab by remember { mutableIntStateOf(-1) }
+        val scope = rememberCoroutineScope()
+        var openJob by remember { mutableStateOf<Job?>(null) }
+        var pendingOpen by remember { mutableStateOf<(() -> Unit)?>(null) }
+        val bounds = remember(entries.size) { mutableStateListOf(*Array(entries.size) { 0f to 0f }) }
+        val target = if (focusedTab >= 0) focusedTab else selected.coerceIn(entries.indices)
+        val pillX by animateFloatAsState(bounds[target].first, spring(dampingRatio = 0.82f, stiffness = 420f), label = "tabX")
+        val pillW by animateFloatAsState(bounds[target].second, spring(dampingRatio = 0.82f, stiffness = 420f), label = "tabW")
+        val pillColor by animateColorAsState(if (focusedTab >= 0) Color.White else Color.White.copy(alpha = 0.2f), tween(180), label = "tabColor")
+        Box(
             Modifier
                 .align(Alignment.Center)
-                .onFocusChanged { onFocusChanged(it.hasFocus) }
+                .onFocusChanged {
+                    // Saiu da barra antes de a página abrir (ex.: ↓ logo a seguir): abre-a já.
+                    if (!it.hasFocus) pendingOpen?.let { open -> openJob?.cancel(); pendingOpen = null; open() }
+                    onFocusChanged(it.hasFocus)
+                }
                 .onPreviewKeyEvent { e ->
                     if (e.type == KeyEventType.KeyDown && (e.key == Key.DirectionLeft || e.key == Key.DirectionRight)) arrowedAt = SystemClock.uptimeMillis()
                     false
                 }
-                .focusRestorer(tabs[selected.coerceIn(tabs.indices)])
                 .background(Color.White.copy(alpha = 0.14f), GoatShapes.Bar)
-                .padding(BarPadding),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                .padding(BarPadding)
+                // O destaque lê a animação só ao desenhar: não recompõe a barra a cada fotograma.
+                .drawBehind {
+                    if (pillW > 0f) {
+                        drawRoundRect(pillColor, Offset(pillX, 0f), Size(pillW, size.height), CornerRadius(ControlRadius.toPx()))
+                    }
+                },
         ) {
-            entries.forEachIndexed { i, (label, action) ->
-                Surface(
-                    onClick = action,
-                    // Passar o foco por um separador abre-o (sem carregar em OK).
-                    modifier = Modifier
-                        .focusRequester(tabs[i])
-                        .onFocusChanged {
-                            if (it.isFocused && SystemClock.uptimeMillis() - arrowedAt < TAB_ARROW_MS && i != selected) action()
-                            if (it.isFocused) arrowedAt = 0L
-                        },
-                    shape = ClickableSurfaceDefaults.shape(GoatShapes.Control),
-                    colors = ClickableSurfaceDefaults.colors(
-                        containerColor = if (i == selected) Color.White.copy(alpha = 0.2f) else Color.Transparent,
-                        contentColor = if (i == selected) Color.White else Color.White.copy(alpha = 0.78f),
-                        focusedContainerColor = Color.White,
-                        focusedContentColor = Color.Black,
-                        pressedContainerColor = Color.White.copy(alpha = 0.8f),
-                        pressedContentColor = Color.Black,
-                    ),
-                    scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
-                ) {
-                    Text(
-                        label,
-                        Modifier.padding(horizontal = 22.dp, vertical = 8.dp),
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = if (i == selected) FontWeight.SemiBold else FontWeight.Medium),
-                    )
+            Row(
+                Modifier.focusRestorer(tabs[selected.coerceIn(tabs.indices)]),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                entries.forEachIndexed { i, (label, action) ->
+                    Surface(
+                        onClick = action,
+                        // Passar o foco por um separador abre-o (sem carregar em OK).
+                        modifier = Modifier
+                            .focusRequester(tabs[i])
+                            .onGloballyPositioned {
+                                // Só quando mudam: escrever o mesmo valor a cada layout recomporia a barra à toa.
+                                val b = it.positionInParent().x to it.size.width.toFloat()
+                                if (bounds[i] != b) bounds[i] = b
+                            }
+                            .onFocusChanged {
+                                if (it.isFocused) focusedTab = i else if (focusedTab == i) focusedTab = -1
+                                if (it.isFocused && SystemClock.uptimeMillis() - arrowedAt < TAB_ARROW_MS && i != selected) {
+                                    // Abre a página só quando o foco pára aqui: o destaque desliza primeiro (construir a
+                                    // página nova a meio do deslize dava um solavanco), e ao passar por um separador a
+                                    // caminho de outro não se constrói a página dele.
+                                    openJob?.cancel()
+                                    pendingOpen = action
+                                    openJob = scope.launch {
+                                        delay(TAB_OPEN_DELAY_MS)
+                                        pendingOpen = null
+                                        action()
+                                    }
+                                } else if (!it.isFocused && focusedTab == -1) {
+                                    openJob?.cancel()
+                                }
+                                if (it.isFocused) arrowedAt = 0L
+                            },
+                        shape = ClickableSurfaceDefaults.shape(GoatShapes.Control),
+                        // O fundo é o destaque que desliza (atrás); aqui fica transparente.
+                        colors = ClickableSurfaceDefaults.colors(
+                            containerColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            pressedContainerColor = Color.White.copy(alpha = 0.3f),
+                        ),
+                        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
+                    ) {
+                        TabLabel(label, onPill = i == target, barFocused = focusedTab >= 0, selected = i == selected)
+                    }
                 }
             }
         }
@@ -1054,7 +1122,21 @@ private fun TopBar(
         ) {
             // Dia/noite: OK troca entre fundo claro e fundo escurecido (e fotos do tom certo).
             TopButton(onClick = onNight) {
-                Icon(if (night) GoatIcons.Moon else GoatIcons.Sun, contentDescription = s.dayNight, modifier = Modifier.size(18.dp))
+                // O sol e a lua trocam a crescer e a aparecer, em vez de saltar.
+                AnimatedContent(
+                    targetState = night,
+                    transitionSpec = {
+                        (fadeIn(tween(260, delayMillis = 60)) + scaleIn(tween(320), initialScale = 0.6f)) togetherWith
+                            (fadeOut(tween(160)) + scaleOut(tween(200), targetScale = 0.6f))
+                    },
+                    label = "dayNightIcon",
+                ) { isNight ->
+                    Icon(
+                        if (isNight) GoatIcons.Moon else GoatIcons.Sun,
+                        contentDescription = s.dayNight,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
             // Estado da rede (Wi-Fi, cabo ou sem rede); OK abre as definições de rede.
             TopButton(onClick = onNetwork) {
@@ -1365,6 +1447,9 @@ private const val MENU_MS = 120
 /** Quanto tempo depois de ← → o foco a chegar a um separador ainda conta como ter andado até ele. */
 private const val TAB_ARROW_MS = 400L
 
+/** Quanto o foco tem de ficar num separador (a andar com ← →) para ele abrir: o tempo do destaque deslizar. */
+private const val TAB_OPEN_DELAY_MS = 250L
+
 private const val AMBIENT_FADE_MS = 1500
 
 /** "Lago ao amanhecer [OC] [4032x3024]" → "Lago ao amanhecer". */
@@ -1420,6 +1505,26 @@ private fun PinOverlay(title: String, waitMs: () -> Long, onPin: (String) -> Boo
 private fun waitText(ms: Long): String {
     val seconds = (ms + 999) / 1000
     return "%d:%02d".format(seconds / 60, seconds % 60)
+}
+
+/** O nome de um separador: preto sobre o destaque com foco, branco no aberto, apagado nos outros. */
+@Composable
+private fun TabLabel(label: String, onPill: Boolean, barFocused: Boolean, selected: Boolean) {
+    val color by animateColorAsState(
+        when {
+            onPill && barFocused -> Color.Black
+            selected -> Color.White
+            else -> Color.White.copy(alpha = 0.78f)
+        },
+        tween(180),
+        label = "tabText",
+    )
+    Text(
+        label,
+        Modifier.padding(horizontal = 22.dp, vertical = 8.dp),
+        color = color,
+        style = MaterialTheme.typography.titleSmall.copy(fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium),
+    )
 }
 
 /** Botão da barra de cima (vidro; branco com foco), com os cantos dos controlos, como na GoatTV. */
