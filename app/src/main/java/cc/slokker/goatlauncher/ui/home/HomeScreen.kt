@@ -55,7 +55,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -121,6 +120,7 @@ import cc.slokker.goatlauncher.ui.common.GoatIcons
 import cc.slokker.goatlauncher.ui.common.glass
 import cc.slokker.goatlauncher.ui.common.requestFocusSafely
 import cc.slokker.goatlauncher.ui.theme.GoatColors
+import cc.slokker.goatlauncher.ui.theme.BarPadding
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.ShelfTitleStyle
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
@@ -1003,7 +1003,7 @@ private fun TopBar(
     var arrowedAt by remember { mutableLongStateOf(0L) }
     Box(Modifier.fillMaxWidth().height(48.dp)) {
         TopGreeting(showGreeting, weather, Modifier.align(Alignment.CenterStart))
-        // Cápsula translúcida, sem contorno; o separador aberto é uma cápsula mais clara lá dentro.
+        // Barra translúcida, sem contorno; o separador aberto é um botão mais claro lá dentro (cantos como os da GoatTV).
         // Ao subir para os separadores, o foco cai no separador aberto.
         Row(
             Modifier
@@ -1014,8 +1014,8 @@ private fun TopBar(
                     false
                 }
                 .focusRestorer(tabs[selected.coerceIn(tabs.indices)])
-                .background(Color.White.copy(alpha = 0.14f), CircleShape)
-                .padding(5.dp),
+                .background(Color.White.copy(alpha = 0.14f), GoatShapes.Bar)
+                .padding(BarPadding),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             entries.forEachIndexed { i, (label, action) ->
@@ -1028,7 +1028,7 @@ private fun TopBar(
                             if (it.isFocused && SystemClock.uptimeMillis() - arrowedAt < TAB_ARROW_MS && i != selected) action()
                             if (it.isFocused) arrowedAt = 0L
                         },
-                    shape = ClickableSurfaceDefaults.shape(CircleShape),
+                    shape = ClickableSurfaceDefaults.shape(GoatShapes.Control),
                     colors = ClickableSurfaceDefaults.colors(
                         containerColor = if (i == selected) Color.White.copy(alpha = 0.2f) else Color.Transparent,
                         contentColor = if (i == selected) Color.White else Color.White.copy(alpha = 0.78f),
@@ -1053,11 +1053,11 @@ private fun TopBar(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // Dia/noite: OK troca entre fundo claro e fundo escurecido (e fotos do tom certo).
-            RoundButton(onClick = onNight) {
+            TopButton(onClick = onNight) {
                 Icon(if (night) GoatIcons.Moon else GoatIcons.Sun, contentDescription = s.dayNight, modifier = Modifier.size(18.dp))
             }
             // Estado da rede (Wi-Fi, cabo ou sem rede); OK abre as definições de rede.
-            RoundButton(onClick = onNetwork) {
+            TopButton(onClick = onNetwork) {
                 Icon(
                     when (network) {
                         NetworkKind.ETHERNET -> GoatIcons.Ethernet
@@ -1422,13 +1422,13 @@ private fun waitText(ms: Long): String {
     return "%d:%02d".format(seconds / 60, seconds % 60)
 }
 
-/** Botão redondo da barra de cima (vidro; branco com foco), como o da rede. */
+/** Botão da barra de cima (vidro; branco com foco), com os cantos dos controlos, como na GoatTV. */
 @Composable
-private fun RoundButton(onClick: () -> Unit, content: @Composable () -> Unit) {
+private fun TopButton(onClick: () -> Unit, content: @Composable () -> Unit) {
     Surface(
         onClick = onClick,
         modifier = Modifier.size(40.dp),
-        shape = ClickableSurfaceDefaults.shape(CircleShape),
+        shape = ClickableSurfaceDefaults.shape(GoatShapes.Control),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.White.copy(alpha = 0.14f),
             contentColor = GoatColors.Text,

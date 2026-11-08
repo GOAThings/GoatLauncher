@@ -69,6 +69,7 @@ import cc.slokker.goatlauncher.ui.home.TopGreeting
 import cc.slokker.goatlauncher.ui.home.WallpaperView
 import cc.slokker.goatlauncher.ui.home.focusEffect
 import cc.slokker.goatlauncher.ui.theme.GoatColors
+import cc.slokker.goatlauncher.ui.theme.BarPadding
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.ShelfTitleStyle
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
@@ -257,14 +258,14 @@ private fun PreviewTopBar(account: AccountSettings, weather: WeatherNow?, showAp
     Box(Modifier.fillMaxWidth().height(48.dp)) {
         TopGreeting(account.showGreeting, weather, Modifier.align(Alignment.CenterStart))
         Row(
-            Modifier.align(Alignment.Center).background(Color.White.copy(alpha = 0.14f), CircleShape).padding(5.dp),
+            Modifier.align(Alignment.Center).background(Color.White.copy(alpha = 0.14f), GoatShapes.Bar).padding(BarPadding),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             listOfNotNull(s.tabHome, s.tabApps.takeIf { showApps }, s.settings).forEachIndexed { i, label ->
                 Text(
                     label,
                     Modifier
-                        .background(if (i == 0) Color.White.copy(alpha = 0.2f) else Color.Transparent, CircleShape)
+                        .background(if (i == 0) Color.White.copy(alpha = 0.2f) else Color.Transparent, GoatShapes.Control)
                         .padding(horizontal = 22.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = if (i == 0) FontWeight.SemiBold else FontWeight.Medium),
                     color = if (i == 0) Color.White else Color.White.copy(alpha = 0.78f),
