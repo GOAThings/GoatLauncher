@@ -3,8 +3,6 @@ package cc.slokker.goatlauncher.ui
 import androidx.core.os.ConfigurationCompat
 import android.content.Context
 import android.content.res.Configuration
-import android.text.TextUtils
-import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.core.os.LocaleListCompat
@@ -19,9 +17,6 @@ import java.util.Locale
 class Strings(context: Context) {
     private val res = context.resources
     val locale: Locale = ConfigurationCompat.getLocales(res.configuration)[0] ?: Locale.getDefault()
-
-    /** Línguas da direita para a esquerda (árabe): o Compose espelha o ecrã sozinho. */
-    val rtl: Boolean = TextUtils.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
 
     private fun s(id: Int): String = res.getString(id)
     private fun s(id: Int, vararg args: Any?): String = res.getString(id, *args)
@@ -46,7 +41,6 @@ class Strings(context: Context) {
     fun continueIn(app: String) = s(R.string.continue_in, app)
     val noApps get() = s(R.string.no_apps)
     val cantOpen get() = s(R.string.cant_open)
-    val noSearch get() = s(R.string.no_search)
     val location get() = s(R.string.location)
     val locationAuto get() = s(R.string.location_auto)
     fun locationAutoCity(city: String) = s(R.string.location_auto_city, city)
@@ -110,7 +104,6 @@ class Strings(context: Context) {
     val youtube get() = s(R.string.youtube)
     val youtubeLink get() = s(R.string.youtube_link)
     val youtubeLinkHint get() = s(R.string.youtube_link_hint)
-    val youtubeOn get() = s(R.string.youtube_on)
     val youtubeOnHint get() = s(R.string.youtube_on_hint)
     val youtubeUnlink get() = s(R.string.youtube_unlink)
     val youtubeGoTo get() = s(R.string.youtube_go_to)
@@ -209,7 +202,6 @@ class Strings(context: Context) {
     val ytBoth get() = s(R.string.yt_both)
     val ytContinue get() = s(R.string.yt_continue)
     val ytRecommended get() = s(R.string.yt_recommended)
-    val remote get() = s(R.string.remote)
     val buttons get() = s(R.string.buttons)
     val buttonsNone get() = s(R.string.buttons_none)
     fun buttonsCount(n: Int) = s(R.string.buttons_count, n)

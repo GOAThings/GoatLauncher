@@ -18,7 +18,6 @@
     <string name="continue_in">%1$s에서 이어서 보기</string>
     <string name="no_apps">설치된 TV 앱이 없어요.</string>
     <string name="cant_open">열 수 없어요.</string>
-    <string name="no_search">이 TV에는 시스템 검색이 없어요.</string>
     <string name="location">위치</string>
     <string name="location_auto">자동 (인터넷 기준)</string>
     <string name="location_auto_city">자동: %1$s (인터넷 기준)</string>
@@ -83,7 +82,6 @@
     <string name="youtube">YouTube</string>
     <string name="youtube_link">Google 계정 연결</string>
     <string name="youtube_link_hint">이어서 보기에 YouTube 추천 영상 표시</string>
-    <string name="youtube_on">YouTube 추천 사용 중</string>
     <string name="youtube_on_hint">YouTube 앱의 이어서 보기에 표시돼요</string>
     <string name="youtube_unlink">Google 계정 연결 해제</string>
     <string name="youtube_go_to">휴대폰이나 컴퓨터에서 다음 주소로 이동한 후</string>
@@ -179,7 +177,6 @@
     <string name="yt_both">시청 중인 동영상과 추천</string>
     <string name="yt_continue">시청 중인 동영상만(이어서 보기)</string>
     <string name="yt_recommended">추천만</string>
-    <string name="remote">리모컨</string>
     <string name="buttons">리모컨 버튼</string>
     <string name="buttons_none">없음: 리모컨 버튼으로 앱을 열 수 있어요</string>
     <string name="buttons_count">%1$d / 5</string>

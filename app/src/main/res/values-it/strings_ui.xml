@@ -18,7 +18,6 @@
     <string name="continue_in">Continua a guardare in %1$s</string>
     <string name="no_apps">Nessuna app per TV installata.</string>
     <string name="cant_open">Impossibile aprirlo.</string>
-    <string name="no_search">Questa TV non ha la ricerca di sistema.</string>
     <string name="location">Posizione</string>
     <string name="location_auto">Automatica (da internet)</string>
     <string name="location_auto_city">Automatica: %1$s (da internet)</string>
@@ -83,7 +82,6 @@
     <string name="youtube">YouTube</string>
     <string name="youtube_link">Collega un account Google</string>
     <string name="youtube_link_hint">I tuoi consigli di YouTube in Continua a guardare</string>
-    <string name="youtube_on">Consigli di YouTube attivi</string>
     <string name="youtube_on_hint">Compaiono in Continua a guardare dell\'app YouTube</string>
     <string name="youtube_unlink">Scollega l\'account Google</string>
     <string name="youtube_go_to">Sul telefono o sul computer, vai su</string>
@@ -179,7 +177,6 @@
     <string name="yt_both">Video in corso e consigli</string>
     <string name="yt_continue">Solo video in corso (continua a guardare)</string>
     <string name="yt_recommended">Solo consigli</string>
-    <string name="remote">Telecomando</string>
     <string name="buttons">Tasti del telecomando</string>
     <string name="buttons_none">Nessuno: un tasto del telecomando può aprire un\'app</string>
     <string name="buttons_count">%1$d di 5</string>

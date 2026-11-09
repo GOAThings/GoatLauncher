@@ -18,7 +18,6 @@
     <string name="continue_in">Продолжить просмотр в %1$s</string>
     <string name="no_apps">Нет установленных ТВ-приложений.</string>
     <string name="cant_open">Не удалось открыть.</string>
-    <string name="no_search">На этом ТВ нет системного поиска.</string>
     <string name="location">Местоположение</string>
     <string name="location_auto">Автоматически (по интернету)</string>
     <string name="location_auto_city">Автоматически: %1$s (по интернету)</string>
@@ -83,7 +82,6 @@
     <string name="youtube">YouTube</string>
     <string name="youtube_link">Привязать аккаунт Google</string>
     <string name="youtube_link_hint">Ваши рекомендации YouTube в «Продолжить просмотр»</string>
-    <string name="youtube_on">Рекомендации YouTube включены</string>
     <string name="youtube_on_hint">Они показываются в «Продолжить просмотр» приложения YouTube</string>
     <string name="youtube_unlink">Отвязать аккаунт Google</string>
     <string name="youtube_go_to">На телефоне или компьютере откройте</string>
@@ -179,7 +177,6 @@
     <string name="yt_both">Начатые видео и рекомендации</string>
     <string name="yt_continue">Только начатые видео (продолжить просмотр)</string>
     <string name="yt_recommended">Только рекомендации</string>
-    <string name="remote">Пульт</string>
     <string name="buttons">Кнопки пульта</string>
     <string name="buttons_none">Нет: кнопка пульта может открывать приложение</string>
     <string name="buttons_count">%1$d из 5</string>

@@ -18,7 +18,6 @@
     <string name="continue_in">Reprendre la lecture dans %1$s</string>
     <string name="no_apps">Aucune app TV installée.</string>
     <string name="cant_open">Impossible d\'ouvrir cet élément.</string>
-    <string name="no_search">Cette TV n\'a pas de recherche système.</string>
     <string name="location">Emplacement</string>
     <string name="location_auto">Automatique (par internet)</string>
     <string name="location_auto_city">Automatique : %1$s (par internet)</string>
@@ -83,7 +82,6 @@
     <string name="youtube">YouTube</string>
     <string name="youtube_link">Associer un compte Google</string>
     <string name="youtube_link_hint">Vos recommandations YouTube dans Reprendre la lecture</string>
-    <string name="youtube_on">Recommandations YouTube activées</string>
     <string name="youtube_on_hint">Elles apparaissent dans Reprendre la lecture de l\'app YouTube</string>
     <string name="youtube_unlink">Dissocier le compte Google</string>
     <string name="youtube_go_to">Sur votre téléphone ou ordinateur, allez sur</string>
@@ -179,7 +177,6 @@
     <string name="yt_both">Vidéos en cours et recommandations</string>
     <string name="yt_continue">Seulement les vidéos en cours (reprendre la lecture)</string>
     <string name="yt_recommended">Seulement les recommandations</string>
-    <string name="remote">Télécommande</string>
     <string name="buttons">Boutons de la télécommande</string>
     <string name="buttons_none">Aucun : un bouton de la télécommande peut ouvrir une app</string>
     <string name="buttons_count">%1$d sur 5</string>

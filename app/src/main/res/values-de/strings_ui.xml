@@ -18,7 +18,6 @@
     <string name="continue_in">Weiterschauen in %1$s</string>
     <string name="no_apps">Keine TV-Apps installiert.</string>
     <string name="cant_open">Konnte nicht geöffnet werden.</string>
-    <string name="no_search">Dieser TV hat keine Systemsuche.</string>
     <string name="location">Standort</string>
     <string name="location_auto">Automatisch (über das Internet)</string>
     <string name="location_auto_city">Automatisch: %1$s (über das Internet)</string>
@@ -83,7 +82,6 @@
     <string name="youtube">YouTube</string>
     <string name="youtube_link">Google-Konto verknüpfen</string>
     <string name="youtube_link_hint">Deine YouTube-Empfehlungen in Weiterschauen</string>
-    <string name="youtube_on">YouTube-Empfehlungen an</string>
     <string name="youtube_on_hint">Sie erscheinen in Weiterschauen der YouTube-App</string>
     <string name="youtube_unlink">Google-Konto trennen</string>
     <string name="youtube_go_to">Öffne auf deinem Handy oder Computer</string>
@@ -179,7 +177,6 @@
     <string name="yt_both">Begonnene Videos und Empfehlungen</string>
     <string name="yt_continue">Nur begonnene Videos (weiterschauen)</string>
     <string name="yt_recommended">Nur Empfehlungen</string>
-    <string name="remote">Fernbedienung</string>
     <string name="buttons">Fernbedienungstasten</string>
     <string name="buttons_none">Keine: Eine Taste der Fernbedienung kann eine App öffnen</string>
     <string name="buttons_count">%1$d von 5</string>

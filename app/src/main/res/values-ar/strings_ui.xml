@@ -18,7 +18,6 @@
     <string name="continue_in">متابعة المشاهدة في %1$s</string>
     <string name="no_apps">لا توجد تطبيقات تلفزيون مثبّتة.</string>
     <string name="cant_open">تعذّر فتح هذا العنصر.</string>
-    <string name="no_search">لا يحتوي هذا التلفزيون على بحث النظام.</string>
     <string name="location">الموقع</string>
     <string name="location_auto">تلقائي (عبر الإنترنت)</string>
     <string name="location_auto_city">تلقائي: %1$s (عبر الإنترنت)</string>
@@ -83,7 +82,6 @@
     <string name="youtube">YouTube</string>
     <string name="youtube_link">ربط حساب Google</string>
     <string name="youtube_link_hint">اقتراحات YouTube الخاصة بك في متابعة المشاهدة</string>
-    <string name="youtube_on">اقتراحات YouTube مفعّلة</string>
     <string name="youtube_on_hint">تظهر في متابعة المشاهدة لتطبيق YouTube</string>
     <string name="youtube_unlink">إلغاء ربط حساب Google</string>
     <string name="youtube_go_to">على هاتفك أو حاسوبك، انتقل إلى</string>
@@ -179,7 +177,6 @@
     <string name="yt_both">الفيديوهات قيد المشاهدة والاقتراحات</string>
     <string name="yt_continue">الفيديوهات قيد المشاهدة فقط (متابعة المشاهدة)</string>
     <string name="yt_recommended">الاقتراحات فقط</string>
-    <string name="remote">جهاز التحكم</string>
     <string name="buttons">أزرار جهاز التحكم</string>
     <string name="buttons_none">لا شيء: يمكن لزر في جهاز التحكم أن يفتح تطبيقًا</string>
     <string name="buttons_count">%1$d من 5</string>

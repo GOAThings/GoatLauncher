@@ -18,7 +18,6 @@
     <string name="continue_in">%1$s で続きを見る</string>
     <string name="no_apps">テレビ用アプリがインストールされていません。</string>
     <string name="cant_open">開けませんでした。</string>
-    <string name="no_search">このテレビにはシステム検索がありません。</string>
     <string name="location">場所</string>
     <string name="location_auto">自動（インターネットから）</string>
     <string name="location_auto_city">自動: %1$s（インターネットから）</string>
@@ -83,7 +82,6 @@
     <string name="youtube">YouTube</string>
     <string name="youtube_link">Google アカウントをリンク</string>
     <string name="youtube_link_hint">「続きを見る」に YouTube のおすすめを表示します</string>
-    <string name="youtube_on">YouTube のおすすめ：オン</string>
     <string name="youtube_on_hint">YouTube アプリの「続きを見る」に表示されます</string>
     <string name="youtube_unlink">Google アカウントのリンクを解除</string>
     <string name="youtube_go_to">スマートフォンまたはパソコンで</string>
@@ -179,7 +177,6 @@
     <string name="yt_both">視聴中の動画とおすすめ</string>
     <string name="yt_continue">視聴中の動画のみ（続きを見る）</string>
     <string name="yt_recommended">おすすめのみ</string>
-    <string name="remote">リモコン</string>
     <string name="buttons">リモコンのボタン</string>
     <string name="buttons_none">なし：リモコンのボタンでアプリを開けます</string>
     <string name="buttons_count">%1$d / 5</string>

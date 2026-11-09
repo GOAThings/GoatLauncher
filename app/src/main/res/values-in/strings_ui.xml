@@ -18,7 +18,6 @@
     <string name="continue_in">Lanjutkan menonton di %1$s</string>
     <string name="no_apps">Tidak ada aplikasi TV yang terpasang.</string>
     <string name="cant_open">Tidak dapat membukanya.</string>
-    <string name="no_search">TV ini tidak punya pencarian sistem.</string>
     <string name="location">Lokasi</string>
     <string name="location_auto">Otomatis (lewat internet)</string>
     <string name="location_auto_city">Otomatis: %1$s (lewat internet)</string>
@@ -83,7 +82,6 @@
     <string name="youtube">YouTube</string>
     <string name="youtube_link">Tautkan akun Google</string>
     <string name="youtube_link_hint">Rekomendasi YouTube Anda di Lanjutkan menonton</string>
-    <string name="youtube_on">Rekomendasi YouTube aktif</string>
     <string name="youtube_on_hint">Muncul di Lanjutkan menonton aplikasi YouTube</string>
     <string name="youtube_unlink">Putuskan tautan akun Google</string>
     <string name="youtube_go_to">Di ponsel atau komputer, buka</string>
@@ -179,7 +177,6 @@
     <string name="yt_both">Video yang belum selesai dan rekomendasi</string>
     <string name="yt_continue">Hanya video yang belum selesai (lanjutkan menonton)</string>
     <string name="yt_recommended">Hanya rekomendasi</string>
-    <string name="remote">Remote</string>
     <string name="buttons">Tombol remote</string>
     <string name="buttons_none">Tidak ada: tombol remote bisa membuka aplikasi</string>
     <string name="buttons_count">%1$d dari 5</string>

@@ -18,7 +18,6 @@
     <string name="continue_in">Continue watching in %1$s</string>
     <string name="no_apps">No TV apps installed.</string>
     <string name="cant_open">Couldn\'t open that.</string>
-    <string name="no_search">This TV has no system search.</string>
     <string name="location">Location</string>
     <string name="location_auto">Automatic (by internet)</string>
     <string name="location_auto_city">Automatic: %1$s (by internet)</string>
@@ -83,7 +82,6 @@
     <string name="youtube">YouTube</string>
     <string name="youtube_link">Link a Google account</string>
     <string name="youtube_link_hint">Your YouTube recommendations in Continue watching</string>
-    <string name="youtube_on">YouTube recommendations on</string>
     <string name="youtube_on_hint">They show in the YouTube app\'s Continue watching</string>
     <string name="youtube_unlink">Unlink the Google account</string>
     <string name="youtube_go_to">On your phone or computer, go to</string>
@@ -179,7 +177,6 @@
     <string name="yt_both">Videos in progress and recommendations</string>
     <string name="yt_continue">Only videos in progress (continue watching)</string>
     <string name="yt_recommended">Only recommendations</string>
-    <string name="remote">Remote</string>
     <string name="buttons">Remote buttons</string>
     <string name="buttons_none">None: a remote button can open an app</string>
     <string name="buttons_count">%1$d of 5</string>
