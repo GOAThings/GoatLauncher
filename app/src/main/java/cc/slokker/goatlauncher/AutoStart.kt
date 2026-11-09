@@ -6,6 +6,9 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.SystemClock
 import android.util.Log
+import cc.slokker.goatlauncher.data.AppCatalog
+import cc.slokker.goatlauncher.data.AppOpener
+import cc.slokker.goatlauncher.data.OpenResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -60,6 +63,18 @@ object AutoStart {
                 container.catalog.launchIntent(pkg) ?: return@launch
             }
             start(context, intent)
+        }
+    }
+
+    /**
+     * Abrir apps a pedido do GoatRemote (`POST /open/<pacote>` na porta 6470, ver PhoneRoutes): pelo [open], com o
+     * controlo parental. Sem o serviço de acessibilidade, o Android não deixa abrir a partir do fundo.
+     */
+    fun opener(context: Context, catalog: AppCatalog) = AppOpener { pkg ->
+        when {
+            catalog.launchIntent(pkg) == null -> OpenResult.NOT_FOUND
+            HomeGuardService.instance == null -> OpenResult.NO_BACKGROUND_START
+            else -> OpenResult.OPENED.also { open(context, pkg) }
         }
     }
 

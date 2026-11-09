@@ -3,8 +3,6 @@ package cc.slokker.goatlauncher.data
 import android.content.Context
 import android.media.AudioManager
 import android.util.Log
-import cc.slokker.goatlauncher.AutoStart
-import cc.slokker.goatlauncher.HomeGuardService
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,24 +31,22 @@ import java.net.Socket
  *                        protocolo do comando e fecha a ligação. Sem o serviço de acessibilidade o Android não deixa
  *                        abrir apps a partir do fundo: responde 409, e o comando tenta pelo protocolo.
  *
- * Aqui fica a rede (ligações, limites, quem pode falar); o que cada pedido responde está no [PhoneRoutes].
+ * Aqui fica a rede (ligações, limites, quem pode falar); o que cada pedido responde está no [PhoneRoutes]. Abrir uma
+ * app é com o [opener] (o AutoStart, na camada da app).
  */
-class PhoneApps(private val context: Context, private val apps: AppCatalog, private val scope: CoroutineScope) {
+class PhoneApps(context: Context, apps: AppCatalog, opener: AppOpener, private val scope: CoroutineScope) {
     private val audio = context.getSystemService(AudioManager::class.java)
 
     private val routes = PhoneRoutes(
         // A lista do catálogo (já lida), e não uma consulta ao PackageManager por pedido: o telemóvel pede os ícones
         // todos de uma vez, até 16 ao mesmo tempo.
-        apps = { apps.current() },
-        png = AppCatalog::encodePng,
-        pngs = apps.pngs,
+        apps = apps::current,
         volume = { direction ->
             runCatching { audio.adjustSuggestedStreamVolume(direction, AudioManager.USE_DEFAULT_STREAM_TYPE, AudioManager.FLAG_SHOW_UI) }
                 .onFailure { Log.w(TAG, "Volume", it) }
         },
-        canOpen = { pkg -> apps.launchIntent(pkg) != null },
-        canStartFromBackground = { HomeGuardService.instance != null },
-        open = { pkg -> AutoStart.open(context, pkg) },
+        opener = opener,
+        pngs = apps.pngs,
     )
 
     /** Só desta porta (mais um para esperar ligações): nunca ocupa os threads do Dispatchers.IO do resto da app. */

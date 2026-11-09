@@ -103,8 +103,8 @@ class AppCatalog(private val context: Context, private val scope: CoroutineScope
     /** O PNG da imagem de [app] (o banner ou o ícone), ou null se não tiver nenhuma. */
     fun png(app: LauncherApp): ByteArray? = (app.banner ?: app.icon)?.let { pngs.get(app.packageName, it) }
 
-    internal companion object {
-        private const val TAG = "AppCatalog"
+    private companion object {
+        const val TAG = "AppCatalog"
 
         /** O PNG tal como o GoatRemote e o site o recebem (o `icon_hash` do site é o SHA-1 destes bytes). */
         fun encodePng(image: ImageBitmap): ByteArray {
