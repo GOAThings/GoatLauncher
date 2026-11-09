@@ -191,11 +191,3 @@ fun TvTextField(
         },
     )
 }
-
-/** Pede o foco a [requester] durante alguns frames (o elemento pode ainda não estar composto). */
-suspend fun focusSoon(requester: FocusRequester) {
-    repeat(5) {
-        withFrameNanos { }
-        if (requester.requestFocusSafely()) return
-    }
-}

@@ -20,7 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.slokker.goatlauncher.LauncherApp
 import cc.slokker.goatlauncher.ui.activation.ActivationScreen
 import cc.slokker.goatlauncher.ui.home.HomeScreen
-import cc.slokker.goatlauncher.ui.home.ToastPill
+import cc.slokker.goatlauncher.ui.common.ToastPill
 import cc.slokker.goatlauncher.ui.common.semanticsOnlyForScreenReaders
 import cc.slokker.goatlauncher.ui.home.WallpaperView
 import cc.slokker.goatlauncher.ui.state.NightClock

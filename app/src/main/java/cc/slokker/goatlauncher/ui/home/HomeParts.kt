@@ -99,8 +99,6 @@ import androidx.compose.ui.unit.IntSize
 import cc.slokker.goatlauncher.data.AccountSettings
 import kotlin.math.roundToInt
 import cc.slokker.goatlauncher.ui.theme.tabular
-
-private val BannerShape = GoatShapes.Control
 val CardHeight = 88.dp
 private val CardShape = GoatShapes.Control
 
@@ -142,224 +140,6 @@ fun TopClock(clock24h: Boolean, modifier: Modifier = Modifier) {
 }
 
 /**
- * O modo ambiente (e o protetor de ecrã): [AccountSettings.AMBIENT_PHOTOS] mostra o fundo com as horas, a data,
- * o tempo, o canal que estava a dar ([nowPlaying]), o título da foto ([caption]) e o autor ([credit]); [AccountSettings.AMBIENT_BOUNCE]
- * é um ecrã preto com o logótipo DVD a andar e a bater nas bordas, como nos leitores de DVD de antigamente.
- */
-@Composable
-fun AmbientScene(
-    style: String,
-    clock24h: Boolean,
-    weather: WeatherNow?,
-    nowPlaying: String?,
-    caption: String?,
-    modifier: Modifier = Modifier,
-    credit: String? = null,
-) {
-    if (style == AccountSettings.AMBIENT_BOUNCE) {
-        BouncingDvd(modifier)
-        return
-    }
-    val now = rememberMinute()
-    // Para não marcar o ecrã: de 10 em 10 minutos o bloco muda de lado (e sobe ou desce um pouco).
-    val slot = (now / 60_000 / AMBIENT_MOVE_MINUTES % 4).toInt()
-    val alignment = if (slot % 2 == 0) Alignment.BottomStart else Alignment.BottomEnd
-    val lift = if (slot < 2) 0.dp else 28.dp
-    Box(
-        modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(0.5f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.6f)))
-            .padding(TvSafePadding)
-            .padding(bottom = lift),
-        contentAlignment = alignment,
-    ) {
-        val end = alignment == Alignment.BottomEnd
-        AmbientBlock(clock24h, weather, nowPlaying, caption, credit, if (end) Alignment.End else Alignment.Start, now)
-    }
-}
-
-/** As horas em grande e, por baixo, a data com o tempo, o canal a dar, o título da foto e o crédito. */
-@Composable
-private fun AmbientBlock(
-    clock24h: Boolean,
-    weather: WeatherNow?,
-    nowPlaying: String?,
-    caption: String?,
-    credit: String?,
-    align: Alignment.Horizontal,
-    now: Long,
-    color: Color = Color.White,
-) {
-    val s = LocalStrings.current
-    Column(horizontalAlignment = align) {
-        Text(
-            SimpleDateFormat(timePattern(s, clock24h, amPm = false), s.locale).format(now),
-            style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Light),
-            color = color,
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(formatDate(now, s), style = MaterialTheme.typography.titleMedium, color = color.copy(alpha = 0.75f))
-            if (weather != null) {
-                Text("  ·  ", style = MaterialTheme.typography.titleMedium, color = color.copy(alpha = 0.75f))
-                Icon(weatherIcon(weather), contentDescription = null, tint = color.copy(alpha = 0.75f), modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("${weather.temperature}°", style = MaterialTheme.typography.titleMedium, color = color.copy(alpha = 0.75f))
-            }
-        }
-        if (nowPlaying != null) {
-            Spacer(Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(GoatIcons.Play, contentDescription = null, tint = color.copy(alpha = 0.6f), modifier = Modifier.size(14.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(nowPlaying, style = MaterialTheme.typography.bodyMedium, color = color.copy(alpha = 0.6f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-        }
-        if (caption != null) {
-            Spacer(Modifier.height(6.dp))
-            Text(caption, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        // O autor e a licença (Wikimedia) ou o crédito (NASA): muitas fotos pedem atribuição, por isso numa linha só sua.
-        if (credit != null) {
-            Spacer(Modifier.height(2.dp))
-            Text(s.photoCredit(credit), style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-    }
-}
-
-/**
- * O logótipo DVD a andar na diagonal e a ressaltar nas bordas (de vez em quando acerta num canto); muda de cor a
- * cada batida. Tudo o resto é preto (um bom protetor de ecrã para TVs OLED).
- */
-@Composable
-private fun BouncingDvd(modifier: Modifier) {
-    val density = LocalDensity.current
-    var area by remember { mutableStateOf(IntSize.Zero) }
-    var block by remember { mutableStateOf(IntSize.Zero) }
-    var pos by remember { mutableStateOf(Offset.Zero) }
-    var colorIndex by remember { mutableIntStateOf(0) }
-    // Easter egg: quando acerta mesmo num canto (as duas bordas quase ao mesmo tempo), aparece uma cabra lá.
-    var goatCorner by remember { mutableStateOf<Alignment?>(null) }
-    LaunchedEffect(goatCorner) {
-        if (goatCorner != null) {
-            delay(GOAT_MS)
-            goatCorner = null
-        }
-    }
-    LaunchedEffect(area, block) {
-        if (area == IntSize.Zero || block == IntSize.Zero) return@LaunchedEffect
-        val maxX = (area.width - block.width).coerceAtLeast(0).toFloat()
-        val maxY = (area.height - block.height).coerceAtLeast(0).toFloat()
-        val speed = with(density) { BOUNCE_SPEED.toPx() }
-        var p = Offset(pos.x.coerceIn(0f, maxX), pos.y.coerceIn(0f, maxY))
-        var vx = speed
-        var vy = speed * 0.75f
-        var last = withFrameNanos { it }
-        while (true) {
-            val t = withFrameNanos { it }
-            val dt = ((t - last) / 1e9f).coerceAtMost(0.1f)
-            last = t
-            var x = p.x + vx * dt
-            var y = p.y + vy * dt
-            val hitX = x <= 0f || x >= maxX
-            val hitY = y <= 0f || y >= maxY
-            if (hitX) { vx = -vx; x = x.coerceIn(0f, maxX) }
-            if (hitY) { vy = -vy; y = y.coerceIn(0f, maxY) }
-            if (hitX || hitY) colorIndex = (colorIndex + 1) % BOUNCE_COLORS.size
-            // Só no canto exato: as duas bordas na mesma frame (perto não conta).
-            if (isCornerHit(hitX, hitY, x, y, maxX, maxY, tolerance = 0f)) {
-                goatCorner = when {
-                    x < maxX / 2 && y < maxY / 2 -> Alignment.TopStart
-                    x < maxX / 2 -> Alignment.BottomStart
-                    y < maxY / 2 -> Alignment.TopEnd
-                    else -> Alignment.BottomEnd
-                }
-            }
-            p = Offset(x, y)
-            pos = p
-        }
-    }
-    Box(modifier.fillMaxSize().background(Color.Black).onSizeChanged { area = it }) {
-        Box(
-            Modifier
-                .offset { IntOffset(pos.x.roundToInt(), pos.y.roundToInt()) }
-                .onSizeChanged { block = it },
-        ) {
-            DvdLogo(BOUNCE_COLORS[colorIndex])
-        }
-        goatCorner?.let { corner ->
-            // Entra com um salto (cresce além do tamanho e volta) e sai sozinha passado GOAT_MS.
-            val pop = remember(corner) { Animatable(0f) }
-            LaunchedEffect(corner) { pop.animateTo(1f, spring(dampingRatio = 0.35f, stiffness = 300f)) }
-            Text(
-                "🐐",
-                fontSize = 120.sp,
-                modifier = Modifier
-                    .align(corner)
-                    .padding(36.dp)
-                    .graphicsLayer {
-                        scaleX = pop.value
-                        scaleY = pop.value
-                    },
-            )
-        }
-    }
-}
-
-/**
- * Um logótipo ao estilo do DVD Video, desenhado aqui (não é a arte oficial da marca): "DVD" a negrito inclinado
- * e, por baixo, um disco achatado com "VIDEO" vazado.
- */
-@Composable
-private fun DvdLogo(color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            // O espaço fino no fim dá lugar à ponta do último D inclinado (o texto é cortado à largura que mede).
-            "DVD\u2009",
-            color = color,
-            softWrap = false,
-            style = MaterialTheme.typography.displayLarge.copy(
-                fontSize = 84.sp,
-                fontWeight = FontWeight.Black,
-                fontStyle = FontStyle.Italic,
-                letterSpacing = (-3).sp,
-            ),
-        )
-        Box(
-            Modifier
-                .offset(y = (-6).dp)
-                .size(width = 210.dp, height = 36.dp)
-                .drawBehind { drawOval(color) },
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                "VIDEO",
-                color = Color.Black,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black, letterSpacing = 6.sp),
-            )
-        }
-    }
-}
-
-/** O canal em direto visto há menos tempo no "Continuar a ver" (ex.: o da GoatTV), como "TVI · Jornal da Noite". */
-fun nowPlaying(watchNext: Map<String, List<WatchNextItem>>): String? =
-    watchNext.values.flatten().filter { it.isChannel }.maxByOrNull { it.lastEngagement }
-        ?.let { listOfNotNull(it.title, it.episodeTitle?.takeIf { t -> t.isNotBlank() }).joinToString(" · ") }
-
-/** De quantos em quantos minutos o bloco do modo ambiente muda de lado. */
-private const val AMBIENT_MOVE_MINUTES = 10L
-private val BOUNCE_SPEED = 70.dp
-private const val GOAT_MS = 3_000L
-private val BOUNCE_COLORS = listOf(
-    Color.White,
-    Color(0xFF7DD3FC),
-    Color(0xFFF9A8D4),
-    Color(0xFFFCD34D),
-    Color(0xFF86EFAC),
-    Color(0xFFC4B5FD),
-    Color(0xFFFDBA74),
-)
-
-/**
  * Em cima à esquerda: "BOA NOITE" e, por baixo, "Terça, 20 de outubro · ☁ 14°"
  * (a saudação e o tempo desligam-se nas definições).
  */
@@ -389,7 +169,7 @@ fun TopGreeting(showGreeting: Boolean, weather: WeatherNow?, modifier: Modifier 
     }
 }
 
-private fun weatherIcon(w: WeatherNow) = when (w.kind) {
+internal fun weatherIcon(w: WeatherNow) = when (w.kind) {
     WeatherNow.Kind.CLEAR, WeatherNow.Kind.PARTLY -> if (w.isDay) GoatIcons.Sun else GoatIcons.Moon
     WeatherNow.Kind.RAIN -> GoatIcons.Rain
     WeatherNow.Kind.SNOW -> GoatIcons.Snow
@@ -398,7 +178,7 @@ private fun weatherIcon(w: WeatherNow) = when (w.kind) {
 }
 
 /** "Segunda, 20 de outubro" / "Monday, 20 October" / "10月20日星期一": o formato de cada língua. */
-private fun formatDate(time: Long, s: Strings): String {
+internal fun formatDate(time: Long, s: Strings): String {
     val pattern = DateFormat.getBestDateTimePattern(s.locale, "EEEEdMMMM")
     val text = SimpleDateFormat(pattern, s.locale).format(time)
     // Em português, "segunda" chega (sem o "-feira"), e com maiúscula.
@@ -406,171 +186,8 @@ private fun formatDate(time: Long, s: Strings): String {
 }
 
 /** As horas no formato da língua ("21:05", "9:05 PM", "午後9:05"…). */
-private fun timePattern(s: Strings, clock24h: Boolean, amPm: Boolean = true): String =
+internal fun timePattern(s: Strings, clock24h: Boolean, amPm: Boolean = true): String =
     if (clock24h) "HH:mm" else DateFormat.getBestDateTimePattern(s.locale, if (amPm) "hm" else "h:mm").let { if (amPm) it else it.replace(Regex("\\s*a\\s*"), "") }
-
-// ---- Banners das apps ----
-
-/** Um favorito ou uma app da grelha: o banner e, por baixo, o nome (mais claro com foco). */
-@Composable
-fun AppTile(
-    app: LauncherApp,
-    width: Dp,
-    custom: ImageBitmap?,
-    customPending: Boolean,
-    showLabel: Boolean,
-    hasContinue: Boolean,
-    moving: Boolean,
-    onFocused: () -> Unit,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    bannerModifier: Modifier = Modifier,
-) {
-    var focused by remember { mutableStateOf(false) }
-    Column(modifier.width(width), horizontalAlignment = Alignment.CenterHorizontally) {
-        AppBanner(
-            app = app,
-            width = width,
-            custom = custom,
-            customPending = customPending,
-            hasContinue = hasContinue,
-            moving = moving,
-            onFocused = onFocused,
-            onClick = onClick,
-            onLongClick = onLongClick,
-            modifier = bannerModifier.onFocusChanged { focused = it.isFocused },
-        )
-        if (showLabel) {
-            Text(
-                app.label,
-                Modifier.padding(top = 10.dp),
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = if (focused) FontWeight.SemiBold else FontWeight.Normal),
-                color = if (focused) GoatColors.Text else GoatColors.TextDim,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
-/**
- * O cartão 16:9 de uma app. Com foco fica maior e com o efeito de foco escolhido (por defeito o contorno branco,
- * como no tvOS; ver FocusEffect). Em modo "mover" ([moving]) o contorno passa a ser o gradiente da marca, e o cartão abana como na Apple TV.
- */
-@Composable
-fun AppBanner(
-    app: LauncherApp,
-    width: Dp,
-    /** Ícone escolhido pela pessoa (icon pack ou imagem da box), em vez do banner da app. */
-    custom: ImageBitmap?,
-    /** O ícone escolhido ainda está a carregar: só a cor da app, sem o banner original. */
-    customPending: Boolean = false,
-    hasContinue: Boolean,
-    moving: Boolean,
-    onFocused: () -> Unit,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    // OK tratado aqui (não pelo Surface): a pressão longa só abre o menu ao largar o botão. Assim o "largar"
-    // não cai no menu (escolhendo "Mover" sem querer) nem deixa o banner preso no estado "carregado".
-    var pressedAt by remember { mutableLongStateOf(NOT_PRESSED) }
-    var armed by remember { mutableStateOf(false) }
-    var focused by remember { mutableStateOf(false) }
-    val armedScale by animateFloatAsState(if (armed) 0.94f else 1f, tween(120), label = "armed")
-    // Ícone transparente com o fundo "transparente" (Aparência): o cartão não tem cor, vê-se o fundo do ecrã.
-    val container = if (isSeeThrough(custom)) Color.Transparent else app.color
-    // A escala do foco é feita aqui (não pelo Surface) para o efeito de foco crescer com o cartão.
-    val focusScale by animateFloatAsState(if (focused) FocusScale else 1f, tween(150), label = "focusScale")
-    // Em modo "mover" o cartão abana, como as apps da Apple TV: roda uns graus para cada lado, sem parar.
-    val jiggle = rememberInfiniteTransition(label = "jiggle")
-    val wobble by jiggle.animateFloat(
-        initialValue = -JiggleDegrees, targetValue = JiggleDegrees,
-        animationSpec = infiniteRepeatable(tween(JIGGLE_MS, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "wobble",
-    )
-    Surface(
-        onClick = onClick,
-        onLongClick = onLongClick,
-        modifier = modifier
-            .size(width, width * 9 / 16)
-            .graphicsLayer {
-                scaleX = armedScale * focusScale
-                scaleY = armedScale * focusScale
-                rotationZ = if (moving) wobble else 0f
-            }
-            .focusEffect(focused, app.color, moving)
-            .onFocusChanged {
-                focused = it.isFocused
-                if (it.isFocused) onFocused() else {
-                    pressedAt = NOT_PRESSED
-                    armed = false
-                }
-            }
-            .onPreviewKeyEvent { e ->
-                // Botão Menu do comando: abre logo o menu da app (o mesmo que manter OK).
-                if (e.key == Key.Menu) {
-                    if (e.type == KeyEventType.KeyUp) onLongClick()
-                    return@onPreviewKeyEvent true
-                }
-                if (e.key != Key.DirectionCenter && e.key != Key.Enter && e.key != Key.NumPadEnter) return@onPreviewKeyEvent false
-                val native = e.nativeKeyEvent
-                when (e.type) {
-                    KeyEventType.KeyDown -> when {
-                        native.repeatCount == 0 -> {
-                            pressedAt = native.eventTime
-                            armed = false
-                        }
-                        // A pressão longa fica "armada" (o banner encolhe um pouco) enquanto o botão está em baixo.
-                        pressedAt != NOT_PRESSED && (native.isLongPress || native.eventTime - pressedAt >= LONG_PRESS_MS) -> armed = true
-                    }
-                    KeyEventType.KeyUp -> {
-                        // Largar sem ter carregado aqui (o foco chegou com o botão em baixo) não faz nada.
-                        if (pressedAt != NOT_PRESSED) {
-                            if (armed || native.eventTime - pressedAt >= LONG_PRESS_MS) onLongClick() else onClick()
-                        }
-                        pressedAt = NOT_PRESSED
-                        armed = false
-                    }
-                }
-                true
-            },
-        shape = ClickableSurfaceDefaults.shape(BannerShape),
-        colors = ClickableSurfaceDefaults.colors(
-            containerColor = container,
-            focusedContainerColor = container,
-            pressedContainerColor = container,
-        ),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
-    ) {
-        Box(Modifier.fillMaxSize()) {
-            BannerImage(app, custom, customPending)
-
-            if (hasContinue) {
-                Box(
-                    Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .size(8.dp)
-                        .shadow(2.dp, CircleShape)
-                        .background(Color.White, CircleShape),
-                )
-            }
-        }
-    }
-}
-
-/** O que se vê num cartão de app: o ícone escolhido, o banner, ou o ícone da app sobre a cor dela. */
-@Composable
-fun BoxScope.BannerImage(app: LauncherApp, custom: ImageBitmap?, customPending: Boolean = false) {
-    when {
-        custom != null -> CustomIconImage(custom, background = app.color)
-        customPending -> Unit
-        app.banner != null -> Image(app.banner, contentDescription = app.label, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-        app.icon != null -> Image(app.icon, contentDescription = app.label, modifier = Modifier.align(Alignment.Center).size(52.dp))
-        else -> Text(app.label, Modifier.align(Alignment.Center).padding(8.dp), maxLines = 2, overflow = TextOverflow.Ellipsis)
-    }
-}
 
 // ---- Continuar a ver ----
 
@@ -762,27 +379,7 @@ fun OnAirLine(item: WatchNextItem, modifier: Modifier = Modifier) {
     }
 }
 
-/** Aviso curto no topo do ecrã. */
-@Composable
-fun ToastPill(text: String, modifier: Modifier = Modifier) {
-    Box(
-        modifier
-            .padding(top = 27.dp)
-            .shadow(8.dp, GoatShapes.Control)
-            .background(Color(0xE61C2333), GoatShapes.Control)
-            .padding(horizontal = 22.dp, vertical = 10.dp),
-    ) {
-        Text(text, style = MaterialTheme.typography.titleSmall)
-    }
-}
-
 /** Espaço entre os elementos das filas (apps e cartões). */
 val RowGap = 24.dp
 
-private const val NOT_PRESSED = -1L
-private val LONG_PRESS_MS = ViewConfiguration.getLongPressTimeout().toLong()
 val RowSpacing = Arrangement.spacedBy(RowGap)
-
-/** O abanar do modo "mover": graus para cada lado e o tempo de ida. */
-private const val JiggleDegrees = 1.6f
-private const val JIGGLE_MS = 130

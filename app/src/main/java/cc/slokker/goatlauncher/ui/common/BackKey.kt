@@ -18,11 +18,3 @@ fun Modifier.onBackKey(onBack: () -> Boolean): Modifier = onPreviewKeyEvent { e 
     // Consome as duas metades da tecla; a ação corre ao largar.
     if (e.type == KeyEventType.KeyUp) onBack() else true
 }
-
-/** Pede o foco sem rebentar se o elemento ainda não estiver no ecrã (devolve false). */
-fun androidx.compose.ui.focus.FocusRequester.requestFocusSafely(): Boolean = try {
-    requestFocus()
-    true
-} catch (e: IllegalStateException) {
-    false
-}
