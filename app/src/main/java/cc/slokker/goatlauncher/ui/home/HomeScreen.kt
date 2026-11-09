@@ -72,7 +72,6 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -81,7 +80,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.LauncherApp
 import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.ui.LauncherViewModel
@@ -157,13 +155,13 @@ fun HomeScreen(vm: LauncherViewModel) {
     // No separador Apps: os favoritos e depois todas as outras, incluindo as escondidas do Início.
     val moreApps = tabApps.orEmpty().filter { app -> favorites.none { it.packageName == app.packageName } }
     val gridApps = favorites + moreApps
-    val appleTv = account.layout == AccountSettings.LAYOUT_APPLE_TV
-    val android = account.layout == AccountSettings.LAYOUT_ANDROID
-    val spotlight = android && account.continueStyle == AccountSettings.STYLE_SPOTLIGHT
-    val columnLayout = android && account.continueStyle == AccountSettings.STYLE_COLUMN
-    val carousel = android && account.continueStyle == AccountSettings.STYLE_CAROUSEL
+    val style = HomeStyle.of(account)
+    val appleTv = style == HomeStyle.AppleTv
+    val spotlight = style == HomeStyle.Spotlight
+    val columnLayout = style == HomeStyle.SideColumn
+    val carousel = style == HomeStyle.Carousel
     // O destaque em ecrã inteiro: o estilo "Destaque", e o "Destaque e a seguir".
-    val shelfStyle = spotlight || (android && account.continueStyle == AccountSettings.STYLE_SHELF)
+    val shelfStyle = style.shelfHero
     // Apple TV: o Início desce da doca para as outras apps (as mesmas do separador Apps, também as escondidas).
     val homeScroll = rememberScrollState()
     val scope = rememberCoroutineScope()
@@ -183,7 +181,7 @@ fun HomeScreen(vm: LauncherViewModel) {
     var shelfIndex by remember(sectionPkg) { mutableIntStateOf(0) }
     val shelfPos = shelfIndex.coerceIn(0, (sectionItems.size - 1).coerceAtLeast(0))
     // O conteúdo que enche o fundo: o do destaque, ou (apps ao lado) o primeiro da app com foco.
-    val shelfItem = sectionItems.getOrNull(shelfPos)?.takeIf { shelfStyle || columnLayout }
+    val shelfItem = sectionItems.getOrNull(shelfPos)?.takeIf { style.heroBackdrop }
 
     var menuFor by remember { mutableStateOf<LauncherApp?>(null) }
     var renameFor by remember { mutableStateOf<LauncherApp?>(null) }
@@ -565,7 +563,7 @@ fun HomeScreen(vm: LauncherViewModel) {
 
                 Column(Modifier.fillMaxSize().padding(TvSafePadding)) {
                     TopBar(
-                        showApps = !appleTv,
+                        showApps = style.hasAppsTab,
                         selected = when {
                             onApps -> 1
                             onSettings -> if (appleTv) 1 else 2

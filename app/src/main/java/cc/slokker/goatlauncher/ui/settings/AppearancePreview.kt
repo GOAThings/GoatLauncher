@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.BoxWithConstraints
 import cc.slokker.goatlauncher.ui.home.UpNextPanel
 import cc.slokker.goatlauncher.ui.home.HeroText
+import cc.slokker.goatlauncher.ui.home.HomeStyle
 import cc.slokker.goatlauncher.ui.home.ProgressBar
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -98,20 +99,19 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
     val apps by vm.apps.collectAsStateWithLifecycle()
     val watchNext by vm.watchNext.collectAsStateWithLifecycle()
     val night by vm.night.collectAsStateWithLifecycle()
-    val photo by vm.onlinePhoto.collectAsStateWithLifecycle()
-    val folderImage by vm.folderImage.collectAsStateWithLifecycle()
+    val wallpaperImage by vm.wallpaperImage.collectAsStateWithLifecycle()
     val weather by vm.weather.collectAsStateWithLifecycle()
 
     val favorites = apps.orEmpty().take(FavoriteCount)
     val focusApp = favorites.firstOrNull { !watchNext[it.packageName].isNullOrEmpty() } ?: favorites.firstOrNull()
     val items = if (account.showContinueWatching) focusApp?.let { watchNext[it.packageName] }.orEmpty() else emptyList()
-    val appleTv = account.layout == AccountSettings.LAYOUT_APPLE_TV
-    val style = account.continueStyle.takeIf { !appleTv }
-    val spotlight = style == AccountSettings.STYLE_SPOTLIGHT
-    val column = style == AccountSettings.STYLE_COLUMN
-    val carousel = style == AccountSettings.STYLE_CAROUSEL
+    val style = HomeStyle.of(account)
+    val appleTv = style == HomeStyle.AppleTv
+    val spotlight = style == HomeStyle.Spotlight
+    val column = style == HomeStyle.SideColumn
+    val carousel = style == HomeStyle.Carousel
     // A imagem do conteúdo enche o fundo no destaque (com ou sem "a seguir") e nas apps ao lado.
-    val shelf = style == AccountSettings.STYLE_SHELF || spotlight
+    val shelf = style.shelfHero
     val focusStyle = remember(account) { FocusStyle.of(account) }
     val shape = RoundedCornerShape(12.dp)
 
@@ -123,7 +123,7 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
             .border(1.dp, Color.White.copy(alpha = 0.22f), shape),
     ) {
         VirtualScreen {
-            WallpaperView(account.wallpaper, photo?.url ?: folderImage)
+            WallpaperView(account.wallpaper, wallpaperImage)
             // Destaque: a imagem do conteúdo enche o fundo (os logos dos canais não).
             val hero = items.firstOrNull()?.takeIf { (shelf || column) && !it.isChannel && it.imageUri != null }
             if (hero != null) {
@@ -153,7 +153,7 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
         LocalFocusDim provides remember { FocusDim() },
     ) {
                 Column(Modifier.fillMaxSize().padding(TvSafePadding)) {
-                    PreviewTopBar(account, weather?.takeIf { account.showWeather }, showApps = !appleTv)
+                    PreviewTopBar(account, weather?.takeIf { account.showWeather }, showApps = style.hasAppsTab)
                     Box(Modifier.weight(1f).fillMaxWidth()) {
                         val tiles: @Composable () -> Unit = {
                             Row(Modifier.width(TilesRowWidth), horizontalArrangement = Arrangement.spacedBy(TileGap, Alignment.CenterHorizontally)) {

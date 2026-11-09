@@ -48,11 +48,11 @@ import kotlin.math.cos
 
 /** Como fica o cartão de uma app com foco (Definições → Aparência). [color] null = automática. */
 @Immutable
-data class FocusStyle(val effect: String, val animation: String, val color: Color?) {
+data class FocusStyle(val effect: FocusEffectKind, val animation: String, val color: Color?) {
     companion object {
-        val Default = FocusStyle(AccountSettings.FOCUS_BORDER, AccountSettings.ANIM_NONE, null)
+        val Default = FocusStyle(FocusEffectKind.BORDER, AccountSettings.ANIM_NONE, null)
 
-        fun of(account: AccountSettings) = FocusStyle(account.focusEffect, account.focusAnimation, parseColor(account.focusColor))
+        fun of(account: AccountSettings) = FocusStyle(FocusEffectKind.of(account.focusEffect), account.focusAnimation, parseColor(account.focusColor))
     }
 }
 
@@ -105,11 +105,10 @@ fun Modifier.focusEffect(
 ): Modifier {
     val shown by animateFloatAsState(if (focused) 1f else 0f, tween(180), label = "focus")
     val effect = style.effect
-    val animation = style.animation.takeIf { it in AccountSettings.focusAnimations(effect) } ?: AccountSettings.ANIM_NONE
-    val glass = effect == AccountSettings.FOCUS_GLASS
+    val animation = effect.animationOf(style.animation)
     // "Escurecer os outros": cada cartão com foco conta; os outros escurecem enquanto houver algum.
     val dim = LocalFocusDim.current
-    val dimMode = effect == AccountSettings.FOCUS_DIM
+    val dimMode = effect == FocusEffectKind.DIM
     if (dimMode && focused) {
         DisposableEffect(dim) {
             dim.focused++
@@ -119,14 +118,8 @@ fun Modifier.focusEffect(
     val dimmed by animateFloatAsState(if (dimMode && !focused && dim.focused > 0) 1f else 0f, tween(220), label = "dim")
     // A animação só corre no cartão com foco (um relógio por cartão seria desperdício). Lê-se ao desenhar:
     // cada frame só redesenha o efeito, não volta a compor o cartão. O vidro tem sempre o brilho a passar.
-    val phaseState = if (focused && !moving && (glass || animation != AccountSettings.ANIM_NONE)) {
-        val period = when {
-            glass -> GLASS_PERIOD
-            animation == AccountSettings.ANIM_PULSE -> 1200
-            animation == AccountSettings.ANIM_BREATH -> 3200
-            effect == AccountSettings.FOCUS_AURORA -> 4000
-            else -> 2600
-        }
+    val phaseState = if (focused && !moving && (effect.alwaysAnimated || animation != AccountSettings.ANIM_NONE)) {
+        val period = effect.period(animation)
         val transition = rememberInfiniteTransition(label = "focusAnim")
         transition.animateFloat(0f, 1f, infiniteRepeatable(tween(period, easing = LinearEasing), RepeatMode.Restart), label = "phase")
     } else {
@@ -162,31 +155,33 @@ fun Modifier.focusEffect(
             }
             // Por baixo do cartão.
             when (effect) {
-                AccountSettings.FOCUS_GLOW -> drawGlow(glowColor(style.color, appColor), (4 + 6 * k).dp.toPx(), radius, a * (0.45f + 0.55f * k))
-                AccountSettings.FOCUS_AURORA -> drawGlow(auroraColors(style.color)[1], 7.dp.toPx(), radius, a * 0.5f * k)
-                AccountSettings.FOCUS_GLASS -> drawGlow(Color.Black, 16.dp.toPx(), radius, a * 0.6f, dy = 5.dp.toPx())
-                else -> drawGlow(Color.Black, 14.dp.toPx(), radius, a * 0.55f, dy = 4.dp.toPx())
+                FocusEffectKind.GLOW -> drawGlow(glowColor(style.color, appColor), (4 + 6 * k).dp.toPx(), radius, a * (0.45f + 0.55f * k))
+                FocusEffectKind.AURORA -> drawGlow(auroraColors(style.color)[1], 7.dp.toPx(), radius, a * 0.5f * k)
+                FocusEffectKind.GLASS -> drawGlow(Color.Black, 16.dp.toPx(), radius, a * 0.6f, dy = 5.dp.toPx())
+                FocusEffectKind.BORDER, FocusEffectKind.REFLECTION, FocusEffectKind.VIEWFINDER, FocusEffectKind.UNDERLINE,
+                FocusEffectKind.RING, FocusEffectKind.DIM, FocusEffectKind.SHADOW,
+                -> drawGlow(Color.Black, 14.dp.toPx(), radius, a * 0.55f, dy = 4.dp.toPx())
             }
             drawContent()
             // Por cima (ou à volta) do cartão.
             when (effect) {
-                AccountSettings.FOCUS_BORDER -> {
+                FocusEffectKind.BORDER -> {
                     // Com a luz a rodar, o contorno fica mais discreto e a luz é que se vê.
                     val base = if (shine) 0.45f else k
                     drawRoundRect(color, Offset(stroke / 2, stroke / 2), edge, corners, style = Stroke(stroke), alpha = a * base)
                 }
-                AccountSettings.FOCUS_GLASS -> drawGlass(color, radius, a, phase)
-                AccountSettings.FOCUS_REFLECTION -> {
+                FocusEffectKind.GLASS -> drawGlass(color, radius, a, phase)
+                FocusEffectKind.REFLECTION -> {
                     drawReflection(a * k)
                     drawRoundRect(color, Offset(stroke / 2, stroke / 2), edge, corners, style = Stroke(stroke), alpha = a * (if (shine) 0.45f else 0.9f))
                 }
-                AccountSettings.FOCUS_AURORA -> {
+                FocusEffectKind.AURORA -> {
                     val angle = if (shine) phase * 360f else AURORA_REST_ANGLE
                     drawAurora(auroraColors(style.color), angle, stroke, radius, a * (0.4f + 0.6f * k))
                 }
-                AccountSettings.FOCUS_VIEWFINDER -> drawViewfinder(color, a * k)
-                AccountSettings.FOCUS_UNDERLINE -> drawUnderline(color, a * k)
-                AccountSettings.FOCUS_RING -> {
+                FocusEffectKind.VIEWFINDER -> drawViewfinder(color, a * k)
+                FocusEffectKind.UNDERLINE -> drawUnderline(color, a * k)
+                FocusEffectKind.RING -> {
                     val gap = RING_GAP.toPx()
                     drawRoundRect(
                         color,
@@ -197,13 +192,19 @@ fun Modifier.focusEffect(
                         alpha = a * (if (shine) 0.4f else k),
                     )
                 }
+                // O brilho e as sombras só se desenham por baixo.
+                FocusEffectKind.GLOW, FocusEffectKind.DIM, FocusEffectKind.SHADOW -> Unit
             }
             if (shine) {
-                val light = if (effect == AccountSettings.FOCUS_GLOW) lerp(glowColor(style.color, appColor), Color.White, 0.6f) else Color.White
+                val light = if (effect == FocusEffectKind.GLOW) lerp(glowColor(style.color, appColor), Color.White, 0.6f) else Color.White
                 when (effect) {
-                    AccountSettings.FOCUS_BORDER, AccountSettings.FOCUS_GLOW, AccountSettings.FOCUS_REFLECTION ->
+                    FocusEffectKind.BORDER, FocusEffectKind.GLOW, FocusEffectKind.REFLECTION ->
                         drawShine(light, phase * 360f, stroke, radius, a)
-                    AccountSettings.FOCUS_RING -> drawShine(light, phase * 360f, stroke, radius, a, grow = RING_GAP.toPx() + stroke / 2)
+                    FocusEffectKind.RING -> drawShine(light, phase * 360f, stroke, radius, a, grow = RING_GAP.toPx() + stroke / 2)
+                    // Na aurora o "brilho" é o gradiente a rodar (acima); os outros não aceitam esta animação.
+                    FocusEffectKind.GLASS, FocusEffectKind.AURORA, FocusEffectKind.VIEWFINDER, FocusEffectKind.UNDERLINE,
+                    FocusEffectKind.DIM, FocusEffectKind.SHADOW,
+                    -> Unit
                 }
             }
         }
@@ -214,8 +215,7 @@ fun Modifier.focusEffect(
 private const val DIM_ALPHA = 0.55f
 /** Distância entre o cartão e o anel flutuante. */
 private val RING_GAP = 6.dp
-/** O vidro: o brilho passa na primeira parte do ciclo e descansa no resto. */
-private const val GLASS_PERIOD = 3600
+/** O vidro: a parte do ciclo ([FocusEffectKind.GLASS_PERIOD]) em que o brilho passa. */
 private const val GLASS_SWEEP = 0.55f
 /** Onde fica o gradiente da aurora quando não roda (o rosa em baixo à direita). */
 private const val AURORA_REST_ANGLE = 35f

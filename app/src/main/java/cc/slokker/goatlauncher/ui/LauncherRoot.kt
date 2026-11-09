@@ -34,8 +34,7 @@ fun LauncherRoot(vm: LauncherViewModel) {
     val screen by vm.screen.collectAsStateWithLifecycle()
     val account by vm.account.collectAsStateWithLifecycle()
     val toast by vm.toast.collectAsStateWithLifecycle()
-    val photo by vm.onlinePhoto.collectAsStateWithLifecycle()
-    val folderImage by vm.folderImage.collectAsStateWithLifecycle()
+    val wallpaperImage by vm.wallpaperImage.collectAsStateWithLifecycle()
     val api = (LocalContext.current.applicationContext as LauncherApp).container.backend
 
     // O contexto da Activity já vem na língua escolhida (AppCompat); ao mudar, a Activity é recriada.
@@ -46,7 +45,7 @@ fun LauncherRoot(vm: LauncherViewModel) {
         Box(Modifier.fillMaxSize().semanticsOnlyForScreenReaders().background(GoatColors.Background)) {
             // Até ler a cópia local das definições (milissegundos), só o fundo escuro: evita piscar o fundo por defeito.
             if (!ready) return@Box
-            WallpaperView(account.wallpaper, photo?.url ?: folderImage)
+            WallpaperView(account.wallpaper, wallpaperImage)
             // Modo noite: o fundo escurece (a interface por cima fica igual).
             val night by vm.night.collectAsStateWithLifecycle()
             val dim by animateFloatAsState(if (night) NightClock.DIM else 0f, tween(600), label = "night")

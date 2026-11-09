@@ -59,6 +59,7 @@ import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.ui.LauncherViewModel
 import cc.slokker.goatlauncher.ui.state.UpdateState
 import cc.slokker.goatlauncher.ui.LocalStrings
+import cc.slokker.goatlauncher.ui.home.HomeStyle
 import cc.slokker.goatlauncher.ui.common.GlassRow
 import cc.slokker.goatlauncher.ui.common.GoatIcons
 import cc.slokker.goatlauncher.ui.common.SectionLabel
@@ -114,9 +115,8 @@ fun SettingsScreen(
 
     // O vidro do painel deixa ver o fundo desfocado por trás, como nas Definições da GoatTV.
     val account by vm.account.collectAsStateWithLifecycle()
-    val photo by vm.onlinePhoto.collectAsStateWithLifecycle()
-    val folderImage by vm.folderImage.collectAsStateWithLifecycle()
-    val blur = rememberWallpaperBlur(account.wallpaper, photo?.url ?: folderImage)
+    val wallpaperImage by vm.wallpaperImage.collectAsStateWithLifecycle()
+    val blur = rememberWallpaperBlur(account.wallpaper, wallpaperImage)
 
     // Na Aparência, o ecrã divide-se: à esquerda a pré-visualização do ecrã inicial, à direita as definições.
     val split = embedded && page == Page.Appearance && !locked
@@ -336,7 +336,7 @@ private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page
             Group {
                 GlassRow(
                     title = s.appearance,
-                    subtitle = layoutName(account, s),
+                    subtitle = HomeStyle.of(account).label(s),
                     leading = { IconTile(GoatIcons.Palette, accent = true) },
                     onClick = { onPage(Page.Appearance) },
                     trailing = { Chevron() },

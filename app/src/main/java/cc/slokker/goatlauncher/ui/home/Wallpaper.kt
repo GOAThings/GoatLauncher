@@ -40,20 +40,24 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Precision
 
-/** Fundos que vêm com a app, desenhados em código (nítidos em qualquer ecrã e sem pesar no APK). */
-class BuiltinWallpaper(val id: String, val draw: DrawScope.() -> Unit) {
-    fun name(s: Strings) = s.wallpaperName(id)
+/** Fundos que vêm com a app, desenhados em código (nítidos em qualquer ecrã e sem pesar no APK). [id] é o que se guarda. */
+class BuiltinWallpaper(val id: String, private val label: (Strings) -> String, val draw: DrawScope.() -> Unit) {
+    fun name(s: Strings) = label(s)
 }
 
 object Wallpapers {
     val ALL = listOf(
-        BuiltinWallpaper("lake") { drawLake() },
-        BuiltinWallpaper("aurora") { drawAurora() },
-        BuiltinWallpaper("sunset") { drawSunset() },
-        BuiltinWallpaper("graphite") { drawGraphite() },
+        BuiltinWallpaper("lake", Strings::wpLake) { drawLake() },
+        BuiltinWallpaper("aurora", Strings::wpAurora) { drawAurora() },
+        BuiltinWallpaper("sunset", Strings::wpSunset) { drawSunset() },
+        BuiltinWallpaper("graphite", Strings::wpGraphite) { drawGraphite() },
     )
 
+    /** Um id desconhecido (ex.: de uma versão mais nova) é o primeiro, o lago. */
     fun byId(id: String) = ALL.firstOrNull { it.id == id } ?: ALL.first()
+
+    /** O desenho de [wallpaper]: o escolhido, ou o lago por baixo de uma foto (se ela faltar ou falhar). */
+    fun builtinFor(wallpaper: Wallpaper) = if (wallpaper.type == Wallpaper.TYPE_BUILTIN) byId(wallpaper.value) else ALL.first()
 }
 
 /**
@@ -62,7 +66,7 @@ object Wallpapers {
  */
 @Composable
 fun WallpaperView(wallpaper: Wallpaper, rotating: Any?, modifier: Modifier = Modifier) {
-    val builtin = if (wallpaper.type == Wallpaper.TYPE_BUILTIN) Wallpapers.byId(wallpaper.value) else Wallpapers.ALL.first()
+    val builtin = Wallpapers.builtinFor(wallpaper)
     Box(modifier.fillMaxSize()) {
         val context = LocalContext.current
         val image = wallpaperImage(context, wallpaper, rotating)
@@ -107,7 +111,7 @@ fun wallpaperImage(context: Context, wallpaper: Wallpaper, rotating: Any?): Any?
 fun rememberWallpaperBlur(wallpaper: Wallpaper, rotating: Any?): ImageBitmap {
     val context = LocalContext.current
     val image = wallpaperImage(context, wallpaper, rotating)
-    val builtin = if (wallpaper.type == Wallpaper.TYPE_BUILTIN) Wallpapers.byId(wallpaper.value) else Wallpapers.ALL.first()
+    val builtin = Wallpapers.builtinFor(wallpaper)
     val drawn = remember(builtin) {
         ImageBitmap(BLUR_W, BLUR_H).also { bitmap ->
             CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, androidx.compose.ui.graphics.Canvas(bitmap), Size(BLUR_W.toFloat(), BLUR_H.toFloat())) {

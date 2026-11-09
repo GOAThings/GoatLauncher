@@ -205,6 +205,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Com o fundo "pasta": a imagem dela que está a aparecer agora. */
     val folderImage: StateFlow<File?> = wallpaper.folderImage
 
+    /** A imagem que roda agora no fundo: a foto online, ou a da pasta (null nos outros fundos). */
+    val wallpaperImage: StateFlow<Any?> = combine(onlinePhoto, folderImage) { photo, folder -> photo?.url ?: folder }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, onlinePhoto.value?.url ?: folderImage.value)
+
     override fun onCleared() {
         continueWatching.stop()
     }

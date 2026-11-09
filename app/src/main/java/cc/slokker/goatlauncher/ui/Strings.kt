@@ -267,14 +267,10 @@ class Strings(context: Context) {
     val nightAutoHint get() = s(R.string.night_auto_hint)
     fun nightAutoSun(sunset: String, sunrise: String) = s(R.string.night_auto_sun, sunset, sunrise)
     val languageAuto get() = s(R.string.language_auto)
-    fun wallpaperName(id: String) = s(
-        when (id) {
-            "aurora" -> R.string.wp_aurora
-            "sunset" -> R.string.wp_sunset
-            "graphite" -> R.string.wp_graphite
-            else -> R.string.wp_lake
-        },
-    )
+    val wpLake get() = s(R.string.wp_lake)
+    val wpAurora get() = s(R.string.wp_aurora)
+    val wpSunset get() = s(R.string.wp_sunset)
+    val wpGraphite get() = s(R.string.wp_graphite)
     fun activateServerError(code: Int) = s(R.string.activate_server_error, code)
     val activateOffline get() = s(R.string.activate_offline)
     val activateBadResponse get() = s(R.string.activate_bad_response)
