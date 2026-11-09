@@ -44,7 +44,7 @@ data class Wallpaper(val type: String, val value: String) {
          */
         const val TYPE_FOLDER = "folder"
 
-        /** Imagens de um subreddit, a mudar de tempos a tempos (ver RedditWallpapers). [value] é o subreddit. */
+        /** Imagens de um subreddit, a mudar de tempos a tempos (ver RedditFeed). [value] é o subreddit. */
         const val TYPE_REDDIT = "reddit"
         /** Fotos do r/EarthPorn; sem rede (ou antes de chegarem) vê-se o fundo "Lago" desenhado. */
         val DEFAULT = Wallpaper(TYPE_REDDIT, "EarthPorn")

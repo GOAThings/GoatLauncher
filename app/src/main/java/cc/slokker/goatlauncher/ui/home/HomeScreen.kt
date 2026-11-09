@@ -480,7 +480,7 @@ fun HomeScreen(vm: LauncherViewModel) {
         }
     }
     val uiAlpha by animateFloatAsState(if (idle) 0f else 1f, tween(if (idle) AMBIENT_FADE_MS else 250), label = "ambient")
-    val reddit by vm.redditImage.collectAsStateWithLifecycle()
+    val photo by vm.onlinePhoto.collectAsStateWithLifecycle()
     // "Não deixar a TV adormecer": só conta enquanto a janela do launcher está visível.
     val view = LocalView.current
     val keepAwake = account.idleMinutes > 0 && account.idleKeepAwake
@@ -998,7 +998,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                     clock24h = account.clock24h,
                     weather = weather?.takeIf { account.showWeather },
                     nowPlaying = nowPlaying(watchNext),
-                    caption = reddit?.title?.let(::cleanRedditTitle),
+                    caption = photo?.title?.let(::cleanRedditTitle),
                 )
             }
         }

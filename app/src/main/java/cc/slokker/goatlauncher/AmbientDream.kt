@@ -96,9 +96,8 @@ private fun DreamContent(c: AppContainer) {
     // A imagem do fundo que roda (Reddit ou pasta): a que o ecrã inicial mostrou por último, ou uma da pasta.
     val rotating by produceState<Any?>(null, account.wallpaper) {
         value = when (account.wallpaper.type) {
-            Wallpaper.TYPE_REDDIT -> c.reddit.lastShown(account.wallpaper.value)?.url
             Wallpaper.TYPE_FOLDER -> ImageImport.images(File(account.wallpaper.value)).randomOrNull()
-            else -> null
+            else -> c.wallpapers.lastShown(account.wallpaper)?.url
         }
     }
     val watchNext by produceState(emptyMap(), Unit) { value = runCatching { c.watchNext.load() }.getOrNull().orEmpty() }

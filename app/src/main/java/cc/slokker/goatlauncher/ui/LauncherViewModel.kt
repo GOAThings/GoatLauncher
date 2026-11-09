@@ -26,7 +26,8 @@ import cc.slokker.goatlauncher.data.AppRelease
 import cc.slokker.goatlauncher.data.ImageImport
 import cc.slokker.goatlauncher.data.NetworkKind
 import cc.slokker.goatlauncher.data.networkKind
-import cc.slokker.goatlauncher.data.RedditImage
+import cc.slokker.goatlauncher.data.OnlinePhoto
+import cc.slokker.goatlauncher.data.OnlineWallpapers
 import cc.slokker.goatlauncher.data.LauncherApp as App
 import cc.slokker.goatlauncher.data.SessionStore
 import cc.slokker.goatlauncher.data.SystemIntents
@@ -166,26 +167,26 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** A última app com foco no ecrã inicial (ao voltar das definições, o foco regressa a ela). */
     var focusedPackage: String? = null
 
-    private val _reddit = MutableStateFlow<RedditImage?>(null)
+    private val _photo = MutableStateFlow<OnlinePhoto?>(null)
 
-    /** Com o fundo do Reddit: a imagem atual (já carregada na cache, para entrar com um fade sem saltos). */
-    val redditImage: StateFlow<RedditImage?> = _reddit.asStateFlow()
+    /** Com um fundo de fotos online (Reddit…): a foto atual (já carregada na cache, para entrar com um fade sem saltos). */
+    val onlinePhoto: StateFlow<OnlinePhoto?> = _photo.asStateFlow()
 
     /** Com o fundo "pasta": a imagem dela que está a aparecer agora. */
     private val _folderImage = MutableStateFlow<File?>(null)
     val folderImage: StateFlow<File?> = _folderImage.asStateFlow()
 
     /** Imagens que não servem de fundo (ao alto, ou que não carregaram). */
-    private val badReddit = mutableSetOf<String>()
+    private val badPhotos = mutableSetOf<String>()
 
-    /** Largura original de cada foto do Reddit já carregada (para a "resolução mínima"). */
-    private val redditWidths = mutableMapOf<String, Int>()
+    /** Largura original de cada foto online já carregada (para a "resolução mínima"). */
+    private val photoWidths = mutableMapOf<String, Int>()
 
     /**
      * Se cada foto é clara (true) ou escura (false), para o modo dia/noite. Tem de ficar antes do init: a escolha
      * do fundo arranca lá e pode chegar aqui antes de o resto da classe estar inicializado (era o crash no onResume).
      */
-    private val redditLight = mutableMapOf<String, Boolean>()
+    private val photoLight = mutableMapOf<String, Boolean>()
 
     private val _pinPrompt = MutableStateFlow<PinPrompt?>(null)
     val pinPrompt: StateFlow<PinPrompt?> = _pinPrompt.asStateFlow()
@@ -298,21 +299,22 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             }
         }
         viewModelScope.launch {
-            // Fundo do Reddit: mostra uma imagem e troca-a a cada RedditWallpapers.ROTATE_MS.
+            // Fundo de fotos online (Reddit…): mostra uma foto e troca-a a cada PHOTO_ROTATE_MS.
             var lastNight: Boolean? = null
             combine(settings.account, night) { a, n -> Triple(a.wallpaper, a.redditMinWidth, n) }.distinctUntilChanged().collectLatest { (wp, minWidth, night) ->
-                if (wp.type != Wallpaper.TYPE_REDDIT) {
-                    _reddit.value = null
+                val source = c.wallpapers.source(wp)
+                if (source == null) {
+                    _photo.value = null
                     return@collectLatest
                 }
                 // Ao abrir: a mesma foto da última vez, já (está na cache); a escolha e as verificações vêm depois.
-                if (_reddit.value == null) _reddit.value = c.reddit.lastShown(wp.value)
+                if (_photo.value == null) _photo.value = source.pool.lastShown(source.id)
                 // Trocar dia/noite pede logo uma foto do tom certo.
                 var next = lastNight != null && lastNight != night
                 lastNight = night
                 while (true) {
-                    showReddit(wp.value, next, minWidth, night)
-                    delay(c.reddit.msUntilRotation(wp.value))
+                    showPhoto(source, next, minWidth, night)
+                    delay(source.pool.msUntilRotation(source.id, PHOTO_ROTATE_MS))
                     next = true
                 }
             }
@@ -470,31 +472,31 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Escolhe a imagem do subreddit e só a mostra depois de carregada (deitada e com pelo menos [minWidth] px);
+     * Escolhe a foto de [source] e só a mostra depois de carregada (deitada e com pelo menos [minWidth] px);
      * senão tenta outra. A atual também é verificada: a resolução mínima pode ter subido.
      */
-    private suspend fun showReddit(subreddit: String, next: Boolean, minWidth: Int, night: Boolean) {
+    private suspend fun showPhoto(source: OnlineWallpapers.Source, next: Boolean, minWidth: Int, night: Boolean) {
         // Uma que sirva mas seja do tom errado (dia/noite) fica de reserva, se não aparecer nenhuma do certo.
-        var fallback: RedditImage? = null
+        var fallback: OnlinePhoto? = null
         repeat(10) { attempt ->
-            val small = redditWidths.filterValues { it < minWidth }.keys
-            val wrongTone = redditLight.filterValues { light -> light == night }.keys
-            val image = c.reddit.current(subreddit, next = next || attempt > 0, skip = badReddit + small + wrongTone)
+            val small = photoWidths.filterValues { it < minWidth }.keys
+            val wrongTone = photoLight.filterValues { light -> light == night }.keys
+            val image = source.pool.current(source.id, PHOTO_ROTATE_MS, next = next || attempt > 0, skip = badPhotos + small + wrongTone)
                 ?: return@repeat
             if (!preloadWallpaper(image.url)) {
-                badReddit += image.url
+                badPhotos += image.url
                 return@repeat
             }
-            if ((redditWidths[image.url] ?: Int.MAX_VALUE) < minWidth) return@repeat
+            if ((photoWidths[image.url] ?: Int.MAX_VALUE) < minWidth) return@repeat
             val light = isLight(image.url)
             if (light != null && light == night) {
                 if (fallback == null) fallback = image
                 return@repeat
             }
-            _reddit.value = image
+            _photo.value = image
             return
         }
-        fallback?.let { if (it.url != _reddit.value?.url) _reddit.value = it }
+        fallback?.let { if (it.url != _photo.value?.url) _photo.value = it }
     }
 
 
@@ -510,7 +512,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             ?: others.firstOrNull()
     }
 
-    private suspend fun isLight(data: Any, key: String): Boolean? = redditLight[key] ?: withContext(Dispatchers.IO) {
+    private suspend fun isLight(data: Any, key: String): Boolean? = photoLight[key] ?: withContext(Dispatchers.IO) {
         val result = SingletonImageLoader.get(context).execute(
             ImageRequest.Builder(context).data(data).size(32, 18).allowHardware(false).build(),
         )
@@ -520,7 +522,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             0.2126 * ((c shr 16) and 0xFF) + 0.7152 * ((c shr 8) and 0xFF) + 0.0722 * (c and 0xFF)
         } / (px.size * 255.0)
         luma > LIGHT_LUMA
-    }?.also { redditLight[key] = it }
+    }?.also { photoLight[key] = it }
 
     /** O botão dia/noite: troca o que está agora e desliga o automático. */
     fun toggleNight() {
@@ -541,7 +543,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 .build(),
         )
         val image = (result as? SuccessResult)?.image ?: return false
-        if (url !in redditWidths) originalWidth(url)?.let { redditWidths[url] = it }
+        if (url !in photoWidths) originalWidth(url)?.let { photoWidths[url] = it }
         return image.width > image.height
     }
 
@@ -1087,6 +1089,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         const val UPDATE_CHECK_MS = 12 * 60 * 60_000L
         /** De quanto em quanto tempo o fundo "pasta" muda de imagem (como o do Reddit). */
         const val FOLDER_ROTATE_MS = 30 * 60_000L
+        /** De quanto em quanto tempo um fundo de fotos online (Reddit…) muda de foto. */
+        const val PHOTO_ROTATE_MS = 30 * 60_000L
         const val FOLDER_TONE_TRIES = 8
         const val WEATHER_MS = 30 * 60_000L
         const val YOUTUBE_MS = 30 * 60_000L

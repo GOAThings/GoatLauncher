@@ -105,7 +105,7 @@ import cc.slokker.goatlauncher.data.AccountSettings
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import cc.slokker.goatlauncher.data.Place
-import cc.slokker.goatlauncher.data.RedditWallpapers
+import cc.slokker.goatlauncher.data.RedditFeed
 import cc.slokker.goatlauncher.HomeGuardService
 import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.data.Wallpaper
@@ -176,9 +176,9 @@ fun SettingsScreen(
 
     // O vidro do painel deixa ver o fundo desfocado por trás, como nas Definições da GoatTV.
     val account by vm.account.collectAsStateWithLifecycle()
-    val reddit by vm.redditImage.collectAsStateWithLifecycle()
+    val photo by vm.onlinePhoto.collectAsStateWithLifecycle()
     val folderImage by vm.folderImage.collectAsStateWithLifecycle()
-    val blur = rememberWallpaperBlur(account.wallpaper, reddit?.url ?: folderImage)
+    val blur = rememberWallpaperBlur(account.wallpaper, photo?.url ?: folderImage)
 
     // Na Aparência, o ecrã divide-se: à esquerda a pré-visualização do ecrã inicial, à direita as definições.
     val split = embedded && page == Page.Appearance && !locked
@@ -1118,7 +1118,7 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
             )
         }
         val isReddit = current.type == Wallpaper.TYPE_REDDIT
-        items(RedditWallpapers.SUGGESTED, key = { "r-$it" }) { sub ->
+        items(RedditFeed.SUGGESTED, key = { "r-$it" }) { sub ->
             GlassRow(
                 title = "r/$sub",
                 onClick = { vm.setWallpaper(Wallpaper(Wallpaper.TYPE_REDDIT, sub)) },
@@ -1131,7 +1131,7 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
         }
         item {
             var custom by remember {
-                mutableStateOf(current.value.takeIf { isReddit && RedditWallpapers.SUGGESTED.none { s -> s.equals(it, true) } }.orEmpty())
+                mutableStateOf(current.value.takeIf { isReddit && RedditFeed.SUGGESTED.none { s -> s.equals(it, true) } }.orEmpty())
             }
             Row(
                 Modifier.padding(horizontal = 8.dp, vertical = 6.dp),

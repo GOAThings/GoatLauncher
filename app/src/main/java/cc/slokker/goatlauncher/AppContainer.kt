@@ -8,7 +8,7 @@ import cc.slokker.goatlauncher.data.CustomIcons
 import cc.slokker.goatlauncher.data.InstalledApps
 import cc.slokker.goatlauncher.data.PhoneApps
 import cc.slokker.goatlauncher.data.PinAttemptStore
-import cc.slokker.goatlauncher.data.RedditWallpapers
+import cc.slokker.goatlauncher.data.OnlineWallpapers
 import cc.slokker.goatlauncher.data.SessionStore
 import cc.slokker.goatlauncher.data.SettingsRepository
 import cc.slokker.goatlauncher.data.Updater
@@ -94,7 +94,7 @@ class AppContainer(context: Context) {
         }
     }
 
-    val reddit = RedditWallpapers(context, plainHttp)
+    val wallpapers = OnlineWallpapers(context, plainHttp)
     val updater = Updater(context, plainHttp, Gson())
     val weather = WeatherSource(context, plainHttp)
     val youtube = YouTubeSource(context, plainHttp)
