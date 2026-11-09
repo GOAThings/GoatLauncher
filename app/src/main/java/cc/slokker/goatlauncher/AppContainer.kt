@@ -1,9 +1,9 @@
 package cc.slokker.goatlauncher
 
 import android.content.Context
-import android.os.Build
 import cc.slokker.goatlauncher.data.AppCatalog
 import cc.slokker.goatlauncher.data.AppIndex
+import cc.slokker.goatlauncher.data.ClientInfo
 import cc.slokker.goatlauncher.data.CustomIcons
 import cc.slokker.goatlauncher.data.DataStoreSettingsDisk
 import cc.slokker.goatlauncher.data.ParentalGate
@@ -42,7 +42,7 @@ class AppContainer(context: Context) {
     /** A sessão na conta Slokker: o token que o interceptor junta a cada pedido vem daqui (ver SessionStore). */
     private val sessions = SessionStore(context)
 
-    private val client = goatClient()
+    private val client = ClientInfo.current.goatClient
 
     private val backendHttp = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -99,7 +99,7 @@ class AppContainer(context: Context) {
         }
     }
 
-    val wallpapers = OnlineWallpapers(context, plainHttp, publicUserAgent())
+    val wallpapers = OnlineWallpapers(context, plainHttp, ClientInfo.current.publicUserAgent)
 
     /**
      * O que vive com o processo, com ou sem ecrã (chamado pelo LauncherApp): as mudanças nas apps instaladas, o índice
@@ -120,7 +120,7 @@ class AppContainer(context: Context) {
             val request = chain.request()
             val host = request.url.host
             val photoHost = PHOTO_HOSTS.any { host == it || host.endsWith(".$it") }
-            chain.proceed(if (photoHost) request.newBuilder().header("User-Agent", publicUserAgent()).build() else request)
+            chain.proceed(if (photoHost) request.newBuilder().header("User-Agent", ClientInfo.current.publicUserAgent).build() else request)
         }
         .build()
     val updater = Updater(context, plainHttp, Gson())
@@ -128,17 +128,5 @@ class AppContainer(context: Context) {
     val youtube = YouTubeSource(context, plainHttp)
 }
 
-/** Os servidores das fotos do fundo que pedem uma identificação da app (ver [publicUserAgent]). */
+/** Os servidores das fotos do fundo que pedem uma identificação da app (ver [ClientInfo.publicUserAgent]). */
 private val PHOTO_HOSTS = listOf("wikimedia.org", "nasa.gov")
-
-private fun platform(): String = if (Build.MANUFACTURER.equals("Amazon", ignoreCase = true)) "fire-tv" else "android-tv"
-
-/** `goatlauncher/<versão> (<plataforma>)`, por exemplo `goatlauncher/0.8.9 (android-tv)`. */
-private fun goatClient(): String = "goatlauncher/${BuildConfig.VERSION_NAME} (${platform()})"
-
-/**
- * Para serviços públicos que pedem uma identificação com contacto (a política do Wikimedia): a de [goatClient] com a
- * página do projeto, por exemplo `goatlauncher/0.9.11 (android-tv; +https://github.com/GOAThings/GoatLauncher)`.
- */
-private fun publicUserAgent(): String =
-    "goatlauncher/${BuildConfig.VERSION_NAME} (${platform()}; +https://github.com/${Updater.RELEASES_REPO})"

@@ -11,13 +11,13 @@ import android.graphics.Bitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cc.slokker.goatlauncher.BuildConfig
-import android.os.Build
-import com.google.gson.JsonObject
 import cc.slokker.goatlauncher.data.BugReport
+import cc.slokker.goatlauncher.data.ClientInfo
 import cc.slokker.goatlauncher.LauncherApp
 import cc.slokker.goatlauncher.data.ButtonMap
 import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.DeviceSettings
+import cc.slokker.goatlauncher.ui.state.ReportSender
 import cc.slokker.goatlauncher.ui.state.ReportState
 import cc.slokker.goatlauncher.ui.state.UpdateState
 import cc.slokker.goatlauncher.data.ImageImport
@@ -198,8 +198,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val update: StateFlow<UpdateState> = _update.asStateFlow()
     val appVersion: String get() = c.updater.currentVersion
 
-    private val _report = MutableStateFlow<ReportState>(ReportState.Idle)
-    val report: StateFlow<ReportState> = _report.asStateFlow()
+    private val reports = ReportSender(
+        scope = viewModelScope,
+        backend = c.backend,
+        client = ClientInfo.current,
+        device = BugReport.device,
+        session = settings.session,
+        layout = { account.value.layout },
+        youtubeSecrets = c.youtube::secrets,
+        strings = { strings },
+        collectLog = { header, secrets -> withContext(Dispatchers.IO) { BugReport.collect(context, header, secrets) } },
+    )
+    val report: StateFlow<ReportState> = reports.state
 
     private val _toast = MutableStateFlow<String?>(null)
     val toast: StateFlow<String?> = _toast.asStateFlow()
@@ -662,42 +672,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     // ---- Relatórios ----
 
-    /**
-     * Envia um relatório para a zona admin do site: o registo do launcher (sem tokens nem email) e o que a pessoa
-     * escreveu. Com a TV ligada à conta, fica ligado a ela.
-     */
-    fun sendReport(message: String) {
-        if (_report.value == ReportState.Sending) return
-        _report.value = ReportState.Sending
-        viewModelScope.launch {
-            _report.value = try {
-                val session = session.value
-                val header = "GoatLauncher ${BuildConfig.VERSION_NAME} · ${BugReport.device}\n" +
-                    "Account: ${if (session != null) "yes" else "no"} · layout: ${account.value.layout}"
-                val secrets = listOfNotNull(session?.token, session?.email) + c.youtube.secrets()
-                val log = withContext(Dispatchers.IO) { BugReport.collect(getApplication(), header, secrets) }
-                val body = JsonObject().apply {
-                    addProperty("app", "goatlauncher")
-                    addProperty("version", BuildConfig.VERSION_NAME)
-                    addProperty("platform", if (Build.MANUFACTURER.equals("Amazon", ignoreCase = true)) "fire-tv" else "android-tv")
-                    addProperty("device", BugReport.device)
-                    message.trim().take(2000).takeIf { it.isNotEmpty() }?.let { addProperty("message", it) }
-                    addProperty("log", log)
-                }
-                val res = c.backend.sendReport(body)
-                val id = res.body()?.get("id")?.takeIf { it.isJsonPrimitive }?.asString
-                when {
-                    res.code() == 429 -> ReportState.Failed(strings.reportTooMany)
-                    res.isSuccessful && id != null -> ReportState.Sent(id)
-                    else -> ReportState.Failed(strings.reportFailed("HTTP ${res.code()}"))
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                ReportState.Failed(strings.reportFailed(e.message ?: e.javaClass.simpleName))
-            }
-        }
-    }
+    /** Ver [ReportSender]. */
+    fun sendReport(message: String) = reports.send(message)
 
     // ---- Atualizações ----
 

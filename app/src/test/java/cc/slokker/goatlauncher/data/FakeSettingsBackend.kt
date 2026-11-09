@@ -50,9 +50,12 @@ internal class FakeSettingsBackend : BackendApi {
     val gets = ArrayDeque<suspend (etag: String?) -> Response<JsonObject>>()
     val patches = ArrayDeque<suspend (body: JsonObject) -> Response<JsonObject>>()
     val refreshes = ArrayDeque<suspend () -> AuthRefreshResponse>()
+    /** Respostas a `POST api/reports` (ver ReportSenderTest). */
+    val reports = ArrayDeque<suspend (body: JsonObject) -> Response<JsonObject>>()
 
     val sentPatches = mutableListOf<JsonObject>()
     val sentEtags = mutableListOf<String?>()
+    val sentReports = mutableListOf<JsonObject>()
     var refreshCalls = 0
 
     override suspend fun settings(etag: String?): Response<JsonObject> {
@@ -72,7 +75,11 @@ internal class FakeSettingsBackend : BackendApi {
 
     override suspend fun deviceStart(body: DeviceStartRequest): DeviceStartResponse = error("não usado")
     override suspend fun devicePoll(body: DevicePollRequest): Response<DevicePollResponse> = error("não usado")
-    override suspend fun sendReport(body: JsonObject): Response<JsonObject> = error("não usado")
+    override suspend fun sendReport(body: JsonObject): Response<JsonObject> {
+        sentReports += body.deepCopy()
+        return reports.removeFirst()(body)
+    }
+
     override suspend fun deviceLogout(token: String): Response<Unit> = error("não usado")
     override suspend fun putApps(body: JsonObject): Response<JsonObject> = error("não usado")
     override suspend fun putAppIcon(pkg: String, png: RequestBody): Response<JsonObject> = error("não usado")
