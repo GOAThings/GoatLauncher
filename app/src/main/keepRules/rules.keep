@@ -1,3 +1,7 @@
 # Modelos lidos pelo Gson por reflexão (respostas da API da conta Slokker).
 -keep class cc.slokker.goatlauncher.data.api.** { *; }
+# A versão mais recente no GitHub (Updater.latest). Sem isto o R8 tirava "body" e "assets" (só o Gson os escreve),
+# e no release nunca aparecia uma versão nova.
+-keep class cc.slokker.goatlauncher.data.Updater$GithubRelease { *; }
+-keep class cc.slokker.goatlauncher.data.Updater$GithubAsset { *; }
 -keepattributes Signature
