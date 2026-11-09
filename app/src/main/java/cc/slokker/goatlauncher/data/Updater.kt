@@ -1,6 +1,7 @@
 package cc.slokker.goatlauncher.data
 
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
@@ -8,7 +9,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import cc.slokker.goatlauncher.BuildConfig
-import cc.slokker.goatlauncher.InstallResultReceiver
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.Dispatchers
@@ -27,9 +27,15 @@ class AppRelease(val version: String, val notes: String, val apkUrl: String, val
 /**
  * Atualizações da app: as versões são publicadas como releases do próprio repositório, [RELEASES_REPO]. O APK
  * descarregado vai para o instalador do Android, que só o aceita se estiver assinado com a mesma chave da app
- * instalada.
+ * instalada. A resposta do instalador vai para [resultReceiver] (o InstallResultReceiver da app, que a devolve com
+ * [reportInstallFailure] e [reportInstallCancelled]).
  */
-class Updater(private val context: Context, private val http: OkHttpClient, private val gson: Gson) {
+class Updater(
+    private val context: Context,
+    private val http: OkHttpClient,
+    private val gson: Gson,
+    private val resultReceiver: Class<out BroadcastReceiver>,
+) {
 
     private val _installFailures = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
@@ -109,7 +115,7 @@ class Updater(private val context: Context, private val http: OkHttpClient, priv
             .onFailure { runCatching { context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } }
     }
 
-    /** Entrega o APK ao instalador do Android (que mostra a confirmação; o resultado chega ao [InstallResultReceiver]). */
+    /** Entrega o APK ao instalador do Android (que mostra a confirmação; o resultado chega ao [resultReceiver]). */
     suspend fun install(apk: File) = withContext(Dispatchers.IO) {
         val installer = context.packageManager.packageInstaller
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
@@ -130,7 +136,7 @@ class Updater(private val context: Context, private val http: OkHttpClient, priv
             }
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
-            val intent = PendingIntent.getBroadcast(context, id, Intent(context, InstallResultReceiver::class.java), flags)
+            val intent = PendingIntent.getBroadcast(context, id, Intent(context, resultReceiver), flags)
             session.commit(intent.intentSender)
         }
     }

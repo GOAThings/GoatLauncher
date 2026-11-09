@@ -123,7 +123,8 @@ class AppContainer(context: Context) {
             chain.proceed(if (photoHost) request.newBuilder().header("User-Agent", ClientInfo.current.publicUserAgent).build() else request)
         }
         .build()
-    val updater = Updater(context, plainHttp, Gson())
+    /** O resultado de cada instalação chega ao InstallResultReceiver (ver UpdateReceivers). */
+    val updater = Updater(context, plainHttp, Gson(), InstallResultReceiver::class.java)
     val weather = WeatherSource(context, plainHttp)
     val youtube = YouTubeSource(context, plainHttp)
 }
