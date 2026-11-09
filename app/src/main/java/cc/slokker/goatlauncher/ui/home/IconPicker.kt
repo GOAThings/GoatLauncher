@@ -137,7 +137,7 @@ fun IconPicker(app: LauncherApp, current: String?, vm: LauncherViewModel, onDone
                     .align(Alignment.CenterEnd)
                     .width(680.dp)
                     .fillMaxHeight()
-                    .glass(GoatShapes.Panel, tint = Color(0xE6111522))
+                    .glass(GoatShapes.Panel, tint = GoatColors.SheetTint)
                     .padding(horizontal = 20.dp, vertical = 18.dp),
             ) {
                 Text(

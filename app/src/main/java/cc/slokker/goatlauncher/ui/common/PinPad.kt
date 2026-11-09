@@ -114,7 +114,7 @@ fun PinPad(title: String, message: String?, onDone: (String) -> Unit, modifier: 
                     Modifier
                         .size(width = 52.dp, height = 64.dp)
                         .clip(GoatShapes.Control)
-                        .background(if (active) Color.White else Color.White.copy(alpha = 0.14f)),
+                        .background(if (active) Color.White else GoatColors.ControlFill),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(

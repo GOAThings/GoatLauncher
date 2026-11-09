@@ -8,9 +8,6 @@ object GoatShapes {
     /** Painéis laterais, guia, definições, cartões grandes (erro, ativação, HUD). */
     val Panel = RoundedCornerShape(12.dp)
 
-    /** Cartões pequenos (troca de canal, avisos, toast). */
-    val Card = RoundedCornerShape(10.dp)
-
     /** Linhas de lista, campos de texto, botões, chips e cápsulas de estado. */
     val Control = RoundedCornerShape(ControlRadius)
 

@@ -258,7 +258,7 @@ private fun PreviewTopBar(account: AccountSettings, weather: WeatherNow?, showAp
     Box(Modifier.fillMaxWidth().height(48.dp)) {
         TopGreeting(account.showGreeting, weather, Modifier.align(Alignment.CenterStart))
         Row(
-            Modifier.align(Alignment.Center).background(Color.White.copy(alpha = 0.14f), GoatShapes.Bar).padding(BarPadding),
+            Modifier.align(Alignment.Center).background(GoatColors.ControlFill, GoatShapes.Bar).padding(BarPadding),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             listOfNotNull(s.tabHome, s.tabApps.takeIf { showApps }, s.settings).forEachIndexed { i, label ->
@@ -312,7 +312,7 @@ private fun PreviewTile(vm: LauncherViewModel, app: LauncherApp, iconSpec: Strin
 /** A imagem de um conteúdo do "Continuar a ver", com a barra de progresso por dentro. */
 @Composable
 private fun PreviewCard(item: WatchNextItem, width: Dp, height: Dp, corner: Dp) {
-    Box(Modifier.size(width, height).clip(RoundedCornerShape(corner)).background(Color(0xFF1C2333))) {
+    Box(Modifier.size(width, height).clip(RoundedCornerShape(corner)).background(GoatColors.CardSurface)) {
         if (item.imageUri != null) {
             val fill = !item.isChannel
             AsyncImage(
@@ -430,7 +430,7 @@ private fun CarouselPreview(app: LauncherApp, items: List<WatchNextItem>) {
             val item = items.first()
             if (item.isChannel && item.imageUri != null) {
                 // O logo de um canal fica em cima, longe do texto (como no ecrã inicial).
-                Box(Modifier.fillMaxSize().background(Color(0xFF1C2333))) {
+                Box(Modifier.fillMaxSize().background(GoatColors.CardSurface)) {
                     AsyncImage(
                         model = item.imageUri,
                         contentDescription = null,

@@ -84,7 +84,7 @@ fun HeroText(app: LauncherApp, item: WatchNextItem, showLogo: Boolean, modifier:
                 Modifier
                     .padding(bottom = 16.dp)
                     .size(width = 176.dp, height = 99.dp)
-                    .background(Color(0xFF1C2333), GoatShapes.Control)
+                    .background(GoatColors.CardSurface, GoatShapes.Control)
                     .padding(14.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -136,7 +136,7 @@ fun UpNextPanel(items: List<WatchNextItem>, more: Int, modifier: Modifier = Modi
     Column(
         modifier
             .width(UpNextWidth)
-            .glass(GoatShapes.Panel, tint = Color(0x99111522))
+            .glass()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -186,7 +186,7 @@ fun ChannelUpNextPanel(item: WatchNextItem, modifier: Modifier = Modifier) {
     Column(
         modifier
             .width(UpNextWidth)
-            .glass(GoatShapes.Panel, tint = Color(0x99111522))
+            .glass()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -224,7 +224,7 @@ private const val UP_NEXT_PROGRAMMES = 3
 /** A imagem pequena de um conteúdo: a cena a encher, ou o logo de um canal inteiro sobre fundo escuro. */
 @Composable
 private fun Thumb(item: WatchNextItem, modifier: Modifier) {
-    Box(modifier.clip(GoatShapes.Small).background(Color(0xFF1C2333)), contentAlignment = Alignment.Center) {
+    Box(modifier.clip(GoatShapes.Small).background(GoatColors.CardSurface), contentAlignment = Alignment.Center) {
         if (item.imageUri != null) {
             AsyncImage(
                 model = item.imageUri,
@@ -363,7 +363,7 @@ private val CarouselShape = RoundedCornerShape(18.dp)
 /** Um cartão do carrossel: a imagem 16:9 com [height] de altura (os logos dos canais inteiros, ao centro). */
 @Composable
 private fun CarouselCard(item: WatchNextItem, height: Dp, modifier: Modifier) {
-    Box(modifier.size(width = height * 16 / 9, height = height).clip(CarouselShape).background(Color(0xFF1C2333)), contentAlignment = Alignment.Center) {
+    Box(modifier.size(width = height * 16 / 9, height = height).clip(CarouselShape).background(GoatColors.CardSurface), contentAlignment = Alignment.Center) {
         if (item.imageUri != null) {
             AsyncImage(
                 model = item.imageUri,

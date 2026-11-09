@@ -169,9 +169,9 @@ fun WatchNextCard(item: WatchNextItem, onClick: () -> Unit, modifier: Modifier =
             modifier = Modifier.fillMaxWidth().height(CardHeight),
             shape = ClickableSurfaceDefaults.shape(CardShape),
             colors = ClickableSurfaceDefaults.colors(
-                containerColor = Color(0xFF1C2333),
-                focusedContainerColor = Color(0xFF1C2333),
-                pressedContainerColor = Color(0xFF1C2333),
+                containerColor = GoatColors.CardSurface,
+                focusedContainerColor = GoatColors.CardSurface,
+                pressedContainerColor = GoatColors.CardSurface,
             ),
             scale = ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
             border = ClickableSurfaceDefaults.border(
@@ -244,9 +244,9 @@ fun TopShelfCard(item: WatchNextItem, height: Dp, onClick: () -> Unit, modifier:
             modifier = Modifier.fillMaxWidth().height(height).onFocusChanged { focused = it.isFocused },
             shape = ClickableSurfaceDefaults.shape(TopShelfShape),
             colors = ClickableSurfaceDefaults.colors(
-                containerColor = Color(0xFF1C2333),
-                focusedContainerColor = Color(0xFF1C2333),
-                pressedContainerColor = Color(0xFF1C2333),
+                containerColor = GoatColors.CardSurface,
+                focusedContainerColor = GoatColors.CardSurface,
+                pressedContainerColor = GoatColors.CardSurface,
             ),
             scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
             border = ClickableSurfaceDefaults.border(

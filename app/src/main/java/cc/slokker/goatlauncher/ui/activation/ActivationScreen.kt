@@ -100,7 +100,7 @@ fun ActivationScreen(api: BackendApi, onApproved: (token: String, user: BackendU
         Row(
             Modifier
                 .align(Alignment.Center)
-                .glass(GoatShapes.Panel, tint = Color(0xE6111522))
+                .glass(GoatShapes.Panel, tint = GoatColors.SheetTint)
                 .padding(48.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(56.dp),

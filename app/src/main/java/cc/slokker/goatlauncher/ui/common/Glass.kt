@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
@@ -74,7 +75,7 @@ import kotlin.math.roundToInt
  * Vidro fumado: véu escuro translúcido, reflexo de luz no topo e contorno fino.
  * Sem desfocagem do fundo (o Android só a tem nativa a partir do 12; a SHIELD está no 11).
  */
-fun Modifier.glass(shape: Shape = GoatShapes.Panel, tint: Color = Color(0x99111522)): Modifier = drawWithCache {
+fun Modifier.glass(shape: Shape = GoatShapes.Panel, tint: Color = GoatColors.GlassTint): Modifier = drawWithCache {
     val outline = shape.createOutline(size, layoutDirection, this)
     val path = Path().apply { addOutline(outline) }
     val highlight = Brush.verticalGradient(
@@ -140,6 +141,9 @@ private val FrostTint = Color(0xFF0A0D16).copy(alpha = 0.6f)
 /** Cores mais vivas por trás do vidro ("vibrancy"). */
 private val Vibrancy = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(1.7f) })
 
+/** O painel de vidro das janelas pequenas por cima do ecrã (menu da app, mudar o nome, o código): [width] de largura. */
+fun Modifier.dialogPanel(width: Dp): Modifier = width(width).glass(GoatShapes.Panel, tint = GoatColors.PanelTint)
+
 /** Botão só com texto: fundo claro translúcido; com foco fica branco com texto escuro. */
 @Composable
 fun GlassButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -147,7 +151,7 @@ fun GlassButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
         onClick = onClick,
         modifier = modifier,
         shape = ClickableSurfaceDefaults.shape(GoatShapes.Control),
-        colors = focusColors(container = Color.White.copy(alpha = 0.14f)),
+        colors = focusColors(container = GoatColors.ControlFill),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
     ) {
         Text(text, Modifier.padding(horizontal = 28.dp, vertical = 12.dp), style = MaterialTheme.typography.titleSmall)
@@ -260,7 +264,7 @@ fun GlassRow(
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
             contentColor = GoatColors.Text,
-            focusedContainerColor = if (sliding != null) Color.Transparent else Color.White.copy(alpha = 0.14f),
+            focusedContainerColor = if (sliding != null) Color.Transparent else GoatColors.ControlFill,
             focusedContentColor = GoatColors.Text,
             pressedContainerColor = Color.White.copy(alpha = 0.22f),
             pressedContentColor = GoatColors.Text,

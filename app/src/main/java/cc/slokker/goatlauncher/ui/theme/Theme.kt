@@ -36,7 +36,6 @@ object GoatColors {
     /** Elemento com foco: vidro claro, texto branco e contorno no gradiente da marca. */
     val Focus = Color(0x33FFFFFF)
     val OnFocus = Text
-    val Pressed = Color(0x4DFFFFFF)
 
     val Error = Color(0xFFFF6961)
 
@@ -45,8 +44,22 @@ object GoatColors {
     // Paleta GOAT (a do site e das outras apps): o separador aberto e o botão principal na cor da marca, e o foco
     // num anel azul-claro em vez de branco.
     val Brand = Color(0xFF2B3B79)
-    val BrandHover = Color(0xFF3A4FA0)
     val FocusRing = Color(0xFF7C92E0)
+
+    /** O fundo dos botões e controlos sem foco (vidro claro): a barra dos separadores, os botões, as teclas do código. */
+    val ControlFill = Color.White.copy(alpha = 0.14f)
+
+    /** O fundo escuro dos cartões de conteúdo, por trás da imagem (vê-se nos logos e enquanto a imagem carrega). */
+    val CardSurface = Color(0xFF1C2333)
+
+    /** O vidro por defeito (ver glass()): os painéis por cima do ecrã inicial, como o "A seguir". */
+    val GlassTint = Color(0x99111522)
+
+    /** O vidro quase opaco das janelas pequenas por cima de tudo: menu da app, mudar o nome, o código. */
+    val PanelTint = Color(0xF0111522)
+
+    /** O vidro das folhas grandes por cima do ecrã: escolher o ícone, ligar a conta. */
+    val SheetTint = Color(0xE6111522)
 }
 
 /** Margens de segurança de TV (overscan). */

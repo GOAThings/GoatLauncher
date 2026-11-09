@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,10 +39,9 @@ import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.data.LauncherApp
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.common.GlassRow
-import cc.slokker.goatlauncher.ui.common.glass
+import cc.slokker.goatlauncher.ui.common.dialogPanel
 import cc.slokker.goatlauncher.ui.common.requestFocusSafely
 import cc.slokker.goatlauncher.ui.theme.GoatColors
-import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 /** Nome da app no launcher (ex.: "YouTube" em vez de "TizenTube"). Guardar vazio repõe o nome da app. */
@@ -55,8 +53,7 @@ internal fun RenameDialog(app: LauncherApp, custom: Boolean, onSave: (String?) -
     Dialog(onDismissRequest = onDismiss) {
         Column(
             Modifier
-                .width(460.dp)
-                .glass(GoatShapes.Panel, tint = Color(0xF0111522))
+                .dialogPanel(460.dp)
                 .padding(20.dp),
         ) {
             Text(s.rename, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
@@ -104,8 +101,7 @@ internal fun AppMenu(
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
         Column(
             Modifier
-                .width(380.dp)
-                .glass(GoatShapes.Panel, tint = Color(0xF0111522))
+                .dialogPanel(380.dp)
                 .padding(16.dp)
                 .focusProperties { onExit = { cancelFocusChange() } }
                 .focusGroup(),
@@ -148,8 +144,7 @@ internal fun PinOverlay(title: String, waitMs: () -> Long, onPin: (String) -> Bo
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)), contentAlignment = Alignment.Center) {
         Column(
             Modifier
-                .width(440.dp)
-                .glass(GoatShapes.Panel, tint = Color(0xF0111522))
+                .dialogPanel(440.dp)
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {

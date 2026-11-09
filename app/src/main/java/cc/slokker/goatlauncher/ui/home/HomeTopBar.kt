@@ -62,6 +62,7 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.common.GoatIcons
+import cc.slokker.goatlauncher.ui.common.focusColors
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.BarPadding
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
@@ -124,7 +125,7 @@ internal fun TopBar(
                     if (e.type == KeyEventType.KeyDown && (e.key == Key.DirectionLeft || e.key == Key.DirectionRight)) arrowedAt = SystemClock.uptimeMillis()
                     false
                 }
-                .background(Color.White.copy(alpha = 0.14f), GoatShapes.Bar)
+                .background(GoatColors.ControlFill, GoatShapes.Bar)
                 .padding(BarPadding)
                 // O destaque lê a animação só ao desenhar: não recompõe a barra a cada fotograma.
                 .drawBehind {
@@ -253,14 +254,7 @@ private fun TopButton(onClick: () -> Unit, content: @Composable () -> Unit) {
         onClick = onClick,
         modifier = Modifier.size(40.dp),
         shape = ClickableSurfaceDefaults.shape(GoatShapes.Control),
-        colors = ClickableSurfaceDefaults.colors(
-            containerColor = Color.White.copy(alpha = 0.14f),
-            contentColor = GoatColors.Text,
-            focusedContainerColor = Color.White,
-            focusedContentColor = Color.Black,
-            pressedContainerColor = Color.White.copy(alpha = 0.8f),
-            pressedContentColor = Color.Black,
-        ),
+        colors = focusColors(container = GoatColors.ControlFill),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { content() }
