@@ -460,9 +460,13 @@ fun HomeScreen(vm: LauncherViewModel) {
     val lastInput = remember { longArrayOf(SystemClock.elapsedRealtime()) }
     var idle by remember { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(account.idleMinutes) {
+    // Mudar o nome e mudar o ícone são janelas à parte (Dialog): as teclas delas não passam pelo onPreviewKeyEvent de
+    // baixo. Enquanto uma está aberta não se conta o tempo, senão o ecrã inicial apagava-se por trás dela; ao fechar,
+    // a contagem recomeça.
+    val dialogOpen = renameFor != null || iconFor != null
+    LaunchedEffect(account.idleMinutes, dialogOpen) {
         idle = false
-        if (account.idleMinutes <= 0) return@LaunchedEffect
+        if (account.idleMinutes <= 0 || dialogOpen) return@LaunchedEffect
         val idleMs = account.idleMinutes * 60_000L
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             lastInput[0] = SystemClock.elapsedRealtime()
