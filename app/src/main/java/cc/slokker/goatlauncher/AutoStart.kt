@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.SystemClock
 import android.util.Log
 import cc.slokker.goatlauncher.data.ParentalLock
 import kotlinx.coroutines.Job
@@ -63,7 +64,22 @@ object AutoStart {
     fun unlockIntent(context: Context, pkg: String): Intent =
         Intent(context, MainActivity::class.java)
             .putExtra(EXTRA_UNLOCK, pkg)
+            .putExtra(EXTRA_UNLOCK_AT, SystemClock.elapsedRealtime())
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+
+    /**
+     * O pedido do [unlockIntent] é de agora? O sistema guarda o intent que abriu o ecrã e volta a dá-lo quando o recria
+     * depois de fechar o processo: esse já foi tratado. Sem a hora (um `am start` à mão) conta como novo.
+     */
+    fun isFresh(intent: Intent, now: Long): Boolean = isFresh(intent.getLongExtra(EXTRA_UNLOCK_AT, -1L), now)
+
+    internal fun isFresh(createdAt: Long, now: Long): Boolean = createdAt < 0 || now - createdAt in 0..UNLOCK_FRESH_MS
+
+    /** Quando o [unlockIntent] foi feito (elapsedRealtime). */
+    private const val EXTRA_UNLOCK_AT = "cc.slokker.goatlauncher.UNLOCK_AT"
+
+    /** Do pedido até o ecrã abrir: um arranque a frio numa SHIELD ocupada leva uns segundos, nunca um minuto. */
+    private const val UNLOCK_FRESH_MS = 60_000L
 
     /** Pelo serviço de acessibilidade quando está ligado (pode abrir apps a partir do fundo); senão, diretamente. */
     fun start(context: Context, intent: Intent) {

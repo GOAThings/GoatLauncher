@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.content.pm.PermissionInfo
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
@@ -42,8 +43,12 @@ class MainActivity : AppCompatActivity() {
         })
         requestWatchNextPermissions()
         hideSystemBars()
-        if (BuildConfig.DEBUG && intent.getBooleanExtra("demo_watch_next", false)) vm.enableDemoWatchNext()
-        intent.getStringExtra(AutoStart.EXTRA_UNLOCK)?.let { vm.requestUnlock(this, it) }
+        // O intent que abriu o ecrã é um pedido de uma vez. Ao recriar o ecrã (mudar a língua) volta a chegar aqui o
+        // mesmo, e pedir o código ou abrir a app outra vez seria um engano.
+        if (savedInstanceState == null) {
+            if (BuildConfig.DEBUG && intent.getBooleanExtra("demo_watch_next", false)) vm.enableDemoWatchNext()
+            unlockRequest(intent)
+        }
         setContent {
             GoatTheme { LauncherRoot(vm) }
         }
@@ -85,8 +90,16 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         // singleTask: o botão Home com o launcher já aberto chega aqui.
         if (intent.hasCategory(Intent.CATEGORY_HOME)) vm.onHomePressed()
-        // Uma app bloqueada abriu por outro caminho (ver HomeGuardService): pede o código.
-        intent.getStringExtra(AutoStart.EXTRA_UNLOCK)?.let { vm.requestUnlock(this, it) }
+        unlockRequest(intent)
+    }
+
+    /**
+     * Uma app bloqueada abriu por outro caminho (ver HomeGuardService), ou o AutoStart quer abrir uma: pede o código.
+     * Um pedido antigo (o intent com que o sistema volta a abrir o ecrã depois de fechar o processo) não conta.
+     */
+    private fun unlockRequest(intent: Intent) {
+        val pkg = intent.getStringExtra(AutoStart.EXTRA_UNLOCK) ?: return
+        if (AutoStart.isFresh(intent, SystemClock.elapsedRealtime())) vm.requestUnlock(this, pkg)
     }
 
     override fun onResume() {
