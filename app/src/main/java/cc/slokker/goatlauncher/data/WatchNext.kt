@@ -340,27 +340,31 @@ class WatchNextSource(private val context: Context) : WatchNextFeed {
             "start_time_utc_millis",
             "end_time_utc_millis",
         )
-        const val COL_ID = 0
-        const val COL_PACKAGE = 1
-        const val COL_TITLE = 2
-        const val COL_EPISODE_TITLE = 3
-        const val COL_SEASON = 4
-        const val COL_EPISODE = 5
-        const val COL_POSTER = 6
-        const val COL_POSTER_RATIO = 7
-        const val COL_THUMB = 8
-        const val COL_THUMB_RATIO = 9
-        const val COL_POSITION = 10
-        const val COL_DURATION = 11
-        const val COL_TYPE = 12
-        const val COL_ENGAGEMENT = 13
-        const val COL_INTENT = 14
-        const val COL_BROWSABLE = 15
-        const val COL_PROGRAM_TYPE = 16
-        const val COL_LIVE = 17
-        const val COL_DESCRIPTION = 18
-        const val COL_LONG_DESCRIPTION = 19
-        const val COL_START = 20
-        const val COL_END = 21
+
+        /** A posição de cada coluna em [PROJECTION], pelo nome (acrescentar uma coluna a meio já não troca as outras). */
+        private fun col(name: String): Int = PROJECTION.indexOf(name).also { check(it >= 0) { "Coluna fora da PROJECTION: $name" } }
+
+        val COL_ID = col("_id")
+        val COL_PACKAGE = col("package_name")
+        val COL_TITLE = col("title")
+        val COL_EPISODE_TITLE = col("episode_title")
+        val COL_SEASON = col("season_display_number")
+        val COL_EPISODE = col("episode_display_number")
+        val COL_POSTER = col("poster_art_uri")
+        val COL_POSTER_RATIO = col("poster_art_aspect_ratio")
+        val COL_THUMB = col("thumbnail_uri")
+        val COL_THUMB_RATIO = col("thumbnail_aspect_ratio")
+        val COL_POSITION = col("last_playback_position_millis")
+        val COL_DURATION = col("duration_millis")
+        val COL_TYPE = col("watch_next_type")
+        val COL_ENGAGEMENT = col("last_engagement_time_utc_millis")
+        val COL_INTENT = col("intent_uri")
+        val COL_BROWSABLE = col("browsable")
+        val COL_PROGRAM_TYPE = col("type")
+        val COL_LIVE = col("live")
+        val COL_DESCRIPTION = col("short_description")
+        val COL_LONG_DESCRIPTION = col("long_description")
+        val COL_START = col("start_time_utc_millis")
+        val COL_END = col("end_time_utc_millis")
     }
 }
