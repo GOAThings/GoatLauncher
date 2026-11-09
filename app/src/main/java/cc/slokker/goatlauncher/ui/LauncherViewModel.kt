@@ -3,57 +3,46 @@ package cc.slokker.goatlauncher.ui
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import cc.slokker.goatlauncher.AutoStart
 import cc.slokker.goatlauncher.BuildConfig
-import cc.slokker.goatlauncher.data.BugReport
-import cc.slokker.goatlauncher.data.ClientInfo
+import cc.slokker.goatlauncher.HomeGuardService
 import cc.slokker.goatlauncher.LauncherApp
-import cc.slokker.goatlauncher.data.ButtonMap
 import cc.slokker.goatlauncher.data.AccountSettings
+import cc.slokker.goatlauncher.data.BugReport
+import cc.slokker.goatlauncher.data.ButtonMap
+import cc.slokker.goatlauncher.data.ClientInfo
 import cc.slokker.goatlauncher.data.DeviceSettings
+import cc.slokker.goatlauncher.data.ImageImport
+import cc.slokker.goatlauncher.data.LauncherApp as App
+import cc.slokker.goatlauncher.data.NetworkKind
+import cc.slokker.goatlauncher.data.OnlinePhoto
+import cc.slokker.goatlauncher.data.ParentalLock
+import cc.slokker.goatlauncher.data.Place
+import cc.slokker.goatlauncher.data.SessionStore
+import cc.slokker.goatlauncher.data.SystemIntents
+import cc.slokker.goatlauncher.data.Wallpaper
+import cc.slokker.goatlauncher.data.WatchNextItem
+import cc.slokker.goatlauncher.data.WeatherNow
+import cc.slokker.goatlauncher.data.YouTubeLogin
+import cc.slokker.goatlauncher.data.api.BackendDevice
+import cc.slokker.goatlauncher.data.api.BackendUser
+import cc.slokker.goatlauncher.data.networkKind
+import cc.slokker.goatlauncher.ui.home.CardHeight
+import cc.slokker.goatlauncher.ui.state.CoilCardPrefetch
+import cc.slokker.goatlauncher.ui.state.CoilWallpaperImages
+import cc.slokker.goatlauncher.ui.state.ContinueWatching
 import cc.slokker.goatlauncher.ui.state.LocalWeather
 import cc.slokker.goatlauncher.ui.state.NightClock
 import cc.slokker.goatlauncher.ui.state.ReportSender
 import cc.slokker.goatlauncher.ui.state.ReportState
 import cc.slokker.goatlauncher.ui.state.UpdateState
 import cc.slokker.goatlauncher.ui.state.UpdatesController
-import cc.slokker.goatlauncher.ui.state.CoilCardPrefetch
-import cc.slokker.goatlauncher.ui.state.ContinueWatching
-import cc.slokker.goatlauncher.ui.state.CoilWallpaperImages
 import cc.slokker.goatlauncher.ui.state.WallpaperRotation
-import cc.slokker.goatlauncher.data.ImageImport
-import cc.slokker.goatlauncher.data.NetworkKind
-import cc.slokker.goatlauncher.data.networkKind
-import cc.slokker.goatlauncher.data.OnlinePhoto
-import cc.slokker.goatlauncher.data.LauncherApp as App
-import cc.slokker.goatlauncher.data.SessionStore
-import cc.slokker.goatlauncher.data.SystemIntents
-import cc.slokker.goatlauncher.data.Wallpaper
-import cc.slokker.goatlauncher.data.WatchNextItem
-import cc.slokker.goatlauncher.data.Place
 import java.io.File
-import cc.slokker.goatlauncher.data.WeatherNow
-import cc.slokker.goatlauncher.data.YouTubeLogin
-import cc.slokker.goatlauncher.data.api.BackendDevice
-import cc.slokker.goatlauncher.data.api.BackendUser
-import cc.slokker.goatlauncher.ui.home.CardHeight
-import coil3.SingletonImageLoader
-import coil3.request.Disposable
-import coil3.request.ImageRequest
-import android.os.SystemClock
-import android.util.Log
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import android.provider.Settings as AndroidSettings
-import androidx.core.content.edit
-import cc.slokker.goatlauncher.HomeGuardService
-import cc.slokker.goatlauncher.AutoStart
-import cc.slokker.goatlauncher.data.ParentalLock
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,13 +50,12 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Pedido do código do controlo parental: o ecrã mostra o teclado e [onSuccess] corre quando acertar. */
 class PinPrompt(val title: String, val onSuccess: () -> Unit)
@@ -212,28 +200,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     /** Com o fundo "pasta": a imagem dela que está a aparecer agora. */
     val folderImage: StateFlow<File?> = wallpaper.folderImage
-
-    init {
-        viewModelScope.launch {
-            settings.awaitReady()
-            settings.sync(refreshToken = true)
-            // Para o site da conta, já com o token renovado (só envia quando a lista mudou). Cada leitura das apps
-            // também envia (ver AppContainer.start).
-            c.appIndex.upload(c.catalog.current())
-        }
-        continueWatching.start()
-        localWeather.start()
-        wallpaper.start()
-        viewModelScope.launch { AutoStart.afterBoot(context) { resumed && _screen.value == Screen.Home } }
-        viewModelScope.launch {
-            // A língua guardada na conta (ou só nesta TV): aplica-se quando as definições já foram lidas, para
-            // um "auto" provisório do arranque não desfazer a escolha. Vinda de outra TV, aplica-se aqui também.
-            settings.awaitReady()
-            settings.account.map { it.language }.distinctUntilChanged().collect { Strings.apply(it) }
-        }
-        updates.start()
-        reloadApps()
-    }
 
     override fun onCleared() {
         continueWatching.stop()
@@ -604,6 +570,43 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun finishMove() {
         viewModelScope.launch { settings.pushPending() }
+    }
+
+    /**
+     * O arranque do ecrã, por esta ordem: as definições (esperar pela leitura do disco, sincronizar com a conta e, já
+     * com o token renovado, o índice das apps para o site), o "Continuar a ver", o tempo, o fundo, o arranque
+     * automático, a língua, as atualizações e as apps instaladas.
+     */
+    private fun start() {
+        viewModelScope.launch {
+            settings.awaitReady()
+            settings.sync(refreshToken = true)
+            // Para o site da conta, já com o token renovado (só envia quando a lista mudou). Cada leitura das apps
+            // também envia (ver AppContainer.start).
+            c.appIndex.upload(c.catalog.current())
+        }
+        continueWatching.start()
+        localWeather.start()
+        wallpaper.start()
+        viewModelScope.launch { AutoStart.afterBoot(context) { resumed && _screen.value == Screen.Home } }
+        viewModelScope.launch {
+            // A língua guardada na conta (ou só nesta TV): aplica-se quando as definições já foram lidas, para
+            // um "auto" provisório do arranque não desfazer a escolha. Vinda de outra TV, aplica-se aqui também.
+            settings.awaitReady()
+            settings.account.map { it.language }.distinctUntilChanged().collect { Strings.apply(it) }
+        }
+        updates.start()
+        reloadApps()
+    }
+
+    /**
+     * Fica depois de todos os campos, de propósito: o viewModelScope corre já (Main.immediate) o que se lança, até à
+     * primeira espera, e um caminho sem espera (ex.: uma foto já na cache) chegava a campos ainda por inicializar (o
+     * crash do f3b4c2b). Ao serem construídos, os holders só preparam estado derivado dos campos anteriores (stateIn);
+     * o que corre lança-se no start().
+     */
+    init {
+        start()
     }
 
     private companion object {
