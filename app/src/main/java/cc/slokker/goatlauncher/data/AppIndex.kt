@@ -3,6 +3,7 @@ package cc.slokker.goatlauncher.data
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import cc.slokker.goatlauncher.data.api.BackendApi
 import com.google.gson.JsonArray
@@ -27,11 +28,21 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
     private val prefs = context.getSharedPreferences(Prefs.FILE, Context.MODE_PRIVATE)
     private val mutex = Mutex()
 
-    /** Envia o índice de [apps] se mudou desde o último envio desta conta. */
-    suspend fun upload(apps: List<LauncherApp>) = mutex.withLock {
+    /**
+     * O hash do PNG de cada app (null se não couber no servidor). Só se volta a codificar quando a imagem da app muda:
+     * antes, cada regresso ao ecrã inicial codificava os PNG de todas as apps só para ver que nada tinha mudado.
+     */
+    private val hashes = PerAppCache<ImageBitmap, String?> { image -> png(image)?.let(::sha1) }
+
+    /**
+     * Envia o índice de [apps] se mudou desde o último envio desta conta. [afterLink]: a TV acabou de ser ligada (a
+     * uma conta nova, ou outra vez à mesma, que a recebe como outra TV): envia-se sempre.
+     */
+    suspend fun upload(apps: List<LauncherApp>, afterLink: Boolean = false) = mutex.withLock {
         val session = settings.session.value ?: return@withLock
+        if (afterLink) prefs.edit().remove(Prefs.HASH).remove(Prefs.ACCOUNT).apply()
         try {
-            withContext(Dispatchers.Default) { send(apps, session.token) }
+            withContext(Dispatchers.Default) { send(apps, indexKey(session)) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -39,17 +50,16 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
         }
     }
 
-    private suspend fun send(apps: List<LauncherApp>, account: String) {
-        val images = apps.associate { it.packageName to it.png() }
+    private suspend fun send(apps: List<LauncherApp>, key: String) {
+        hashes.retain(apps.map { it.packageName })
         val list = JsonArray()
         for (app in apps) {
-            val png = images[app.packageName] ?: continue
+            val image = app.banner ?: app.icon ?: continue
+            val iconHash = hashes.get(app.packageName, image) ?: continue
             // O mesmo resumo que o GoatRemote recebe em /apps, mais o hash da imagem.
-            list.add(app.summary().apply { addProperty("icon_hash", sha1(png)) })
+            list.add(app.summary().apply { addProperty("icon_hash", iconHash) })
         }
         val hash = sha1(list.toString().toByteArray())
-        // O hash vale para esta conta: noutra (ou ao voltar a ligar a TV), envia-se outra vez.
-        val key = sha1(account.toByteArray())
         if (prefs.getString(Prefs.HASH, null) == hash && prefs.getString(Prefs.ACCOUNT, null) == key) return
         val res = withContext(Dispatchers.IO) {
             api.putApps(JsonObject().apply {
@@ -63,8 +73,10 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
             return
         }
         var allSent = true
+        val byPkg = apps.associateBy { it.packageName }
         for (pkg in missing) {
-            val png = images[pkg] ?: continue
+            // Só as que o servidor ainda não tem (poucas): codificam-se outra vez aqui.
+            val png = byPkg[pkg]?.let { it.banner ?: it.icon }?.let(::png) ?: continue
             val icon = withContext(Dispatchers.IO) { api.putAppIcon(pkg, png.toRequestBody(PNG)) }
             when {
                 icon.isSuccessful -> Unit
@@ -86,8 +98,8 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
      * O banner (480×270) ou o ícone (192×192) em PNG, como no PhoneApps, a caber nos limites do servidor
      * (1024×1024 e 200 KB): maior, reduz-se; se nem assim couber, não vai.
      */
-    private fun LauncherApp.png(): ByteArray? {
-        val source = (banner ?: icon)?.asAndroidBitmap() ?: return null
+    private fun png(image: ImageBitmap): ByteArray? {
+        val source = image.asAndroidBitmap()
         val (width, height) = fitIconSize(source.width, source.height)
         var bitmap = if (width == source.width && height == source.height) source else Bitmap.createScaledBitmap(source, width, height, true)
         repeat(3) {
@@ -97,9 +109,6 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
         }
         return null
     }
-
-    private fun sha1(bytes: ByteArray): String =
-        MessageDigest.getInstance("SHA-1").digest(bytes).joinToString("") { "%02x".format(it) }
 
     /** O que já foi enviado (nunca muda de nome: ver PersistedNamesTest). */
     internal object Prefs {
@@ -114,6 +123,15 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
         val PNG = "image/png".toMediaType()
     }
 }
+
+/**
+ * A conta de um envio do índice: o email (o token muda a cada arranque, e com ele o índice ia todo outra vez). Sem
+ * email, o token, como antes. Ligar a TV outra vez à mesma conta envia na mesma (ver [AppIndex.upload]).
+ */
+internal fun indexKey(session: SessionStore.Session): String = sha1((session.email ?: session.token).toByteArray())
+
+private fun sha1(bytes: ByteArray): String =
+    MessageDigest.getInstance("SHA-1").digest(bytes).joinToString("") { "%02x".format(it) }
 
 /** O maior lado que o servidor aceita num banner ou ícone. */
 internal const val MAX_ICON_SIDE = 1024

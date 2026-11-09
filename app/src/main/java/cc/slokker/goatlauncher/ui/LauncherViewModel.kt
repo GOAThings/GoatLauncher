@@ -969,7 +969,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         _screen.value = Screen.Settings
         viewModelScope.launch {
             settings.link(token, user?.email, device?.name)
-            c.scope.launch { c.appIndex.upload(c.apps.load()) }
+            c.scope.launch { c.appIndex.upload(c.apps.load(), afterLink = true) }
             toast(strings.linked)
         }
     }

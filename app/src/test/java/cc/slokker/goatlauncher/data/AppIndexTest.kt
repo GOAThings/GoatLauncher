@@ -2,6 +2,7 @@ package cc.slokker.goatlauncher.data
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -27,6 +28,19 @@ class AppIndexTest {
     fun iconeGrandeDemais() {
         assertTrue(isIconTooBig(400, """{"status":400,"code":"icon_too_big","message":"Icon too big.","data":{}}"""))
         assertTrue(isIconTooBig(400, """{"message":"Icon too big.","data":{"code":"icon_too_big"}}"""))
+    }
+
+    @Test
+    fun aContaNaoMudaComOToken() {
+        // O token renova-se a cada arranque (auth-refresh): o índice não volta a ir só por isso.
+        val before = SessionStore.Session("token-1", "pessoa@example.com", "Sala")
+        assertEquals(indexKey(before), indexKey(before.copy(token = "token-2")))
+        assertNotEquals(indexKey(before), indexKey(before.copy(email = "outra@example.com")))
+        // Sem email (um servidor antigo), fica o token, como antes.
+        assertNotEquals(indexKey(before.copy(email = null)), indexKey(before.copy(email = null, token = "token-2")))
+        // Nunca o email às claras nas preferências.
+        assertEquals(40, indexKey(before).length)
+        assertFalse(indexKey(before).contains("pessoa"))
     }
 
     @Test
