@@ -17,7 +17,8 @@ class LauncherApp : Application(), SingletonImageLoader.Factory {
         super.onCreate()
         BugReport.installCrashHandler(this)
         container = AppContainer(this)
-        // O controlo parental precisa das definições também num processo sem ecrã (só com o HomeGuardService).
+        // O controlo parental precisa das definições também num processo sem ecrã (só com o HomeGuardService). É o único
+        // a ler as definições: os outros esperam por elas (SettingsRepository.awaitReady).
         container.scope.launch { container.settings.init() }
         container.phoneApps.start()
         AutoStart.watchWake(this)

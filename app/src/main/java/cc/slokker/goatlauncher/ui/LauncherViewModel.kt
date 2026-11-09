@@ -268,7 +268,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     init {
         viewModelScope.launch {
-            settings.init()
+            settings.awaitReady()
             settings.sync(refreshToken = true)
             c.appIndex.upload(c.apps.load())
         }
@@ -347,7 +347,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             // A língua guardada na conta (ou só nesta TV): aplica-se quando as definições já foram lidas, para
             // um "auto" provisório do arranque não desfazer a escolha. Vinda de outra TV, aplica-se aqui também.
-            settings.ready.first { it }
+            settings.awaitReady()
             settings.account.map { it.language }.distinctUntilChanged().collect { Strings.apply(it) }
         }
         viewModelScope.launch {
@@ -575,7 +575,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
      * pessoa ainda estiver no ecrã inicial quando o tempo de espera acabar).
      */
     private suspend fun autostartAfterBoot() {
-        settings.ready.first { it }
+        settings.awaitReady()
         val boot = AndroidSettings.Global.getInt(context.contentResolver, AndroidSettings.Global.BOOT_COUNT, -1)
         val prefs = context.getSharedPreferences(AutoStart.BOOT_PREFS, Context.MODE_PRIVATE)
         if (boot < 0 || prefs.getInt(AutoStart.BOOT_KEY, -1) == boot) return
@@ -818,33 +818,27 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         launchApp(activity, pkg)
     }
 
-    /** Corre [check] com as definições lidas: até lá não se sabe se há código, e "por ler" nunca conta como "sem código". */
-    private fun whenSettingsRead(check: () -> Unit) {
-        if (settings.ready.value) return check()
+    /**
+     * Corre [action] já se [locked] disser que não, senão depois de acertar o código ([title]). Com as definições lidas
+     * decide logo, no mesmo clique (o viewModelScope corre já no thread principal); por ler, espera por elas (ver
+     * ParentalGate): "por ler" nunca conta como "sem código".
+     */
+    private fun gated(locked: suspend () -> Boolean, title: () -> String, action: () -> Unit) {
         viewModelScope.launch {
-            settings.ready.first { it }
-            check()
+            if (!locked()) action() else _pinPrompt.value = PinPrompt(title(), action)
         }
     }
 
     /** Corre [action] já, ou depois de acertar o código se [pkg] estiver bloqueada agora. */
-    private fun unlocked(pkg: String, action: () -> Unit) = whenSettingsRead {
-        if (!ParentalLock.appLocked(settings.device.value, pkg)) return@whenSettingsRead action()
-        val label = allApps.value?.firstOrNull { it.packageName == pkg }?.label ?: pkg
-        _pinPrompt.value = PinPrompt(strings.unlockApp(label), action)
-    }
+    private fun unlocked(pkg: String, action: () -> Unit) = gated({ c.parental.appLocked(pkg) }, {
+        strings.unlockApp(allApps.value?.firstOrNull { it.packageName == pkg }?.label ?: pkg)
+    }, action)
 
     /** Corre [action] já, ou depois do código se as Definições e a organização estiverem protegidas. */
-    fun withSettingsUnlocked(action: () -> Unit) = whenSettingsRead {
-        if (!ParentalLock.settingsLocked(settings.device.value)) return@whenSettingsRead action()
-        _pinPrompt.value = PinPrompt(strings.unlockSettings, action)
-    }
+    fun withSettingsUnlocked(action: () -> Unit) = gated(c.parental::settingsLocked, { strings.unlockSettings }, action)
 
     /** Corre [action] depois do código (se houver): para entrar nas definições do controlo parental. */
-    fun withParentalUnlocked(action: () -> Unit) = whenSettingsRead {
-        if (!ParentalLock.parentalLocked(settings.device.value)) return@whenSettingsRead action()
-        _pinPrompt.value = PinPrompt(strings.unlockSettings, action)
-    }
+    fun withParentalUnlocked(action: () -> Unit) = gated(c.parental::parentalLocked, { strings.unlockSettings }, action)
 
     fun settingsLocked(): Boolean = ParentalLock.settingsLocked(settings.device.value)
 

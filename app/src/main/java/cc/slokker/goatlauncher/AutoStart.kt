@@ -6,10 +6,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.SystemClock
 import android.util.Log
-import cc.slokker.goatlauncher.data.ParentalLock
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -39,7 +37,7 @@ object AutoStart {
                 val settings = app.container.settings
                 wakeJob?.cancel()
                 wakeJob = app.container.scope.launch {
-                    settings.ready.first { it }
+                    settings.awaitReady()
                     val device = settings.device.value
                     val pkg = device.autostart?.takeIf { device.autostartWake } ?: return@launch
                     delay(device.autostartDelay * 1000L)
@@ -50,14 +48,13 @@ object AutoStart {
     }
 
     /**
-     * Abre [pkg]; se estiver bloqueada, abre antes o launcher a pedir o código. Só decide com as definições lidas:
-     * até lá não se sabe se há código, e nada abre.
+     * Abre [pkg]; se estiver bloqueada, abre antes o launcher a pedir o código. Só decide com as definições lidas
+     * (ver ParentalGate): até lá não se sabe se há código, e nada abre.
      */
     fun open(context: Context, pkg: String) {
         val container = (context.applicationContext as LauncherApp).container
         container.scope.launch {
-            container.settings.ready.first { it }
-            val intent = if (ParentalLock.appLocked(container.settings.device.value, pkg)) {
+            val intent = if (container.parental.appLocked(pkg)) {
                 unlockIntent(context, pkg)
             } else {
                 container.apps.launchIntent(pkg) ?: return@launch
