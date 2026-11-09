@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cc.slokker.goatlauncher.LauncherApp
 import cc.slokker.goatlauncher.ui.activation.ActivationScreen
 import cc.slokker.goatlauncher.ui.home.HomeScreen
+import cc.slokker.goatlauncher.ui.home.ProvideMinute
 import cc.slokker.goatlauncher.ui.common.ToastPill
 import cc.slokker.goatlauncher.ui.common.semanticsOnlyForScreenReaders
 import cc.slokker.goatlauncher.ui.home.WallpaperView
@@ -50,10 +51,13 @@ fun LauncherRoot(vm: LauncherViewModel) {
             val night by vm.night.collectAsStateWithLifecycle()
             val dim by animateFloatAsState(if (night) NightClock.DIM else 0f, tween(600), label = "night")
             Box(Modifier.fillMaxSize().graphicsLayer { alpha = dim }.background(Color.Black))
-            when (screen) {
-                // Início, Apps e Definições são separadores do mesmo ecrã (a barra fica, só o conteúdo muda).
-                Screen.Home, Screen.Apps, Screen.Settings -> HomeScreen(vm)
-                Screen.Activation -> ActivationScreen(api, onApproved = vm::onLinked, onBack = vm::closeActivation)
+            // Um só relógio ao minuto para as horas, o "a dar agora" e os cartões (em vez de um por cartão).
+            ProvideMinute {
+                when (screen) {
+                    // Início, Apps e Definições são separadores do mesmo ecrã (a barra fica, só o conteúdo muda).
+                    Screen.Home, Screen.Apps, Screen.Settings -> HomeScreen(vm)
+                    Screen.Activation -> ActivationScreen(api, onApproved = vm::onLinked, onBack = vm::closeActivation)
+                }
             }
             toast?.let { text ->
                 ToastPill(text, Modifier.align(Alignment.TopCenter))

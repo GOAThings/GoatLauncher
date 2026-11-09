@@ -18,13 +18,13 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.BoxWithConstraints
 import cc.slokker.goatlauncher.ui.home.UpNextPanel
 import cc.slokker.goatlauncher.ui.home.HeroText
+import cc.slokker.goatlauncher.ui.home.ProgressBar
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -325,17 +325,7 @@ private fun PreviewCard(item: WatchNextItem, width: Dp, height: Dp, corner: Dp) 
             Icon(GoatIcons.Play, contentDescription = null, modifier = Modifier.align(Alignment.Center).size(28.dp))
         }
         item.progress?.let { p ->
-            Box(
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 8.dp)
-                    .height(4.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.35f)),
-            ) {
-                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Color.White))
-            }
+            ProgressBar(p, Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp).height(4.dp), fill = Color.White)
         }
     }
 }
@@ -371,9 +361,7 @@ private fun ShelfPreview(app: LauncherApp, item: WatchNextItem, count: Int) {
             Text(item.title, style = ShelfTitleStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
             item.progress?.let { p ->
                 Spacer(Modifier.height(12.dp))
-                Box(Modifier.width(320.dp).height(5.dp).background(Color.White.copy(alpha = 0.3f), GoatShapes.Small)) {
-                    Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(Color.White, GoatShapes.Small))
-                }
+                ProgressBar(p, Modifier.width(320.dp).height(5.dp), trackAlpha = 0.3f, fill = Color.White, rounded = GoatShapes.Small)
             }
             Spacer(Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {

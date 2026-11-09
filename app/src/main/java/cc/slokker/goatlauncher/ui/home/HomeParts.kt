@@ -17,22 +17,18 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -60,7 +56,6 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import androidx.compose.runtime.staticCompositionLocalOf
 import java.util.Calendar
@@ -70,19 +65,6 @@ val CardHeight = 88.dp
 private val CardShape = GoatShapes.Control
 
 // ---- Relógio ----
-
-/** A hora atual, que só muda (e recompõe) quando muda o minuto. Vê-se a cada segundo para apanhar acertos da hora. */
-@Composable
-internal fun rememberMinute(): Long {
-    val minute by produceState(System.currentTimeMillis() / 60_000) {
-        while (true) {
-            delay(1_000)
-            val m = System.currentTimeMillis() / 60_000
-            if (m != value) value = m
-        }
-    }
-    return minute * 60_000
-}
 
 /** Relógio de 24 horas (Definições), para as horas que aparecem fora da barra de cima. */
 val LocalClock24h = staticCompositionLocalOf { true }
@@ -98,7 +80,7 @@ fun clockText(time: Long, s: Strings, clock24h: Boolean): String = SimpleDateFor
 @Composable
 fun TopClock(clock24h: Boolean, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
-    val now = rememberMinute()
+    val now = currentMinute()
     Text(
         SimpleDateFormat(timePattern(s, clock24h), s.locale).format(now),
         modifier,
@@ -113,7 +95,7 @@ fun TopClock(clock24h: Boolean, modifier: Modifier = Modifier) {
 @Composable
 fun TopGreeting(showGreeting: Boolean, weather: WeatherNow?, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
-    val now = rememberMinute()
+    val now = currentMinute()
     val hour = Calendar.getInstance().apply { timeInMillis = now }.get(Calendar.HOUR_OF_DAY)
     val greeting = when (hour) {
         in 5..11 -> s.goodMorning
@@ -203,27 +185,13 @@ fun WatchNextCard(item: WatchNextItem, onClick: () -> Unit, modifier: Modifier =
                     Icon(GoatIcons.Play, contentDescription = null, modifier = Modifier.align(Alignment.Center).size(32.dp))
                 }
                 item.progress?.let { p ->
-                    Box(
-                        Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 7.dp)
-                            .height(4.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.35f)),
-                    ) {
-                        Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing))
-                    }
+                    ProgressBar(p, Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 8.dp, vertical = 7.dp).height(4.dp))
                 }
             }
         }
         Spacer(Modifier.height(6.dp))
         Text(item.title, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        val details = listOfNotNull(
-            s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() } ?: item.episodeTitle,
-            item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
-            item.onAir(rememberMinute())?.title,
-        ).joinToString(" · ")
+        val details = detailsLine(item, s, currentMinute(), DetailsStyle.Card)
         if (details.isNotEmpty()) {
             Text(details, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -281,27 +249,12 @@ fun TopShelfCard(item: WatchNextItem, height: Dp, onClick: () -> Unit, modifier:
                             .height(height / 4)
                             .background(Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.45f))),
                     )
-                    Box(
-                        Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(horizontal = 18.dp, vertical = 14.dp)
-                            .height(4.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.35f)),
-                    ) {
-                        Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing))
-                    }
+                    ProgressBar(p, Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp).height(4.dp))
                 }
             }
         }
         val titleAlpha by animateFloatAsState(if (focused) 1f else 0f, tween(200), label = "title")
-        val details = listOfNotNull(
-            s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() } ?: item.episodeTitle?.takeIf { it != item.title },
-            item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
-            // Canal em direto: o programa que está a dar.
-            item.onAir(rememberMinute())?.title,
-        )
+        val details = detailsParts(item, s, currentMinute(), DetailsStyle.TopShelf)
         Text(
             (listOf(item.title) + details).joinToString(" · "),
             Modifier.padding(start = 4.dp, top = 12.dp).graphicsLayer { alpha = titleAlpha },
@@ -322,12 +275,10 @@ private val TopShelfShape = RoundedCornerShape(14.dp)
 @Composable
 fun OnAirLine(item: WatchNextItem, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
-    val air = item.onAir(rememberMinute()) ?: return
+    val air = item.onAir(currentMinute()) ?: return
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         air.progress?.let { p ->
-            Box(Modifier.width(96.dp).height(4.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.3f))) {
-                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing))
-            }
+            ProgressBar(p, Modifier.width(96.dp).height(4.dp), trackAlpha = 0.3f)
         }
         air.next?.let { next ->
             // Um título comprido corta-se, mas a hora fica sempre.

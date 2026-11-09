@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -76,7 +75,7 @@ import coil3.compose.AsyncImage
 fun HeroText(app: LauncherApp, item: WatchNextItem, showLogo: Boolean, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
     // O programa a dar muda à hora certa, como o OnAirLine por baixo (o mesmo minuto).
-    val now = rememberMinute()
+    val now = currentMinute()
     Column(modifier) {
         // Sem imagem de fundo (ex.: logo de um canal): o logo aparece num cartão, como na fila de cartões.
         if (showLogo && item.imageUri != null) {
@@ -98,12 +97,7 @@ fun HeroText(app: LauncherApp, item: WatchNextItem, showLogo: Boolean, modifier:
         )
         Spacer(Modifier.height(6.dp))
         Text(item.title, style = ShelfTitleStyle.copy(letterSpacing = tracking(-1.2f)), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        val details = listOfNotNull(
-            s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
-            item.episodeTitle?.takeIf { it != item.title },
-            item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
-            item.onAir(now)?.title,
-        ).joinToString(" · ")
+        val details = detailsLine(item, s, now, DetailsStyle.Hero)
         if (details.isNotEmpty()) {
             Spacer(Modifier.height(6.dp))
             Text(
@@ -116,9 +110,7 @@ fun HeroText(app: LauncherApp, item: WatchNextItem, showLogo: Boolean, modifier:
         }
         item.progress?.let { p ->
             Spacer(Modifier.height(12.dp))
-            Box(Modifier.width(320.dp).height(5.dp).background(Color.White.copy(alpha = 0.3f), GoatShapes.Small)) {
-                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing, GoatShapes.Small))
-            }
+            ProgressBar(p, Modifier.width(320.dp).height(5.dp), trackAlpha = 0.3f, rounded = GoatShapes.Small)
         }
         OnAirLine(item, Modifier.padding(top = 12.dp))
     }
@@ -131,7 +123,7 @@ fun HeroText(app: LauncherApp, item: WatchNextItem, showLogo: Boolean, modifier:
 @Composable
 fun UpNextPanel(items: List<WatchNextItem>, more: Int, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
-    val now = rememberMinute()
+    val now = currentMinute()
     if (items.isEmpty()) return
     Column(
         modifier
@@ -158,11 +150,7 @@ fun UpNextPanel(items: List<WatchNextItem>, more: Int, modifier: Modifier = Modi
                 Thumb(item, Modifier.size(width = 96.dp, height = 54.dp))
                 Column(Modifier.weight(1f)) {
                     Text(item.title, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    val details = listOfNotNull(
-                        s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() } ?: item.episodeTitle,
-                        item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
-                        item.onAir(now)?.title,
-                    ).joinToString(" · ")
+                    val details = detailsLine(item, s, now, DetailsStyle.Card)
                     if (details.isNotEmpty()) {
                         Text(details, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
@@ -181,7 +169,7 @@ fun UpNextPanel(items: List<WatchNextItem>, more: Int, modifier: Modifier = Modi
 @Composable
 fun ChannelUpNextPanel(item: WatchNextItem, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
-    val shown = item.upcoming(rememberMinute()).take(UP_NEXT_PROGRAMMES)
+    val shown = item.upcoming(currentMinute()).take(UP_NEXT_PROGRAMMES)
     if (shown.isEmpty()) return
     Column(
         modifier
@@ -323,7 +311,7 @@ fun CarouselShelf(
 @Composable
 private fun CarouselText(app: LauncherApp, item: WatchNextItem, width: Dp, modifier: Modifier) {
     val s = LocalStrings.current
-    val now = rememberMinute()
+    val now = currentMinute()
     Column(modifier.padding(horizontal = 24.dp, vertical = 18.dp)) {
         Text(
             s.shelfLabel(app.label).uppercase(s.locale),
@@ -336,20 +324,13 @@ private fun CarouselText(app: LauncherApp, item: WatchNextItem, width: Dp, modif
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        val details = listOfNotNull(
-            s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
-            item.episodeTitle?.takeIf { it != item.title },
-            item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
-            item.onAir(now)?.title,
-        ).joinToString(" · ")
+        val details = detailsLine(item, s, now, DetailsStyle.Hero)
         if (details.isNotEmpty()) {
             Text(details, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal), color = GoatColors.TextDim, maxLines = 1)
         }
         item.progress?.let { p ->
             Spacer(Modifier.height(8.dp))
-            Box(Modifier.width(width / 2).height(4.dp).background(Color.White.copy(alpha = 0.3f), GoatShapes.Small)) {
-                Box(Modifier.fillMaxHeight().fillMaxWidth(p).background(GoatColors.FocusRing, GoatShapes.Small))
-            }
+            ProgressBar(p, Modifier.width(width / 2).height(4.dp), trackAlpha = 0.3f, rounded = GoatShapes.Small)
         }
         OnAirLine(item, Modifier.padding(top = 8.dp))
     }

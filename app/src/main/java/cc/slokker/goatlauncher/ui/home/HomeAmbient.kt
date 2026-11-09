@@ -69,7 +69,7 @@ fun AmbientScene(
         BouncingDvd(modifier)
         return
     }
-    val now = rememberMinute()
+    val now = currentMinute()
     // Para não marcar o ecrã: de 10 em 10 minutos o bloco muda de lado (e sobe ou desce um pouco).
     val slot = (now / 60_000 / AMBIENT_MOVE_MINUTES % 4).toInt()
     val alignment = if (slot % 2 == 0) Alignment.BottomStart else Alignment.BottomEnd
