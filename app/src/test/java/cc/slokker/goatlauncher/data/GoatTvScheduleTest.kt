@@ -72,6 +72,8 @@ class GoatTvScheduleTest {
         // Nas outras apps a descrição longa é uma sinopse, nunca uma lista de programas.
         assertEquals(true, "cc.slokker.itv" in GoatTvContract.PACKAGES)
         assertEquals(true, "cc.slokker.itv.debug" in GoatTvContract.PACKAGES)
+        // A staging (itv app/build.gradle.kts, applicationIdSuffix ".staging") também: sem ela não havia "A seguir".
+        assertEquals(true, "cc.slokker.itv.staging" in GoatTvContract.PACKAGES)
         assertEquals(false, "com.netflix.ninja" in GoatTvContract.PACKAGES)
     }
 }

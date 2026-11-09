@@ -117,8 +117,8 @@ data class Programme(val title: String, val startMs: Long)
  * AppViewModel), e o GoatTvScheduleTest tem uma cópia dele. Mudar um lado obriga a mudar o outro (e o teste).
  */
 internal object GoatTvContract {
-    /** As builds do GoatTV que põem os programas seguintes na descrição longa. */
-    val PACKAGES = setOf("cc.slokker.itv", "cc.slokker.itv.debug")
+    /** As builds do GoatTV que põem os programas seguintes na descrição longa (itv app/build.gradle.kts: debug, staging). */
+    val PACKAGES = setOf("cc.slokker.itv", "cc.slokker.itv.debug", "cc.slokker.itv.staging")
 
     /** O GoatTV põe lá até cinco títulos, um por linha. */
     const val MAX_SCHEDULE = 1_500
