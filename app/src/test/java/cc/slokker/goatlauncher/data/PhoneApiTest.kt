@@ -33,7 +33,7 @@ class PhoneApiTest {
 
     private val netflixBanner = Image(480, 270)
     private val kodiIcon = Image(192, 192)
-    private val installed = listOf(
+    private var installed = listOf(
         LauncherApp("com.netflix.ninja", "Netflix", banner = netflixBanner, icon = null, color = Color(0xFF1C2333), smallIcon = null),
         LauncherApp("org.xbmc.kodi", "Kodi \"Omega\"", banner = null, icon = kodiIcon, color = Color(0xFF12AB3F), smallIcon = null),
         LauncherApp("no.image", "Sem imagem", banner = null, icon = null, color = Color(0xFF000000), smallIcon = null),
@@ -98,6 +98,22 @@ class PhoneApiTest {
         assertEquals("404 Not Found", call("GET", "/icon/not.installed").status)
         // A mesma imagem não se volta a codificar.
         assertEquals(2, encoded)
+    }
+
+    @Test
+    fun iconCacheKeepsOneImagePerInstalledApp() {
+        call("GET", "/icon/com.netflix.ninja")
+        call("GET", "/icon/org.xbmc.kodi")
+        assertEquals(2, routes.pngs.size)
+        // A Netflix foi atualizada (o InstalledApps desenha um banner novo): o PNG antigo é substituído.
+        installed = listOf(installed[0].let { LauncherApp(it.packageName, it.label, Image(480, 270), null, it.color, null) }) + installed.drop(1)
+        call("GET", "/icon/com.netflix.ninja")
+        assertEquals(3, encoded)
+        assertEquals(2, routes.pngs.size)
+        // O Kodi foi desinstalado: o PNG dele sai no pedido seguinte.
+        installed = installed.filter { it.packageName != "org.xbmc.kodi" }
+        call("GET", "/apps")
+        assertEquals(1, routes.pngs.size)
     }
 
     @Test

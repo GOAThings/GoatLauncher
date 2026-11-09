@@ -34,7 +34,8 @@ internal class PhoneRoutes(
     private val canStartFromBackground: () -> Boolean,
     private val open: (pkg: String) -> Unit,
 ) {
-    private val pngs = HashMap<String, ByteArray>()
+    /** Os PNG já feitos, um por app instalada (antes ficava um a mais por cada atualização, e os das desinstaladas). */
+    internal val pngs = PerAppCache(png)
 
     suspend fun reply(request: LanRequest): LanReply {
         if (!request.allowed) return LanReply.text("403 Forbidden", "recusado")
@@ -45,19 +46,21 @@ internal class PhoneRoutes(
         return when {
             path == "/apps" -> {
                 val json = JsonArray()
-                for (app in apps()) json.add(app.summary())
+                for (app in installed()) json.add(app.summary())
                 LanReply.ok("application/json", json.toString().toByteArray())
             }
             path.startsWith("/icon/") -> {
                 val pkg = path.removePrefix("/icon/")
-                val app = apps().firstOrNull { it.packageName == pkg }
+                val app = installed().firstOrNull { it.packageName == pkg }
                 val image = app?.banner ?: app?.icon ?: return LanReply.text("404 Not Found", "não há")
-                val bytes = synchronized(pngs) { pngs.getOrPut(pkg + ":" + System.identityHashCode(image)) { png(image) } }
-                LanReply.ok("image/png", bytes)
+                LanReply.ok("image/png", pngs.get(pkg, image))
             }
             else -> LanReply.text("404 Not Found", "GoatLauncher")
         }
     }
+
+    /** As apps instaladas agora; os PNG das que saíram vão com elas. */
+    private suspend fun installed(): List<LauncherApp> = apps().also { list -> pngs.retain(list.map { it.packageName }) }
 
     private fun volume(method: String, what: String): LanReply {
         val direction = when (what) {
