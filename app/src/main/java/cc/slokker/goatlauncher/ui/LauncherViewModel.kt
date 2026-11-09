@@ -43,6 +43,7 @@ import cc.slokker.goatlauncher.ui.state.UpdatesController
 import cc.slokker.goatlauncher.ui.state.WallpaperRotation
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -117,6 +118,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     /** O launcher está à frente (para o arranque automático não abrir uma app por cima de outra). */
     private var resumed = false
+
+    /** A sincronização com a conta ao arrancar (ver [start]); o primeiro regresso ao ecrã espera por ela. */
+    private var startupSync: Job? = null
 
     /** Wi-Fi, cabo ou sem rede (o ícone no canto superior direito). */
     val network: StateFlow<NetworkKind> = networkKind(application)
@@ -210,7 +214,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         updates.checkGuard()
         reloadApps()
         continueWatching.onResume()
-        viewModelScope.launch { settings.syncIfStale() }
+        viewModelScope.launch {
+            // Ao abrir, a sincronização do arranque ainda pode estar a meio (sem lastSync): esperar por ela evita um
+            // segundo GET logo a seguir. Depois disso só sincroniza se já passou o intervalo (ver syncIfStale).
+            startupSync?.join()
+            settings.syncIfStale()
+        }
     }
 
     /** Reinstala a própria app (ver [UpdatesController.repairGuard]). */
@@ -578,9 +587,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
      * automático, a língua, as atualizações e as apps instaladas.
      */
     private fun start() {
-        viewModelScope.launch {
+        val sync = viewModelScope.launch {
             settings.awaitReady()
             settings.sync(refreshToken = true)
+        }
+        startupSync = sync
+        viewModelScope.launch {
+            sync.join()
             // Para o site da conta, já com o token renovado (só envia quando a lista mudou). Cada leitura das apps
             // também envia (ver AppContainer.start).
             c.appIndex.upload(c.catalog.current())
