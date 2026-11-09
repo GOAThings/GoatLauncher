@@ -76,6 +76,8 @@ import coil3.compose.AsyncImage
 @Composable
 fun HeroText(app: LauncherApp, item: WatchNextItem, showLogo: Boolean, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
+    // O programa a dar muda à hora certa, como o OnAirLine por baixo (o mesmo minuto).
+    val now = rememberMinute()
     Column(modifier) {
         // Sem imagem de fundo (ex.: logo de um canal): o logo aparece num cartão, como na fila de cartões.
         if (showLogo && item.imageUri != null) {
@@ -101,7 +103,7 @@ fun HeroText(app: LauncherApp, item: WatchNextItem, showLogo: Boolean, modifier:
             s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
             item.episodeTitle?.takeIf { it != item.title },
             item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
-            item.onAir(System.currentTimeMillis())?.title,
+            item.onAir(now)?.title,
         ).joinToString(" · ")
         if (details.isNotEmpty()) {
             Spacer(Modifier.height(6.dp))
@@ -130,6 +132,7 @@ fun HeroText(app: LauncherApp, item: WatchNextItem, showLogo: Boolean, modifier:
 @Composable
 fun UpNextPanel(items: List<WatchNextItem>, more: Int, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
+    val now = rememberMinute()
     if (items.isEmpty()) return
     Column(
         modifier
@@ -159,7 +162,7 @@ fun UpNextPanel(items: List<WatchNextItem>, more: Int, modifier: Modifier = Modi
                     val details = listOfNotNull(
                         s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() } ?: item.episodeTitle,
                         item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
-                        item.onAir(System.currentTimeMillis())?.title,
+                        item.onAir(now)?.title,
                     ).joinToString(" · ")
                     if (details.isNotEmpty()) {
                         Text(details, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -321,6 +324,7 @@ fun CarouselShelf(
 @Composable
 private fun CarouselText(app: LauncherApp, item: WatchNextItem, width: Dp, modifier: Modifier) {
     val s = LocalStrings.current
+    val now = rememberMinute()
     Column(modifier.padding(horizontal = 24.dp, vertical = 18.dp)) {
         Text(
             s.shelfLabel(app.label).uppercase(s.locale),
@@ -337,7 +341,7 @@ private fun CarouselText(app: LauncherApp, item: WatchNextItem, width: Dp, modif
             s.seasonEpisode(item.season, item.episode).takeIf { it.isNotEmpty() },
             item.episodeTitle?.takeIf { it != item.title },
             item.remainingMinutes?.takeIf { it > 0 }?.let(s::minutesLeft),
-            item.onAir(System.currentTimeMillis())?.title,
+            item.onAir(now)?.title,
         ).joinToString(" · ")
         if (details.isNotEmpty()) {
             Text(details, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal), color = GoatColors.TextDim, maxLines = 1)
