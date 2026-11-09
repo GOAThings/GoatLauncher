@@ -77,6 +77,7 @@ import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.theme.ControlRadius
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
@@ -335,11 +336,11 @@ fun focusColors(container: Color) = ClickableSurfaceDefaults.colors(
 )
 
 
-/** Título de secção pequeno, em maiúsculas. */
+/** Título de secção pequeno, em maiúsculas (as da língua: em turco, "stili" fica "STİLİ"). */
 @Composable
 fun SectionLabel(text: String, modifier: Modifier = Modifier) {
     Text(
-        text.uppercase(),
+        text.uppercase(LocalStrings.current.locale),
         modifier = modifier.fillMaxWidth().padding(start = 12.dp, top = 14.dp, bottom = 4.dp),
         style = MaterialTheme.typography.labelSmall,
         color = GoatColors.TextFaint,
