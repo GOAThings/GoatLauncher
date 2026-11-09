@@ -95,7 +95,6 @@ private fun sunClock(minutes: Int, s: Strings, clock24h: Boolean): String {
     return clockText(time, s, clock24h)
 }
 
-/** "Automático" e as 15 línguas, cada uma com o nome na própria língua. Ao escolher, o ecrã muda logo. */
 /**
  * Onde está a TV (para o tempo e o dia/noite): automática pelo IP, ou uma cidade procurada pelo nome.
  * O IP engana-se com VPN ou com alguns operadores (dá a cidade do servidor).
@@ -153,6 +152,7 @@ internal fun LocationPage(vm: LauncherViewModel, first: FocusRequester) {
     }
 }
 
+/** "Automático" e as 15 línguas, cada uma com o nome na própria língua. Ao escolher, o ecrã muda logo. */
 @Composable
 internal fun LanguagePage(vm: LauncherViewModel, first: FocusRequester) {
     val s = LocalStrings.current

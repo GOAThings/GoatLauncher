@@ -4,7 +4,6 @@ import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.LocalStrings
 import android.view.KeyEvent as AndroidKeyEvent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,7 +41,7 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 
 /**
  * Entrada de PIN de 4 dígitos: números do comando, ou ↑/↓ para mudar o dígito e →/OK para avançar.
- * [onDone] devolve null para limpar e pedir de novo (ex.: PIN errado). Com [waiting], fica com o foco mas não muda nada.
+ * Para limpar e pedir de novo (ex.: PIN errado), quem chama recria o PinPad (key). Com [waiting], fica com o foco mas não muda nada.
  */
 @Composable
 fun PinPad(title: String, message: String?, onDone: (String) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, waiting: Boolean = false) {

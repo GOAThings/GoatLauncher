@@ -1,12 +1,8 @@
 package cc.slokker.goatlauncher.ui.common
 
-import android.graphics.BlurMaskFilter
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.LayoutCoordinates
 import kotlinx.coroutines.launch
@@ -59,26 +54,18 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.addOutline
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.createBitmap
 import androidx.tv.material3.Border
-import androidx.tv.material3.ClickableSurfaceBorder
 import androidx.tv.material3.ClickableSurfaceDefaults
-import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.ui.LocalStrings
-import cc.slokker.goatlauncher.ui.theme.ControlRadius
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import kotlin.math.roundToInt
@@ -334,7 +321,6 @@ fun focusColors(container: Color) = ClickableSurfaceDefaults.colors(
     pressedContainerColor = Color.White.copy(alpha = 0.8f),
     pressedContentColor = Color.Black,
 )
-
 
 /** Título de secção pequeno, em maiúsculas (as da língua: em turco, "stili" fica "STİLİ"). */
 @Composable

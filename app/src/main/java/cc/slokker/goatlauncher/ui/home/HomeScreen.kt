@@ -1,7 +1,5 @@
 package cc.slokker.goatlauncher.ui.home
 
-import cc.slokker.goatlauncher.ui.theme.tracking
-import cc.slokker.goatlauncher.ui.common.PinPad
 import cc.slokker.goatlauncher.ui.PinPrompt
 import android.content.pm.ApplicationInfo
 import android.os.SystemClock
@@ -12,17 +10,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.animation.AnimatedContent
-import cc.slokker.goatlauncher.ui.theme.ControlRadius
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.Crossfade
 import androidx.compose.ui.graphics.painter.Painter
@@ -33,19 +20,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.focusGroup
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.BringIntoViewSpec
-import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,14 +36,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -83,20 +57,14 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import cc.slokker.goatlauncher.data.NetworkKind
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.focus.onFocusChanged
-import cc.slokker.goatlauncher.ui.common.TvTextField
-import cc.slokker.goatlauncher.ui.common.GlassButton
 import cc.slokker.goatlauncher.ui.settings.SettingsScreen
-import cc.slokker.goatlauncher.data.WeatherNow
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -106,42 +74,26 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.ClickableSurfaceDefaults
-import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
-import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.LauncherApp
 import cc.slokker.goatlauncher.data.SystemIntents
-import cc.slokker.goatlauncher.data.WatchNextItem
 import cc.slokker.goatlauncher.ui.LauncherViewModel
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.Screen
-import cc.slokker.goatlauncher.ui.common.GlassRow
-import cc.slokker.goatlauncher.ui.common.GoatIcons
-import cc.slokker.goatlauncher.ui.common.glass
 import cc.slokker.goatlauncher.ui.common.requestFocusSafely
 import cc.slokker.goatlauncher.ui.theme.GoatColors
-import cc.slokker.goatlauncher.ui.theme.BarPadding
-import cc.slokker.goatlauncher.ui.theme.GoatShapes
-import cc.slokker.goatlauncher.ui.theme.ShelfTitleStyle
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
-import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -932,8 +884,8 @@ fun HomeScreen(vm: LauncherViewModel) {
                             if (app.packageName in device.hidden) {
                                 vm.setHidden(app.packageName, false)
                             } else {
-                                // No Início a app sai da fila: o foco passa para a vizinha. Nas Apps continua lá.
-                                // Nas Apps (e na grelha da Apple TV) continua lá, com o foco.
+                                // No Início a app sai da fila: o foco passa para a vizinha. Nas Apps (e na grelha da
+                                // Apple TV) continua lá, com o foco.
                                 if (!onApps && !appleTv) {
                                     val i = favorites.indexOfFirst { it.packageName == app.packageName }
                                     focusApp((favorites.getOrNull(i + 1) ?: favorites.getOrNull(i - 1))?.packageName)
