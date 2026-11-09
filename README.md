@@ -36,7 +36,7 @@ Once installed, the launcher finds new versions by itself (Settings → Updates)
   account.
 - Two layouts: Android TV style or tvOS style.
 - Hide, rename, reorder and change the icon of any app.
-- Wallpapers: built-in, your own images or a subreddit, darker at night.
+- Wallpapers: built-in, your own images, or a photo of the day from Wikimedia Commons or NASA, darker at night.
 - Focus effects and animations.
 - Ambient mode and screensaver.
 - Remote buttons that open the app you choose.

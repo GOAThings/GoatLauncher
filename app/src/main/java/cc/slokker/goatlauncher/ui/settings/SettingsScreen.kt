@@ -106,7 +106,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import cc.slokker.goatlauncher.data.Place
 import cc.slokker.goatlauncher.data.ApodFeed
-import cc.slokker.goatlauncher.data.RedditFeed
 import cc.slokker.goatlauncher.data.WikimediaFeed
 import cc.slokker.goatlauncher.HomeGuardService
 import cc.slokker.goatlauncher.data.SystemIntents
@@ -1105,7 +1104,7 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
         }
 
         // Fotos do dia, sem conta nem chave: a imagem do dia do Wikimedia Commons e a da NASA. A resolução mínima
-        // vale para todas as fotos online (também as do Reddit).
+        // vale para as duas.
         item { SectionLabel(s.photosOfTheDay) }
         item {
             PhotoSourceRow(WIKIMEDIA_NAME, s.wikimediaHint, current.type == Wallpaper.TYPE_WIKIMEDIA) {
@@ -1119,47 +1118,13 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
         }
         item {
             // OK passa à seguinte: qualquer → Full HD → 2K → 4K → qualquer.
-            val next = REDDIT_MIN_WIDTHS.getOrElse(REDDIT_MIN_WIDTHS.indexOf(account.redditMinWidth) + 1) { REDDIT_MIN_WIDTHS.first() }
+            val next = PHOTO_MIN_WIDTHS.getOrElse(PHOTO_MIN_WIDTHS.indexOf(account.photoMinWidth) + 1) { PHOTO_MIN_WIDTHS.first() }
             GlassRow(
                 title = s.minWidth,
-                subtitle = resolutionName(account.redditMinWidth, s),
-                onClick = { vm.setRedditMinWidth(next) },
+                subtitle = resolutionName(account.photoMinWidth, s),
+                onClick = { vm.setPhotoMinWidth(next) },
                 trailing = { Chevron() },
             )
-        }
-
-        // Reddit: subreddits de fotos sugeridos, ou outro escrito à mão.
-        item { SectionLabel(s.reddit) }
-        item {
-            Text(s.redditHint, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 4.dp))
-        }
-        val isReddit = current.type == Wallpaper.TYPE_REDDIT
-        items(RedditFeed.SUGGESTED, key = { "r-$it" }) { sub ->
-            GlassRow(
-                title = "r/$sub",
-                onClick = { vm.setWallpaper(Wallpaper(Wallpaper.TYPE_REDDIT, sub)) },
-                trailing = {
-                    if (isReddit && current.value.equals(sub, ignoreCase = true)) {
-                        Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp))
-                    }
-                },
-            )
-        }
-        item {
-            var custom by remember {
-                mutableStateOf(current.value.takeIf { isReddit && RedditFeed.SUGGESTED.none { s -> s.equals(it, true) } }.orEmpty())
-            }
-            Row(
-                Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TvTextField(custom, { custom = it }, s.otherSubreddit, Modifier.weight(1f))
-                GlassButton(s.use, onClick = {
-                    val sub = custom.trim().removePrefix("/").removePrefix("r/").trim('/')
-                    if (sub.matches(Regex("[A-Za-z0-9_]{2,21}"))) vm.setWallpaper(Wallpaper(Wallpaper.TYPE_REDDIT, sub))
-                })
-            }
         }
     }
 }
@@ -1257,7 +1222,6 @@ private fun clockText(minutes: Int, h24: Boolean): String {
 
 private fun wallpaperName(w: Wallpaper, s: cc.slokker.goatlauncher.ui.Strings): String = when (w.type) {
     Wallpaper.TYPE_BUILTIN -> Wallpapers.byId(w.value).name(s)
-    Wallpaper.TYPE_REDDIT -> "r/${w.value}"
     Wallpaper.TYPE_WIKIMEDIA -> WIKIMEDIA_NAME
     Wallpaper.TYPE_NASA -> NASA_NAME
     Wallpaper.TYPE_FOLDER -> s.wallpaperFolder(w.value.substringAfterLast('/'))
@@ -1266,7 +1230,7 @@ private fun wallpaperName(w: Wallpaper, s: cc.slokker.goatlauncher.ui.Strings): 
 
 private val IDLE_MINUTES = listOf(0, 1, 2, 5, 10, 30)
 private val AUTOSTART_DELAYS = listOf(0, 3, 5, 10, 20)
-private val REDDIT_MIN_WIDTHS = listOf(0, 1920, 2560, 3840)
+private val PHOTO_MIN_WIDTHS = listOf(0, 1920, 2560, 3840)
 
 /** Os nomes das fontes de fotos do dia (nomes próprios: não se traduzem). */
 private const val WIKIMEDIA_NAME = "Wikimedia Commons"

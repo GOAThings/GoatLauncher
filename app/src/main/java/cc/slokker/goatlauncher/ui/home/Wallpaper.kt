@@ -75,7 +75,7 @@ fun WallpaperView(wallpaper: Wallpaper, rotating: Any?, modifier: Modifier = Mod
         Crossfade(targetState = image, animationSpec = tween(1200), label = "wallpaper") { model ->
             if (model != null) {
                 AsyncImage(
-                    // Do tamanho do ecrã, não maior: as fotos do Reddit vêm com 4000+ px.
+                    // Do tamanho do ecrã, não maior: as fotos online vêm com 3840 px.
                     model = ImageRequest.Builder(context).data(model).precision(Precision.EXACT).crossfade(400).build(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,

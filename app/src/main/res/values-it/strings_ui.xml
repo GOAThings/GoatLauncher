@@ -69,14 +69,10 @@
     <string name="appearance">Aspetto</string>
     <string name="wallpaper">Sfondo</string>
     <string name="wallpaper_image">Immagine scelta</string>
-    <string name="reddit">Reddit</string>
-    <string name="reddit_hint">Le foto migliori della settimana; cambia ogni 30 minuti</string>
-    <string name="other_subreddit">Altro subreddit</string>
     <string name="photos_of_the_day">Foto del giorno</string>
     <string name="wikimedia_hint">Natura, luoghi e arte, con autore e licenza</string>
     <string name="nasa_hint">L\'immagine astronomica del giorno</string>
     <string name="photo_credit">Crediti: %1$s</string>
-    <string name="use">Usa</string>
     <string name="clock24h">Orologio 24 ore</string>
     <string name="greeting">Saluto</string>
     <string name="weather">Meteo</string>

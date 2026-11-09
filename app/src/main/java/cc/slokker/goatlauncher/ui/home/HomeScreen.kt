@@ -998,8 +998,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                     clock24h = account.clock24h,
                     weather = weather?.takeIf { account.showWeather },
                     nowPlaying = nowPlaying(watchNext),
-                    // O Reddit põe etiquetas no título ("[OC]"); as outras fontes trazem o crédito e um título limpo.
-                    caption = photo?.let { if (it.credit == null) cleanRedditTitle(it.title) else it.title }?.ifBlank { null },
+                    caption = photo?.title?.ifBlank { null },
                     credit = photo?.credit,
                 )
             }
@@ -1453,10 +1452,6 @@ private const val TAB_ARROW_MS = 400L
 private const val TAB_OPEN_DELAY_MS = 250L
 
 private const val AMBIENT_FADE_MS = 1500
-
-/** "Lago ao amanhecer [OC] [4032x3024]" → "Lago ao amanhecer". */
-private fun cleanRedditTitle(title: String): String =
-    title.replace(Regex("""[\[(][^\])]*[\])]"""), "").replace(Regex("""\s+"""), " ").trim()
 
 /**
  * O teclado do código por cima do ecrã (Voltar cancela: ver o ecrã). [onPin] devolve false se estiver errado.

@@ -73,7 +73,7 @@ class AppContainer(context: Context) {
     val watchNext = WatchNextSource(context)
     val icons = CustomIcons(context)
 
-    /** Cliente sem token (pedidos fora da conta Slokker, ex.: o feed do Reddit). */
+    /** Cliente sem token (pedidos fora da conta Slokker, ex.: as fotos do dia do fundo). */
     private val plainHttp = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)

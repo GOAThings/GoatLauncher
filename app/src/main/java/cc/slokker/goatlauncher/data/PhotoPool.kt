@@ -11,7 +11,7 @@ import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Uma foto online para o fundo. [credit]: o autor (e a licença), para a legenda do modo ambiente; null no Reddit. */
+/** Uma foto online para o fundo. [credit]: o autor (e a licença), para a legenda do modo ambiente. */
 data class OnlinePhoto(val url: String, val title: String, val credit: String? = null)
 
 /** De onde vêm as fotos de um [PhotoPool]: um pedido que devolve a lista, ou lança se falhar. */
@@ -22,7 +22,7 @@ interface PhotoFeed {
     /** De quanto em quanto tempo se volta a pedir a lista. */
     val refreshMs: Long
 
-    /** As fotos de [id] (um subreddit, por exemplo), já sem as que não servem de fundo (ao alto, vídeos…). */
+    /** As fotos de [id] (cada fonte tem um só, ver OnlineWallpapers), já sem as que não servem de fundo (ao alto, vídeos…). */
     fun fetch(id: String): List<OnlinePhoto>
 }
 
@@ -131,7 +131,7 @@ class PhotoPool(private val context: Context, prefsName: String, private val fee
         private const val MIN_WAIT_MS = 60_000L
 
         /**
-         * A lista guardada: `[{"url", "title", "credit"?}]`, os mesmos nomes que o Gson dava ao antigo RedditImage.
+         * A lista guardada: `[{"url", "title", "credit"?}]`.
          * Uma lista que não se leia conta como vazia (é só uma cache: volta a pedir-se).
          */
         internal fun readList(json: String?): List<OnlinePhoto> = runCatching {

@@ -7,8 +7,8 @@ import com.google.gson.JsonObject
 /*
  * Formato das definições guardadas na conta (o backend guarda o JSON tal como o recebe):
  *
- *   "account": { "wallpaper": {"type": "builtin" | "file" | "url" | "folder" | "reddit" | "wikimedia" | "nasa",
- *                              "value": "lake" | "wall-123.jpg" | "https://…" | "/storage/…" | "EarthPorn" | "potd" | "apod"},
+ *   "account": { "wallpaper": {"type": "builtin" | "file" | "url" | "folder" | "wikimedia" | "nasa",
+ *                              "value": "lake" | "wall-123.jpg" | "https://…" | "/storage/…" | "potd" | "apod"},
  *                "clock_24h": true, "show_greeting": true, "show_continue_watching": true, "show_app_name": true,
  *                "layout": "android" | "appletv",
  *                "continue_style": "row" | "shelf" | "spotlight" | "column" | "carousel", "show_weather": true,
@@ -26,6 +26,9 @@ import com.google.gson.JsonObject
  *                "pin": "<sal>:<sha-256>", "locked": ["com.netflix.ninja"], "lock_settings": true, "lock_hours": [20, 8] }
  *
  * Um fundo "file" só existe na TV onde foi escolhido; as outras mostram o fundo por defeito.
+ * Um fundo "reddit" (o antigo defeito, r/EarthPorn, ou outro subreddit) lê-se como o [Wallpaper.DEFAULT]: o Reddit
+ * acabou com o RSS a 13/11/2026 e deixou de ser fonte. Fica gravado assim até à próxima mudança nesta TV.
+ * "reddit_min_width" (nome antigo) é a resolução mínima de todas as fotos online.
  *
  * A leitura é tolerante (campos em falta ou com outro tipo ficam no valor por defeito) e a escrita parte
  * do JSON recebido ([raw]), para não apagar campos que uma versão mais nova da app tenha juntado.
@@ -33,7 +36,7 @@ import com.google.gson.JsonObject
 
 data class Wallpaper(val type: String, val value: String) {
     /** Fotos de uma fonte online, uma de cada vez (ver OnlineWallpapers). */
-    val isOnlinePhotos: Boolean get() = type == TYPE_REDDIT || type == TYPE_WIKIMEDIA || type == TYPE_NASA
+    val isOnlinePhotos: Boolean get() = type == TYPE_WIKIMEDIA || type == TYPE_NASA
 
     companion object {
         const val TYPE_BUILTIN = "builtin"
@@ -48,8 +51,11 @@ data class Wallpaper(val type: String, val value: String) {
          */
         const val TYPE_FOLDER = "folder"
 
-        /** Imagens de um subreddit, a mudar de tempos a tempos (ver RedditFeed). [value] é o subreddit. */
-        const val TYPE_REDDIT = "reddit"
+        /**
+         * Imagens de um subreddit, até à 0.9.11 (e o fundo por defeito, r/EarthPorn). O Reddit deixou de dar RSS: um
+         * fundo destes, guardado nesta TV ou vindo de outra da conta, lê-se como o [DEFAULT] (ver AccountSettings.fromJson).
+         */
+        const val LEGACY_TYPE_REDDIT = "reddit"
 
         /** A imagem do dia do Wikimedia Commons (ver WikimediaFeed); [value] é sempre "potd". */
         const val TYPE_WIKIMEDIA = "wikimedia"
@@ -98,8 +104,8 @@ data class AccountSettings(
     val continueStyle: String = STYLE_ROW,
     /** O tempo (ícone e temperatura) ao lado da saudação, em cima à direita. */
     val showWeather: Boolean = true,
-    /** Fundos de fotos online (Reddit, Wikimedia, NASA): fotos mais estreitas do que isto (px) ficam de fora; 0 = todas. */
-    val redditMinWidth: Int = 1920,
+    /** Fundos de fotos online (Wikimedia, NASA): fotos mais estreitas do que isto (px) ficam de fora; 0 = todas. */
+    val photoMinWidth: Int = 1920,
     /** Modo ambiente: minutos sem tocar no comando até o ecrã inicial ficar só com o fundo e as horas; 0 = desligado. */
     val idleMinutes: Int = 0,
     /** Com o modo ambiente, o ecrã inicial não deixa a TV adormecer nem começar a proteção de ecrã do sistema. */
@@ -112,7 +118,7 @@ data class AccountSettings(
     val youtubeFeed: String = YT_BOTH,
     /** Língua da app: "auto" (a do sistema) ou um código BCP 47 das 15 do site (ver Strings.LANGUAGES). */
     val language: String = "auto",
-    /** Modo noite (botão ao lado da rede): fundo escurecido e, no Reddit, fotos escuras; de dia, fotos claras. */
+    /** Modo noite (botão ao lado da rede): fundo escurecido e, nas fotos online e na pasta, fotos escuras; de dia, claras. */
     val nightMode: Boolean = false,
     /** Dia/noite pela hora da TV (noite das [NIGHT_FROM] às [NIGHT_TO]); carregar no botão desliga-o. */
     val nightAuto: Boolean = false,
@@ -138,7 +144,7 @@ data class AccountSettings(
         addProperty("layout", layout)
         addProperty("continue_style", continueStyle)
         addProperty("show_weather", showWeather)
-        addProperty("reddit_min_width", redditMinWidth)
+        addProperty("reddit_min_width", photoMinWidth)
         addProperty("idle_minutes", idleMinutes)
         addProperty("idle_keep_awake", idleKeepAwake)
         addProperty("ambient_style", ambientStyle)
@@ -205,7 +211,7 @@ data class AccountSettings(
             val type = wp?.str("type")
             val value = wp?.str("value")
             return AccountSettings(
-                wallpaper = if (type != null && !value.isNullOrBlank()) Wallpaper(type, value) else Wallpaper.DEFAULT,
+                wallpaper = if (type != null && type != Wallpaper.LEGACY_TYPE_REDDIT && !value.isNullOrBlank()) Wallpaper(type, value) else Wallpaper.DEFAULT,
                 clock24h = json.bool("clock_24h") ?: true,
                 showGreeting = json.bool("show_greeting") ?: true,
                 showContinueWatching = json.bool("show_continue_watching") ?: true,
@@ -217,7 +223,7 @@ data class AccountSettings(
                     json.str("layout")?.takeIf { it in STYLES } ?: style
                 },
                 showWeather = json.bool("show_weather") ?: true,
-                redditMinWidth = json.int("reddit_min_width")?.coerceAtLeast(0) ?: 1920,
+                photoMinWidth = json.int("reddit_min_width")?.coerceAtLeast(0) ?: 1920,
                 idleMinutes = json.int("idle_minutes")?.coerceAtLeast(0) ?: 0,
                 idleKeepAwake = json.bool("idle_keep_awake") ?: false,
                 ambientStyle = json.str("ambient_style")?.takeIf { it == AMBIENT_BOUNCE } ?: AMBIENT_PHOTOS,

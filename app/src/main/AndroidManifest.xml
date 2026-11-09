@@ -9,7 +9,7 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Saber se há rede antes de trocar o fundo do Reddit (sem rede fica a imagem atual). -->
+    <!-- Saber se há rede antes de trocar a foto do fundo (sem rede fica a imagem atual). -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Atualizações a partir do repositório público de versões (o Android pede confirmação). -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />

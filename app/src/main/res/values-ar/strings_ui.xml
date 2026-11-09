@@ -69,14 +69,10 @@
     <string name="appearance">المظهر</string>
     <string name="wallpaper">الخلفية</string>
     <string name="wallpaper_image">الصورة المختارة</string>
-    <string name="reddit">Reddit</string>
-    <string name="reddit_hint">أفضل صور الأسبوع، تتغيّر كل 30 دقيقة</string>
-    <string name="other_subreddit">منتدى فرعي آخر</string>
     <string name="photos_of_the_day">صورة اليوم</string>
     <string name="wikimedia_hint">طبيعة وأماكن وفن، مع المؤلف والترخيص</string>
     <string name="nasa_hint">صورة اليوم الفلكية</string>
     <string name="photo_credit">المصدر: %1$s</string>
-    <string name="use">استخدام</string>
     <string name="clock24h">ساعة بنظام 24 ساعة</string>
     <string name="greeting">التحية</string>
     <string name="weather">الطقس</string>

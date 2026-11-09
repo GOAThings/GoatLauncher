@@ -32,6 +32,23 @@ class WallpaperSettingTest {
     }
 
     @Test
+    fun anyRedditWallpaperReadsAsWikimedia() {
+        // O antigo defeito, um subreddit sugerido e um escrito à mão, guardados nesta TV.
+        listOf("EarthPorn", "SkyPorn", "earthporn", "my_sub").forEach { sub ->
+            assertEquals(sub, Wallpaper.DEFAULT, read("""{"wallpaper": {"type": "reddit", "value": "$sub"}}""").wallpaper)
+        }
+        // Vindo de outra TV da conta (o GET das definições passa pelo mesmo fromJson): o resto fica.
+        val remote = read("""{"wallpaper": {"type": "reddit", "value": "CityPorn"}, "reddit_min_width": 3840, "clock_24h": false}""")
+        assertEquals(Wallpaper.DEFAULT, remote.wallpaper)
+        assertEquals(3840, remote.photoMinWidth)
+        assertEquals(false, remote.clock24h)
+        // Na próxima gravação sai o fundo novo; as chaves continuam as mesmas.
+        val saved = remote.toJson()
+        assertEquals("wikimedia", saved.getAsJsonObject("wallpaper").get("type").asString)
+        assertEquals(3840, saved.get("reddit_min_width").asInt)
+    }
+
+    @Test
     fun otherChoicesAreKept() {
         assertEquals(Wallpaper(Wallpaper.TYPE_BUILTIN, "aurora"), read("""{"wallpaper": {"type": "builtin", "value": "aurora"}}""").wallpaper)
         assertEquals(Wallpaper(Wallpaper.TYPE_FOLDER, "/storage/x"), read("""{"wallpaper": {"type": "folder", "value": "/storage/x"}}""").wallpaper)

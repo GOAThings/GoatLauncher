@@ -69,14 +69,10 @@
     <string name="appearance">रूप-रंग</string>
     <string name="wallpaper">वॉलपेपर</string>
     <string name="wallpaper_image">चुनी गई इमेज</string>
-    <string name="reddit">Reddit</string>
-    <string name="reddit_hint">हफ़्ते की टॉप फ़ोटो; हर 30 मिनट में बदलती है</string>
-    <string name="other_subreddit">दूसरा सबरेडिट</string>
     <string name="photos_of_the_day">आज की फ़ोटो</string>
     <string name="wikimedia_hint">प्रकृति, जगहें और कला, लेखक और लाइसेंस के साथ</string>
     <string name="nasa_hint">आज की खगोलीय तस्वीर</string>
     <string name="photo_credit">श्रेय: %1$s</string>
-    <string name="use">इस्तेमाल करें</string>
     <string name="clock24h">24-घंटे की घड़ी</string>
     <string name="greeting">अभिवादन</string>
     <string name="weather">मौसम</string>

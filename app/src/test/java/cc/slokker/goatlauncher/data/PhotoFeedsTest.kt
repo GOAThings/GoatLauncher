@@ -106,9 +106,9 @@ class PhotoFeedsTest {
     fun theCacheKeepsTitleAndCredit() {
         val list = listOf(OnlinePhoto("https://a/1.jpg", "One", "Ana · CC BY 4.0"), OnlinePhoto("https://a/2.jpg", "Two"))
         assertEquals(list, PhotoPool.readList(PhotoPool.writeList(list)))
-        // O formato que o Gson dava ao antigo RedditImage (sem crédito) continua a ler-se.
-        val old = PhotoPool.readList("""[{"url":"https://i.redd.it/x.jpg","title":"Lake [OC] [4032x3024]"}]""")
-        assertEquals("https://i.redd.it/x.jpg", old.single().url)
+        // Uma entrada sem crédito também se lê.
+        val old = PhotoPool.readList("""[{"url":"https://a/x.jpg","title":"Lake"}]""")
+        assertEquals("https://a/x.jpg", old.single().url)
         assertNull(old.single().credit)
     }
 }

@@ -126,8 +126,8 @@ private fun DreamContent(c: AppContainer) {
                 clock24h = account.clock24h,
                 weather = c.weather.cached().takeIf { account.showWeather },
                 nowPlaying = nowPlaying(watchNext),
-                // Só com crédito (Wikimedia, NASA): a atribuição tem de aparecer onde a foto aparece.
-                caption = photo?.takeIf { it.credit != null }?.title?.ifBlank { null },
+                // O título e o crédito: a atribuição tem de aparecer onde a foto aparece.
+                caption = photo?.title?.ifBlank { null },
                 credit = photo?.credit,
             )
         }
