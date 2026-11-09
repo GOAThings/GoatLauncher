@@ -18,6 +18,8 @@ import cc.slokker.goatlauncher.ui.state.ReportSender
 import cc.slokker.goatlauncher.ui.state.ReportState
 import cc.slokker.goatlauncher.ui.state.UpdateState
 import cc.slokker.goatlauncher.ui.state.UpdatesController
+import cc.slokker.goatlauncher.ui.state.CoilCardPrefetch
+import cc.slokker.goatlauncher.ui.state.ContinueWatching
 import cc.slokker.goatlauncher.ui.state.CoilWallpaperImages
 import cc.slokker.goatlauncher.ui.state.WallpaperRotation
 import cc.slokker.goatlauncher.data.ImageImport
@@ -110,28 +112,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         all?.let { ordered(it, d.apps).map { app -> d.names[app.packageName]?.let(app::withLabel) ?: app } }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    /** O "Continuar a ver" de todas as apps, por pacote. Mudar o foco só filtra isto (sem consultas novas). */
-    private val _watchNext = MutableStateFlow<Map<String, List<WatchNextItem>>>(emptyMap())
-
-    /** Recomendações do YouTube (conta ligada em Definições → YouTube), com o pacote da app que as abre. */
-    private val _youtube = MutableStateFlow<List<WatchNextItem>>(emptyList())
-
-    /** O Watch Next de todas as apps, mais as recomendações do YouTube na app de YouTube instalada. */
-    val watchNext: StateFlow<Map<String, List<WatchNextItem>>> = combine(_watchNext, _youtube, settings.device) { system, yt, d ->
-        val all = if (yt.isEmpty()) system else system + (yt.first().packageName to (system[yt.first().packageName].orEmpty() + yt))
-        // Apps em que a pessoa desligou o "Continuar a ver" (menu da app).
-        all - d.noContinue
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
-
-    private val _youtubeLinked = MutableStateFlow(c.youtube.linked)
-    val youtubeLinked: StateFlow<Boolean> = _youtubeLinked.asStateFlow()
-
-    /** Ligação ao YouTube em curso: o código a mostrar (ou null enquanto se pede), e erros. */
-    private val _youtubeLogin = MutableStateFlow<YouTubeLogin?>(null)
-    val youtubeLogin: StateFlow<YouTubeLogin?> = _youtubeLogin.asStateFlow()
-    private var youtubeLoginJob: Job? = null
-    private var youtubeLoadedAt = 0L
-
     private val _homeEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     /** Botão Home com o launcher já aberto: volta ao início da fila. */
@@ -196,8 +176,26 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     )
     val report: StateFlow<ReportState> = reports.state
 
-    private val watchNextRequests = Channel<Unit>(Channel.CONFLATED)
-    private val stopObservingWatchNext: () -> Unit
+    private val continueWatching = ContinueWatching(
+        scope = viewModelScope,
+        source = c.watchNext,
+        youtube = c.youtube,
+        installed = installed,
+        device = settings.device,
+        homeApps = { apps.value.orEmpty() },
+        youtubeFeed = { settings.account.value.youtubeFeed },
+        prefetch = CoilCardPrefetch(context, CardHeight.value),
+        strings = { strings },
+        toast = ::toast,
+        demoAllowed = BuildConfig.DEBUG,
+    )
+
+    /** O Watch Next de todas as apps, mais as recomendações do YouTube (ver [ContinueWatching]). */
+    val watchNext: StateFlow<Map<String, List<WatchNextItem>>> = continueWatching.watchNext
+    val youtubeLinked: StateFlow<Boolean> = continueWatching.youtubeLinked
+
+    /** Ligação ao YouTube em curso: o código a mostrar (ou null enquanto se pede). */
+    val youtubeLogin: StateFlow<YouTubeLogin?> = continueWatching.youtubeLogin
 
     private val nightClock = NightClock(settings.account, localWeather.location)
 
@@ -223,16 +221,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             // também envia (ver AppContainer.start).
             c.appIndex.upload(c.catalog.current())
         }
-        viewModelScope.launch {
-            // As apps escrevem no Watch Next várias vezes seguidas: junta as mudanças antes de ler.
-            watchNextRequests.receiveAsFlow().collectLatest {
-                delay(300)
-                // Se a leitura falhar, ficam as entradas que já havia.
-                val all = (c.watchNext.load() ?: return@collectLatest).let { if (demo) it + demoWatchNext() else it }
-                _watchNext.value = all
-                prefetchImages(all)
-            }
-        }
+        continueWatching.start()
         localWeather.start()
         wallpaper.start()
         viewModelScope.launch { autostartAfterBoot() }
@@ -242,30 +231,19 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             settings.awaitReady()
             settings.account.map { it.language }.distinctUntilChanged().collect { Strings.apply(it) }
         }
-        viewModelScope.launch {
-            // YouTube: quando já se sabe que apps há, e de 30 em 30 minutos.
-            installed.first { it != null }
-            while (true) {
-                refreshYouTube()
-                delay(YOUTUBE_MS)
-            }
-        }
         updates.start()
         reloadApps()
-        reloadWatchNext()
-        stopObservingWatchNext = c.watchNext.observe(::reloadWatchNext)
     }
 
     override fun onCleared() {
-        stopObservingWatchNext()
+        continueWatching.stop()
     }
 
     fun onResume() {
         resumed = true
         updates.checkGuard()
         reloadApps()
-        reloadWatchNext()
-        if (SystemClock.elapsedRealtime() - youtubeLoadedAt > YOUTUBE_STALE_MS) viewModelScope.launch { refreshYouTube() }
+        continueWatching.onResume()
         viewModelScope.launch { settings.syncIfStale() }
     }
 
@@ -284,7 +262,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun setYoutubeFeed(feed: String) {
         settings.updateAccount { it.copy(youtubeFeed = feed) }
-        viewModelScope.launch { refreshYouTube() }
+        continueWatching.refreshYouTube()
     }
 
     fun onPause() {
@@ -301,9 +279,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         c.catalog.refresh()
     }
 
-    fun reloadWatchNext() {
-        watchNextRequests.trySend(Unit)
-    }
+    fun reloadWatchNext() = continueWatching.reload()
 
     /** O botão dia/noite: troca o que está agora e desliga o automático. */
     fun toggleNight() {
@@ -330,128 +306,17 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         if (resumed && _screen.value == Screen.Home) AutoStart.open(context, pkg)
     }
 
-    private val prefetches = HashMap<String, List<Disposable>>()
-
-    /**
-     * Pede já as imagens dos primeiros cartões de cada app (para a cache do Coil), no tamanho em que aparecem: ao mudar
-     * de app, os cartões aparecem logo em vez de carregarem um a um. Um novo pedido substitui o anterior dessa app.
-     */
-    private fun prefetchImages(all: Map<String, List<WatchNextItem>>) {
-        val loader = SingletonImageLoader.get(context)
-        val height = (CardHeight.value * context.resources.displayMetrics.density).toInt()
-        for ((pkg, items) in all) {
-            prefetches.remove(pkg)?.forEach { it.dispose() }
-            prefetches[pkg] = items.filter { it.imageUri != null }.take(PREFETCH_PER_APP).map { item ->
-                loader.enqueue(
-                    ImageRequest.Builder(context)
-                        .data(item.imageUri)
-                        .size((height * item.aspectRatio.coerceIn(0.6f, 2f)).toInt(), height)
-                        .build(),
-                )
-            }
-        }
-    }
-
-    private var demo = false
-
     /** Só em debug (`am start … --ez demo_watch_next true`): "Continuar a ver" de exemplo nos 2 primeiros favoritos. */
-    fun enableDemoWatchNext() {
-        if (!BuildConfig.DEBUG || demo) return
-        demo = true
-        reloadWatchNext()
-    }
-
-    private fun demoWatchNext(): Map<String, List<WatchNextItem>> {
-        val pkgs = apps.value.orEmpty().take(2).map { it.packageName }
-        fun item(id: Long, pkg: String, title: String, image: String, ratio: Float, s: String?, e: String?, pos: Long) = WatchNextItem(
-            id = -id, packageName = pkg, title = title, episodeTitle = null, season = s, episode = e,
-            imageUri = image, aspectRatio = ratio, positionMs = pos, durationMs = 2_700_000, type = WatchNextItem.TYPE_CONTINUE,
-            lastEngagement = System.currentTimeMillis() - id, intentUri = null, isChannel = id == 4L,
-        )
-        val out = mutableMapOf<String, List<WatchNextItem>>()
-        pkgs.getOrNull(0)?.let { p ->
-            out[p] = listOf(
-                item(1, p, "Lago ao amanhecer", "https://picsum.photos/id/1018/1280/720", 16f / 9f, "2", "5", 1_200_000),
-                item(2, p, "Montanha", "https://picsum.photos/id/1015/1280/720", 16f / 9f, "1", "3", 300_000),
-                item(3, p, "Costa", "https://picsum.photos/id/1016/1280/720", 16f / 9f, null, null, 0),
-            )
-        }
-        // Um logo quadrado publicado como 16:9 (como os canais da GoatTV).
-        pkgs.getOrNull(1)?.let { p -> out[p] = listOf(item(4, p, "CANAL", "https://picsum.photos/id/237/400/400", 16f / 9f, null, null, 0)) }
-        return out
-    }
+    fun enableDemoWatchNext() = continueWatching.enableDemo()
 
     // ---- YouTube ----
 
-    /** A app que abre os vídeos (TizenTube, a app oficial, SmartTube…), a primeira instalada da lista. */
-    private fun youtubeApp(): String? {
-        val pkgs = installed.value.orEmpty().map { it.packageName }.toSet()
-        return YOUTUBE_APPS.firstOrNull { it in pkgs }
-    }
-
-    private suspend fun refreshYouTube() {
-        val pkg = youtubeApp()
-        if (!c.youtube.linked || pkg == null) {
-            _youtube.value = emptyList()
-            return
-        }
-        try {
-            val items = c.youtube.recommendations(pkg, settings.account.value.youtubeFeed)
-            Log.d("YouTube", "Recomendações: ${items.size}")
-            _youtube.value = items
-            youtubeLoadedAt = SystemClock.elapsedRealtime()
-            prefetchImages(mapOf(pkg to items))
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.w("YouTube", "Recomendações: ${e.message}")
-        }
-        _youtubeLinked.value = c.youtube.linked
-    }
-
     /** Pede um código e espera que a pessoa o confirme em google.com/device (pede outro se expirar). */
-    fun startYouTubeLogin() {
-        youtubeLoginJob?.cancel()
-        youtubeLoginJob = viewModelScope.launch {
-            _youtubeLogin.value = null
-            while (true) {
-                val login = try {
-                    c.youtube.startLogin()
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    toast(strings.youtubeError)
-                    delay(10_000)
-                    continue
-                }
-                _youtubeLogin.value = login
-                while (System.currentTimeMillis() < login.expiresAt) {
-                    delay(login.intervalSec * 1000L)
-                    val done = runCatching { c.youtube.poll(login) }.getOrNull() ?: continue
-                    if (done) {
-                        _youtubeLinked.value = true
-                        _youtubeLogin.value = null
-                        toast(strings.youtubeLinked)
-                        refreshYouTube()
-                        return@launch
-                    }
-                    break // recusado ou expirado: pede um código novo
-                }
-            }
-        }
-    }
+    fun startYouTubeLogin() = continueWatching.startYouTubeLogin()
 
-    fun cancelYouTubeLogin() {
-        youtubeLoginJob?.cancel()
-        youtubeLoginJob = null
-        _youtubeLogin.value = null
-    }
+    fun cancelYouTubeLogin() = continueWatching.cancelYouTubeLogin()
 
-    fun unlinkYouTube() {
-        c.youtube.unlink()
-        _youtubeLinked.value = false
-        _youtube.value = emptyList()
-    }
+    fun unlinkYouTube() = continueWatching.unlinkYouTube()
 
     // ---- Relatórios ----
 
@@ -759,24 +624,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     private companion object {
-        const val YOUTUBE_MS = 30 * 60_000L
-        /** Os cartões que se veem de uma vez numa fila; os outros carregam ao chegar lá. */
-        const val PREFETCH_PER_APP = 8
-        const val YOUTUBE_STALE_MS = 10 * 60_000L
 
         /** O arranque automático só conta nos primeiros minutos depois de ligar (não depois de atualizar a app). */
         const val BOOT_WINDOW_MS = 10 * 60_000L
 
         const val LANGUAGE_DELAY_MS = 400L
-
-        /** Apps que abrem links do YouTube, por ordem de preferência. */
-        val YOUTUBE_APPS = listOf(
-            "io.gh.reisxd.tizentube.cobalt",
-            "io.gh.reisxd.tizentube",
-            "com.google.android.youtube.tv",
-            "com.teamsmart.videomanager.tv",
-            "com.liskovsoft.smarttubetv.beta",
-        )
 
         /** Primeiro as apps pela ordem guardada; as que lá não estão vão para o fim (por nome). */
         fun ordered(all: List<App>, order: List<String>): List<App> {

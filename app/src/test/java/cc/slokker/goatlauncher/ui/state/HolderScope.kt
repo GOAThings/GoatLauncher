@@ -33,13 +33,19 @@ internal class FakeWaits {
         asked += ms
         val done = CompletableDeferred<Unit>()
         pending += done
-        done.await()
+        try {
+            done.await()
+        } finally {
+            // Acabada ou cancelada (ex.: um collectLatest que recomeçou): já não está à espera.
+            pending.remove(done)
+        }
     }
 
-    /** Acaba a espera mais antiga (o que estava à espera continua já). */
+    /** Acaba a espera mais antiga das que ainda estão à espera (o que estava à espera continua já). */
     fun release() {
-        pending.removeFirst().complete(Unit)
+        pending.first().complete(Unit)
     }
 
-    val waiting: Int get() = pending.count { it.isActive }
+    /** Quantas esperas estão por acabar. */
+    val waiting: Int get() = pending.size
 }

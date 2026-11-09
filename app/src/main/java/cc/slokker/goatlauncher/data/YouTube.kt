@@ -20,6 +20,26 @@ import java.util.UUID
 /** Um pedido de ligação em curso: a pessoa escreve [userCode] em [verificationUrl] (ex.: google.com/device). */
 data class YouTubeLogin(val userCode: String, val verificationUrl: String, val deviceCode: String, val intervalSec: Int, val expiresAt: Long)
 
+/** A conta YouTube ligada, para o "Continuar a ver": o [YouTubeSource] (outra nos testes, ver ContinueWatching). */
+interface YouTubeAccount {
+    val linked: Boolean
+
+    fun unlink()
+
+    /** Pede um código para a pessoa confirmar em google.com/device. */
+    suspend fun startLogin(): YouTubeLogin
+
+    /** true: ligada; null: ainda à espera da pessoa; false: o código expirou ou foi recusado. */
+    suspend fun poll(login: YouTubeLogin): Boolean?
+
+    /**
+     * O que aparece no "Continuar a ver" da app do YouTube ([packageName], a que abre os vídeos), conforme [feed]
+     * (AccountSettings.YT_*): os vídeos começados e por acabar (do histórico, com o progresso), as recomendações do
+     * Início (como na app de TV), ou os dois (começados primeiro); até [max].
+     */
+    suspend fun recommendations(packageName: String, feed: String, max: Int = 20): List<WatchNextItem>
+}
+
 /**
  * As recomendações da conta YouTube da pessoa, para o "Continuar a ver". Usa a mesma API que a app de TV do
  * YouTube (e a TizenTube): ligação por código em google.com/device (a TV nunca vê a password) e o feed
@@ -27,22 +47,22 @@ data class YouTubeLogin(val userCode: String, val verificationUrl: String, val d
  *
  * As credenciais da app de TV do YouTube não vêm na app: lêem-se de youtube.com/tv, como faz o próprio site.
  */
-class YouTubeSource(context: Context, private val http: OkHttpClient) {
+class YouTubeSource(context: Context, private val http: OkHttpClient) : YouTubeAccount {
     private val prefs = context.getSharedPreferences(Prefs.FILE, Context.MODE_PRIVATE)
     private val json = "application/json".toMediaType()
 
-    val linked: Boolean get() = prefs.contains(Prefs.REFRESH)
+    override val linked: Boolean get() = prefs.contains(Prefs.REFRESH)
 
     /** Os tokens e o segredo guardados, para os tirar dos relatórios (BugReport). */
     fun secrets(): List<String> = listOfNotNull(prefs.getString(Prefs.REFRESH, null), prefs.getString(Prefs.ACCESS, null), prefs.getString(Prefs.CLIENT_SECRET, null))
 
-    fun unlink() = prefs.edit {
+    override fun unlink() = prefs.edit {
         remove(Prefs.REFRESH)
         remove(Prefs.ACCESS)
         remove(Prefs.ACCESS_UNTIL)
     }
 
-    suspend fun startLogin(): YouTubeLogin = withContext(Dispatchers.IO) {
+    override suspend fun startLogin(): YouTubeLogin = withContext(Dispatchers.IO) {
         val (clientId, _) = client()
         val body = JsonObject().apply {
             addProperty("client_id", clientId)
@@ -60,8 +80,7 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
         )
     }
 
-    /** true: ligada; null: ainda à espera da pessoa; false: o código expirou ou foi recusado. */
-    suspend fun poll(login: YouTubeLogin): Boolean? = withContext(Dispatchers.IO) {
+    override suspend fun poll(login: YouTubeLogin): Boolean? = withContext(Dispatchers.IO) {
         val (clientId, secret) = client()
         val body = JsonObject().apply {
             addProperty("client_id", clientId)
@@ -80,15 +99,7 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
         }
     }
 
-    /**
-     * Recomendações do Início do YouTube (como na app de TV), até [max], com o pacote da app que as abre.
-     * Os vídeos já começados vêm primeiro, com o progresso.
-     */
-    /**
-     * O que aparece no "Continuar a ver" da app do YouTube, conforme [feed] (AccountSettings.YT_*): os vídeos
-     * começados e por acabar (do histórico), as recomendações do Início, ou os dois (começados primeiro).
-     */
-    suspend fun recommendations(packageName: String, feed: String, max: Int = 20): List<WatchNextItem> = withContext(Dispatchers.IO) {
+    override suspend fun recommendations(packageName: String, feed: String, max: Int): List<WatchNextItem> = withContext(Dispatchers.IO) {
         val token = accessToken() ?: return@withContext emptyList()
         val home = if (feed != AccountSettings.YT_CONTINUE) browse("default", token, packageName) else null
         val started = if (feed != AccountSettings.YT_RECOMMENDED) {

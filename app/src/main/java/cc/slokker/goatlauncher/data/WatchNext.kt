@@ -194,17 +194,25 @@ internal object WatchNextRows {
     }
 }
 
+/** O Watch Next do sistema: o [WatchNextSource] (outro nos testes, ver ContinueWatching). */
+interface WatchNextFeed {
+    /** Por pacote, o mais recente primeiro. null se não deu para ler (não quer dizer que não haja nada). */
+    suspend fun load(): Map<String, List<WatchNextItem>>?
+
+    /** Chama [onChange] quando alguma app mexe no Watch Next. Devolve a função que deixa de observar. */
+    fun observe(onChange: () -> Unit): () -> Unit
+}
+
 /**
  * Lê o Watch Next do TvProvider (o mesmo que o Google TV e o Projectivy usam) e agrupa-o por app.
  * Precisa de READ_TV_LISTINGS (ver o manifesto); sem ela, o sistema só devolve os programas da própria app.
  * O TvProvider não aceita `selection` a quem não é do sistema: lê-se tudo e filtra-se aqui.
  */
-class WatchNextSource(private val context: Context) {
+class WatchNextSource(private val context: Context) : WatchNextFeed {
 
     private val supported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
 
-    /** Por pacote, o mais recente primeiro. null se não deu para ler (não quer dizer que não haja nada). */
-    suspend fun load(): Map<String, List<WatchNextItem>>? = withContext(Dispatchers.IO) {
+    override suspend fun load(): Map<String, List<WatchNextItem>>? = withContext(Dispatchers.IO) {
         if (!supported) return@withContext emptyMap()
         runCatching {
             var bad = 0
@@ -227,8 +235,7 @@ class WatchNextSource(private val context: Context) {
         }
     }
 
-    /** Chama [onChange] quando alguma app mexe no Watch Next. Devolve a função que deixa de observar. */
-    fun observe(onChange: () -> Unit): () -> Unit {
+    override fun observe(onChange: () -> Unit): () -> Unit {
         if (!supported) return {}
         val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
             override fun onChange(selfChange: Boolean) = onChange()
