@@ -90,14 +90,6 @@ class FocusDim {
 
 val LocalFocusDim = staticCompositionLocalOf { FocusDim() }
 
-/** As animações que cada efeito aceita: o vidro e o "escurecer" não têm (o vidro tem o seu brilho a passar). */
-fun focusAnimations(effect: String): List<String> = when (effect) {
-    AccountSettings.FOCUS_GLASS, AccountSettings.FOCUS_DIM, AccountSettings.FOCUS_SHADOW -> emptyList()
-    AccountSettings.FOCUS_VIEWFINDER, AccountSettings.FOCUS_UNDERLINE ->
-        listOf(AccountSettings.ANIM_NONE, AccountSettings.ANIM_PULSE, AccountSettings.ANIM_BREATH)
-    else -> listOf(AccountSettings.ANIM_NONE, AccountSettings.ANIM_PULSE, AccountSettings.ANIM_BREATH, AccountSettings.ANIM_SHINE)
-}
-
 /**
  * O efeito de foco desenhado à volta do cartão (o brilho ou a sombra por trás, o contorno por cima). Tem de vir
  * depois do graphicsLayer da escala, para crescer com o cartão. [appColor] é a cor do brilho automático;
@@ -113,7 +105,7 @@ fun Modifier.focusEffect(
 ): Modifier {
     val shown by animateFloatAsState(if (focused) 1f else 0f, tween(180), label = "focus")
     val effect = style.effect
-    val animation = style.animation.takeIf { it in focusAnimations(effect) } ?: AccountSettings.ANIM_NONE
+    val animation = style.animation.takeIf { it in AccountSettings.focusAnimations(effect) } ?: AccountSettings.ANIM_NONE
     val glass = effect == AccountSettings.FOCUS_GLASS
     // "Escurecer os outros": cada cartão com foco conta; os outros escurecem enquanto houver algum.
     val dim = LocalFocusDim.current

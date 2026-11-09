@@ -8,7 +8,8 @@ import com.google.gson.JsonObject
  * Formato das definições guardadas no disco e na conta (o backend guarda o JSON tal como o recebe, e o site edita-o):
  * "account" (igual em todas as TVs da conta) e "device" (só desta TV). Todas as chaves, cada uma com um valor de
  * exemplo, estão em app/src/test/resources/formats/ (account.json e device.json), e o SettingsFormatTest garante que
- * cada uma se lê e se escreve igual. Os valores possíveis de cada campo estão no fromJson, abaixo.
+ * cada uma se lê e se escreve igual. Os valores possíveis de cada campo estão no companion da classe, junto das
+ * constantes (as Definições percorrem as mesmas listas que o fromJson aceita).
  *
  * Um fundo "file" só existe na TV onde foi escolhido; as outras mostram o fundo por defeito.
  * Um fundo "reddit" (o antigo defeito, r/EarthPorn, ou outro subreddit) lê-se como o [Wallpaper.DEFAULT]: o Reddit
@@ -89,19 +90,19 @@ data class AccountSettings(
     val continueStyle: String = STYLE_ROW,
     /** O tempo (ícone e temperatura) ao lado da saudação, em cima à direita. */
     val showWeather: Boolean = true,
-    /** Fundos de fotos online (Wikimedia, NASA): fotos mais estreitas do que isto (px) ficam de fora; 0 = todas. */
+    /** Fundos de fotos online (Wikimedia, NASA): fotos mais estreitas do que isto (px) ficam de fora; 0 = todas (ver [PHOTO_MIN_WIDTHS]). */
     val photoMinWidth: Int = 1920,
     /** De quantos em quantos minutos muda a foto dos fundos que rodam (fotos online e pasta): um dos [WALLPAPER_MINUTES]. */
     val wallpaperMinutes: Int = 30,
-    /** Modo ambiente: minutos sem tocar no comando até o ecrã inicial ficar só com o fundo e as horas; 0 = desligado. */
+    /** Modo ambiente: minutos sem tocar no comando até o ecrã inicial ficar só com o fundo e as horas; 0 = desligado (ver [IDLE_MINUTES]). */
     val idleMinutes: Int = 0,
     /** Com o modo ambiente, o ecrã inicial não deixa a TV adormecer nem começar a proteção de ecrã do sistema. */
     val idleKeepAwake: Boolean = false,
-    /** O que mostram o modo ambiente e o protetor de ecrã: AMBIENT_PHOTOS (o fundo e as horas) ou AMBIENT_BOUNCE. */
+    /** O que mostram o modo ambiente e o protetor de ecrã: um dos [AMBIENT_STYLES] (o fundo e as horas, ou o relógio a ressaltar). */
     val ambientStyle: String = AMBIENT_PHOTOS,
     /** Um tique ao mover com as setas e um clique no OK (ver NavSounds). */
     val navSounds: Boolean = false,
-    /** O que a app do YouTube mostra no "Continuar a ver" (com a conta ligada): YT_BOTH, YT_CONTINUE ou YT_RECOMMENDED. */
+    /** O que a app do YouTube mostra no "Continuar a ver" (com a conta ligada): um dos [YOUTUBE_FEEDS]. */
     val youtubeFeed: String = YT_BOTH,
     /** Língua da app: "auto" (a do sistema) ou um código BCP 47 das 15 do site (ver Strings.LANGUAGES). */
     val language: String = "auto",
@@ -111,7 +112,10 @@ data class AccountSettings(
     val nightAuto: Boolean = false,
     /** Cartão de uma app com foco: um dos FOCUS_EFFECTS (contorno, brilho, vidro, reflexo, aurora, visor, sublinhado, anel, escurecer os outros, só sombra). */
     val focusEffect: String = FOCUS_BORDER,
-    /** Animação do efeito de foco: ANIM_NONE, ANIM_PULSE, ANIM_BREATH ou ANIM_SHINE (luz a dar a volta ao cartão). */
+    /**
+     * Animação do efeito de foco: uma das [FOCUS_ANIMATIONS] (ANIM_SHINE: luz a dar a volta ao cartão). Cada efeito só
+     * mostra as suas ([focusAnimations]); as outras ficam guardadas mas desenham-se como ANIM_NONE.
+     */
     val focusAnimation: String = ANIM_NONE,
     /** Cor do efeito de foco: COLOR_AUTO (contorno branco, brilho da cor da app) ou "#RRGGBB". */
     val focusColor: String = COLOR_AUTO,
@@ -158,11 +162,16 @@ data class AccountSettings(
 
         const val LAYOUT_ANDROID = "android"
         const val LAYOUT_APPLE_TV = "appletv"
+        val LAYOUTS = listOf(LAYOUT_ANDROID, LAYOUT_APPLE_TV)
 
-        /** Modo noite automático: das 20h às 7h. */
+        /** O fundo e as horas. */
         const val AMBIENT_PHOTOS = "photos"
         /** Ecrã preto com o relógio a ressaltar nas bordas. */
         const val AMBIENT_BOUNCE = "bounce"
+        /** Pela ordem em que o OK os percorre nas Definições. */
+        val AMBIENT_STYLES = listOf(AMBIENT_PHOTOS, AMBIENT_BOUNCE)
+
+        /** Modo noite automático sem saber onde a TV está: das 20h às 7h. */
         const val NIGHT_FROM = 20
         const val NIGHT_TO = 7
 
@@ -185,6 +194,16 @@ data class AccountSettings(
         const val ANIM_PULSE = "pulse"
         const val ANIM_BREATH = "breath"
         const val ANIM_SHINE = "shine"
+        /** Todas as que se guardam; cada efeito aceita só algumas ([focusAnimations]), por esta ordem. */
+        val FOCUS_ANIMATIONS = listOf(ANIM_NONE, ANIM_PULSE, ANIM_BREATH, ANIM_SHINE)
+
+        /** As animações que cada efeito aceita: o vidro e o "escurecer" não têm (o vidro tem o seu brilho a passar). */
+        fun focusAnimations(effect: String): List<String> = when (effect) {
+            FOCUS_GLASS, FOCUS_DIM, FOCUS_SHADOW -> emptyList()
+            FOCUS_VIEWFINDER, FOCUS_UNDERLINE -> listOf(ANIM_NONE, ANIM_PULSE, ANIM_BREATH)
+            else -> FOCUS_ANIMATIONS
+        }
+
         const val COLOR_AUTO = "auto"
         const val BG_GRAPHITE = "graphite"
         const val BG_NONE = "none"
@@ -192,9 +211,23 @@ data class AccountSettings(
         /** Os intervalos das Definições, pela ordem em que o OK os percorre: 5, 15 e 30 min, 1 h, 3 h e um dia. */
         val WALLPAPER_MINUTES = listOf(5, 15, 30, 60, 180, 24 * 60)
 
+        /**
+         * A resolução mínima nas Definições (qualquer, Full HD, 2K, 4K), pela ordem do OK. O site pode gravar outro
+         * valor (≥ 0): vale na mesma, e o OK passa daí à primeira.
+         */
+        val PHOTO_MIN_WIDTHS = listOf(0, 1920, 2560, 3840)
+
+        /**
+         * O modo ambiente nas Definições (desligado, 1, 2, 5, 10 e 30 min), pela ordem do OK. O site pode gravar outro
+         * valor (≥ 0): vale na mesma, e o OK passa daí à primeira.
+         */
+        val IDLE_MINUTES = listOf(0, 1, 2, 5, 10, 30)
+
         const val YT_BOTH = "both"
         const val YT_CONTINUE = "continue"
         const val YT_RECOMMENDED = "recommended"
+        /** Pela ordem em que o OK os percorre nas Definições: os dois → só a meio → só recomendações. */
+        val YOUTUBE_FEEDS = listOf(YT_BOTH, YT_CONTINUE, YT_RECOMMENDED)
 
         fun fromJson(json: JsonObject?): AccountSettings {
             if (json == null) return AccountSettings()
@@ -207,7 +240,7 @@ data class AccountSettings(
                 showGreeting = json.bool("show_greeting") ?: true,
                 showContinueWatching = json.bool("show_continue_watching") ?: true,
                 showAppName = json.bool("show_app_name") ?: true,
-                layout = json.str("layout")?.takeIf { it == LAYOUT_APPLE_TV } ?: LAYOUT_ANDROID,
+                layout = json.str("layout")?.takeIf { it in LAYOUTS } ?: LAYOUT_ANDROID,
                 // O antigo "downunder" (já não existe) passa a fila de cartões. Os estilos novos foram disposições
                 // durante uns dias (só em versões de teste): uma dessas disposições guardada passa a ser o estilo.
                 continueStyle = (json.str("continue_style")?.takeIf { it in STYLES } ?: STYLE_ROW).let { style ->
@@ -218,14 +251,14 @@ data class AccountSettings(
                 wallpaperMinutes = json.int("wallpaper_minutes")?.takeIf { it in WALLPAPER_MINUTES } ?: 30,
                 idleMinutes = json.int("idle_minutes")?.coerceAtLeast(0) ?: 0,
                 idleKeepAwake = json.bool("idle_keep_awake") ?: false,
-                ambientStyle = json.str("ambient_style")?.takeIf { it == AMBIENT_BOUNCE } ?: AMBIENT_PHOTOS,
+                ambientStyle = json.str("ambient_style")?.takeIf { it in AMBIENT_STYLES } ?: AMBIENT_PHOTOS,
                 navSounds = json.bool("nav_sounds") ?: false,
-                youtubeFeed = json.str("youtube_feed")?.takeIf { it == YT_CONTINUE || it == YT_RECOMMENDED } ?: YT_BOTH,
+                youtubeFeed = json.str("youtube_feed")?.takeIf { it in YOUTUBE_FEEDS } ?: YT_BOTH,
                 language = json.str("language") ?: "auto",
                 nightMode = json.bool("night_mode") ?: false,
                 nightAuto = json.bool("night_auto") ?: false,
                 focusEffect = json.str("focus_effect")?.takeIf { it in FOCUS_EFFECTS } ?: FOCUS_BORDER,
-                focusAnimation = json.str("focus_animation")?.takeIf { it == ANIM_PULSE || it == ANIM_BREATH || it == ANIM_SHINE } ?: ANIM_NONE,
+                focusAnimation = json.str("focus_animation")?.takeIf { it in FOCUS_ANIMATIONS } ?: ANIM_NONE,
                 focusColor = json.str("focus_color")?.takeIf { it.matches(Regex("#[0-9A-Fa-f]{6}")) } ?: COLOR_AUTO,
                 iconBackground = json.str("icon_background")
                     ?.takeIf { it == BG_NONE || it.matches(Regex("#[0-9A-Fa-f]{6}")) } ?: BG_GRAPHITE,
@@ -235,10 +268,10 @@ data class AccountSettings(
     }
 }
 
-/** Só desta TV. [apps] é a ordem da fila; as apps instaladas que lá não estão vão para o fim. */
 /** Um sítio escolhido à mão para o tempo e o dia/noite (em vez do que o IP diz). [name] é para mostrar. */
 data class Place(val name: String, val lat: Double, val lon: Double)
 
+/** Só desta TV. [apps] é a ordem da fila; as apps instaladas que lá não estão vão para o fim. */
 data class DeviceSettings(
     val apps: List<String> = emptyList(),
     val hidden: Set<String> = emptySet(),
@@ -248,7 +281,10 @@ data class DeviceSettings(
     val names: Map<String, String> = emptyMap(),
     /** Apps cujo "Continuar a ver" (ou recomendações do YouTube) não aparece no Início. */
     val noContinue: Set<String> = emptySet(),
-    /** App que abre ao ligar a TV (e, com [autostartWake], ao acordar), [autostartDelay] segundos depois. */
+    /**
+     * App que abre ao ligar a TV (e, com [autostartWake], ao acordar), [autostartDelay] segundos depois (um dos
+     * [AUTOSTART_DELAYS] nas Definições; o site pode gravar outro entre 0 e [AUTOSTART_DELAY_MAX]).
+     */
     val autostart: String? = null,
     val autostartWake: Boolean = false,
     val autostartDelay: Int = 5,
@@ -320,6 +356,12 @@ data class DeviceSettings(
          */
         val PARENTAL_KEYS = setOf("pin", "locked", "lock_settings", "lock_hours")
 
+        /** A espera do arranque automático nas Definições (segundos), pela ordem do OK. */
+        val AUTOSTART_DELAYS = listOf(0, 3, 5, 10, 20)
+
+        /** A maior espera aceite (de outro sítio, ex.: o site); acima disto lê-se este valor. */
+        const val AUTOSTART_DELAY_MAX = 120
+
         fun fromJson(json: JsonObject?): DeviceSettings {
             if (json == null) return DeviceSettings()
             return DeviceSettings(
@@ -330,7 +372,7 @@ data class DeviceSettings(
                 noContinue = json.strings("no_continue").toSet(),
                 autostart = json.str("autostart")?.takeIf { it.isNotBlank() },
                 autostartWake = json.bool("autostart_wake") ?: false,
-                autostartDelay = json.int("autostart_delay")?.coerceIn(0, 120) ?: 5,
+                autostartDelay = json.int("autostart_delay")?.coerceIn(0, AUTOSTART_DELAY_MAX) ?: 5,
                 buttons = json.buttons(),
                 pin = json.str("pin")?.takeIf { it.contains(':') },
                 locked = json.strings("locked").toSet(),
@@ -348,6 +390,12 @@ data class DeviceSettings(
         }
     }
 }
+
+/**
+ * O valor depois de [current] nesta lista, como o OK das Definições os percorre: volta ao primeiro depois do último, e
+ * também quando [current] não está na lista (um valor gravado pelo site, por exemplo).
+ */
+fun <T> List<T>.after(current: T): T = getOrElse(indexOf(current) + 1) { first() }
 
 /** null se não for um objeto JSON com pelo menos um campo (o que a conta devolve antes da primeira gravação). */
 fun JsonElement?.nonEmptyObject(): JsonObject? =

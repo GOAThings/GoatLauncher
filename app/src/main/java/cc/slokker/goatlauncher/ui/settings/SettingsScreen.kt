@@ -32,7 +32,6 @@ import cc.slokker.goatlauncher.ui.home.FocusColors
 import cc.slokker.goatlauncher.ui.home.GraphiteBackground
 import androidx.compose.ui.geometry.Offset
 import cc.slokker.goatlauncher.ui.home.colorSpec
-import cc.slokker.goatlauncher.ui.home.focusAnimations
 import cc.slokker.goatlauncher.ui.home.parseColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -102,6 +101,8 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.BuildConfig
 import cc.slokker.goatlauncher.data.AccountSettings
+import cc.slokker.goatlauncher.data.DeviceSettings
+import cc.slokker.goatlauncher.data.after
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import cc.slokker.goatlauncher.data.Place
@@ -656,7 +657,7 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
         item {
             // OK passa ao efeito seguinte (pela ordem de FOCUS_EFFECTS, e volta ao primeiro); a pré-visualização ao lado mostra-o.
             val effects = AccountSettings.FOCUS_EFFECTS
-            val next = effects[(effects.indexOf(account.focusEffect) + 1) % effects.size]
+            val next = effects.after(account.focusEffect)
             val label = when (account.focusEffect) {
                 AccountSettings.FOCUS_GLOW -> s.effectGlow
                 AccountSettings.FOCUS_GLASS -> s.effectGlass
@@ -674,12 +675,12 @@ private fun AppearancePage(vm: LauncherViewModel, first: FocusRequester, onPage:
         // Cada efeito tem as suas animações (o vidro tem o brilho a passar e mais nenhuma); a cor não serve
         // para "só sombra" nem para "escurecer os outros".
         val effect = account.focusEffect
-        val animations = focusAnimations(effect)
+        val animations = AccountSettings.focusAnimations(effect)
         if (animations.isNotEmpty()) {
             item {
                 // OK passa à animação seguinte das que este efeito aceita (e volta à primeira).
                 val current = account.focusAnimation.takeIf { it in animations } ?: AccountSettings.ANIM_NONE
-                val next = animations[(animations.indexOf(current) + 1) % animations.size]
+                val next = animations.after(current)
                 val label = when (current) {
                     AccountSettings.ANIM_PULSE -> s.animPulse
                     AccountSettings.ANIM_BREATH -> s.animBreath
@@ -775,7 +776,7 @@ private fun StartupPage(vm: LauncherViewModel, first: FocusRequester, onPage: (P
                 )
             }
             item {
-                val next = AUTOSTART_DELAYS.getOrElse(AUTOSTART_DELAYS.indexOf(device.autostartDelay) + 1) { AUTOSTART_DELAYS.first() }
+                val next = DeviceSettings.AUTOSTART_DELAYS.after(device.autostartDelay)
                 GlassRow(
                     title = s.autostartDelay,
                     subtitle = s.seconds(device.autostartDelay),
@@ -796,7 +797,7 @@ private fun AmbientPage(vm: LauncherViewModel, first: FocusRequester) {
     LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
         item {
             // OK passa ao tempo seguinte: desligado → 1 → 2 → 5 → 10 → 30 min → desligado.
-            val next = IDLE_MINUTES.getOrElse(IDLE_MINUTES.indexOf(account.idleMinutes) + 1) { IDLE_MINUTES.first() }
+            val next = AccountSettings.IDLE_MINUTES.after(account.idleMinutes)
             GlassRow(
                 modifier = Modifier.focusRequester(first),
                 title = s.idleMode,
@@ -811,7 +812,7 @@ private fun AmbientPage(vm: LauncherViewModel, first: FocusRequester) {
             GlassRow(
                 title = s.ambientStyle,
                 subtitle = if (bounce) s.ambientBounce else s.ambientPhotos,
-                onClick = { vm.setAmbientStyle(if (bounce) AccountSettings.AMBIENT_PHOTOS else AccountSettings.AMBIENT_BOUNCE) },
+                onClick = { vm.setAmbientStyle(AccountSettings.AMBIENT_STYLES.after(account.ambientStyle)) },
                 trailing = { Chevron() },
             )
         }
@@ -931,11 +932,12 @@ private fun AccountPage(vm: LauncherViewModel, first: FocusRequester, onPage: (P
             var confirm by remember { mutableStateOf(false) }
             if (linked) {
                 // OK passa à seguinte: os dois → só a meio → só recomendações → os dois.
-                val (label, next) = when (account.youtubeFeed) {
-                    AccountSettings.YT_CONTINUE -> s.ytContinue to AccountSettings.YT_RECOMMENDED
-                    AccountSettings.YT_RECOMMENDED -> s.ytRecommended to AccountSettings.YT_BOTH
-                    else -> s.ytBoth to AccountSettings.YT_CONTINUE
+                val label = when (account.youtubeFeed) {
+                    AccountSettings.YT_CONTINUE -> s.ytContinue
+                    AccountSettings.YT_RECOMMENDED -> s.ytRecommended
+                    else -> s.ytBoth
                 }
+                val next = AccountSettings.YOUTUBE_FEEDS.after(account.youtubeFeed)
                 GlassRow(title = s.youtubeFeed, subtitle = label, onClick = { vm.setYoutubeFeed(next) }, trailing = { Chevron() })
                 GlassRow(
                     title = s.youtubeUnlink,
@@ -1107,8 +1109,7 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
 
         // De quanto em quanto tempo muda a foto (fotos do dia e pasta). OK passa ao seguinte: 5 min → … → um dia → 5 min.
         item {
-            val minutes = AccountSettings.WALLPAPER_MINUTES
-            val next = minutes.getOrElse(minutes.indexOf(account.wallpaperMinutes) + 1) { minutes.first() }
+            val next = AccountSettings.WALLPAPER_MINUTES.after(account.wallpaperMinutes)
             GlassRow(
                 title = s.rotateEvery,
                 subtitle = s.rotateInterval(account.wallpaperMinutes),
@@ -1132,7 +1133,7 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
         }
         item {
             // OK passa à seguinte: qualquer → Full HD → 2K → 4K → qualquer.
-            val next = PHOTO_MIN_WIDTHS.getOrElse(PHOTO_MIN_WIDTHS.indexOf(account.photoMinWidth) + 1) { PHOTO_MIN_WIDTHS.first() }
+            val next = AccountSettings.PHOTO_MIN_WIDTHS.after(account.photoMinWidth)
             GlassRow(
                 title = s.minWidth,
                 subtitle = resolutionName(account.photoMinWidth, s),
@@ -1245,10 +1246,6 @@ private fun wallpaperName(w: Wallpaper, s: cc.slokker.goatlauncher.ui.Strings): 
     Wallpaper.TYPE_FOLDER -> s.wallpaperFolder(w.value.substringAfterLast('/'))
     else -> s.wallpaperImage
 }
-
-private val IDLE_MINUTES = listOf(0, 1, 2, 5, 10, 30)
-private val AUTOSTART_DELAYS = listOf(0, 3, 5, 10, 20)
-private val PHOTO_MIN_WIDTHS = listOf(0, 1920, 2560, 3840)
 
 /** Os nomes das fontes de fotos do dia (nomes próprios: não se traduzem). */
 private const val WIKIMEDIA_NAME = "Wikimedia Commons"
