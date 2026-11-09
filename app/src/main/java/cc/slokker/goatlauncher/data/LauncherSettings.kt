@@ -57,8 +57,8 @@ data class Wallpaper(val type: String, val value: String) {
         /** A Astronomy Picture of the Day da NASA (ver ApodFeed); [value] é sempre "apod". */
         const val TYPE_NASA = "nasa"
 
-        /** Fotos do r/EarthPorn; sem rede (ou antes de chegarem) vê-se o fundo "Lago" desenhado. */
-        val DEFAULT = Wallpaper(TYPE_REDDIT, "EarthPorn")
+        /** A imagem do dia do Wikimedia Commons; sem rede (ou antes de chegar) vê-se o fundo "Lago" desenhado. */
+        val DEFAULT = Wallpaper(TYPE_WIKIMEDIA, WikimediaFeed.ID)
     }
 }
 

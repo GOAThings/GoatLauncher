@@ -97,8 +97,10 @@ class PhotoPool(private val context: Context, prefsName: String, private val fee
 
     private fun images(sub: String, allowFetch: Boolean = true): List<OnlinePhoto> {
         val cached = readList(prefs.getString(key(sub, "list"), null))
+        // Depois de uma falha, fetched_at fica a RETRY_MS do pedido seguinte, também sem lista: antes, uma fonte
+        // que falhava sem lista guardada era pedida de novo a cada tentativa de escolher uma foto (até 10 seguidas).
         val fetchedAt = prefs.getLong(key(sub, "fetched_at"), 0)
-        if (cached.isNotEmpty() && System.currentTimeMillis() - fetchedAt < feed.refreshMs) return cached
+        if (System.currentTimeMillis() - fetchedAt < feed.refreshMs) return cached
         if (!allowFetch || !online()) return cached
         val fresh = runCatching { feed.fetch(sub) }
             .onFailure { Log.w(TAG, "${feed.name} $sub: ${it.message}") }
