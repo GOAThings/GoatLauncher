@@ -44,6 +44,7 @@ import cc.slokker.goatlauncher.ui.common.requestFocusSafely
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+
 /** Nome da app no launcher (ex.: "YouTube" em vez de "TizenTube"). Guardar vazio repõe o nome da app. */
 @Composable
 internal fun RenameDialog(app: LauncherApp, custom: Boolean, onSave: (String?) -> Unit, onDismiss: () -> Unit) {

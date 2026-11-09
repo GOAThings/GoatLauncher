@@ -56,6 +56,7 @@ import cc.slokker.goatlauncher.data.AccountSettings
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.Brush
 import androidx.tv.material3.Icon
+
 private val BannerShape = GoatShapes.Control
 
 /** Um favorito ou uma app da grelha: o banner e, por baixo, o nome (mais claro com foco). */

@@ -33,6 +33,7 @@ import cc.slokker.goatlauncher.ui.common.GlassRow
 import cc.slokker.goatlauncher.ui.common.SectionLabel
 import cc.slokker.goatlauncher.ui.common.TvTextField
 import cc.slokker.goatlauncher.ui.theme.GoatColors
+
 /** O estado do último relatório, ou o que o botão faz. */
 internal fun reportStatus(state: ReportState, s: Strings): String = when (state) {
     ReportState.Idle -> s.sendReportSub

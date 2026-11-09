@@ -68,6 +68,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import cc.slokker.goatlauncher.HomeGuardService
 import cc.slokker.goatlauncher.data.after
 import cc.slokker.goatlauncher.ui.common.Toggle
+
 /** Desvanece [EdgeFade] em cima e em baixo do conteúdo (as listas que passam por baixo do título e do rodapé). */
 internal fun Modifier.fadeEdges(): Modifier =
     graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {

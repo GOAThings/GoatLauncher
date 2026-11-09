@@ -109,6 +109,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.abs
+
 /** Apps no Início (as primeiras da ordem guardada); as restantes estão no separador Apps. */
 const val FavoriteCount = 5
 

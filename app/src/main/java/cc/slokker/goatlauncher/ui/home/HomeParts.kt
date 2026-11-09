@@ -62,6 +62,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import java.util.Calendar
 import kotlin.math.abs
 import cc.slokker.goatlauncher.ui.theme.tabular
+
 private val CardShape = GoatShapes.Control
 
 // ---- Relógio ----

@@ -72,6 +72,7 @@ import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
 import androidx.compose.foundation.BorderStroke
 import java.io.File
+
 private sealed interface PickerPage {
     data object Sources : PickerPage
     data class Pack(val pack: IconPack) : PickerPage

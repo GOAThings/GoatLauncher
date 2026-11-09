@@ -67,6 +67,7 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.layout.BoxWithConstraints
+
 private val SafeH = 48.dp
 
 /**

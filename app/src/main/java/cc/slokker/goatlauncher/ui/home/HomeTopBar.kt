@@ -71,6 +71,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+
 /**
  * À esquerda a saudação, a data e o tempo; ao centro os separadores (Início, Apps, Definições: mudam ao passar
  * o foco, como no tvOS); à direita o estado da rede e as horas.

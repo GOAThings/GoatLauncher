@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import cc.slokker.goatlauncher.data.AccountSettings
 import kotlin.math.roundToInt
+
 /**
  * O modo ambiente (e o protetor de ecrã): [AccountSettings.AMBIENT_PHOTOS] mostra o fundo com as horas, a data,
  * o tempo, o canal que estava a dar ([nowPlaying]), o título da foto ([caption]) e o autor ([credit]); [AccountSettings.AMBIENT_BOUNCE]

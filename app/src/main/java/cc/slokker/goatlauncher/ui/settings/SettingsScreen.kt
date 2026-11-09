@@ -54,6 +54,7 @@ import cc.slokker.goatlauncher.ui.common.onBackKey
 import cc.slokker.goatlauncher.ui.home.rememberWallpaperBlur
 import cc.slokker.goatlauncher.ui.common.frostedGlass
 import cc.slokker.goatlauncher.ui.theme.GoatColors
+
 /**
  * Definições do launcher, no seu separador do ecrã inicial: um painel de vidro à direita, por cima do fundo. Voltar sobe
  * um nível; na página principal faz [onExit]. As páginas estão em Page; as linhas da maioria, em SettingsCatalog.
