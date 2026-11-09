@@ -143,7 +143,7 @@ fun TopClock(clock24h: Boolean, modifier: Modifier = Modifier) {
 
 /**
  * O modo ambiente (e o protetor de ecrã): [AccountSettings.AMBIENT_PHOTOS] mostra o fundo com as horas, a data,
- * o tempo, o canal que estava a dar ([nowPlaying]) e o título da foto ([caption]); [AccountSettings.AMBIENT_BOUNCE]
+ * o tempo, o canal que estava a dar ([nowPlaying]), o título da foto ([caption]) e o autor ([credit]); [AccountSettings.AMBIENT_BOUNCE]
  * é um ecrã preto com o logótipo DVD a andar e a bater nas bordas, como nos leitores de DVD de antigamente.
  */
 @Composable
@@ -154,6 +154,7 @@ fun AmbientScene(
     nowPlaying: String?,
     caption: String?,
     modifier: Modifier = Modifier,
+    credit: String? = null,
 ) {
     if (style == AccountSettings.AMBIENT_BOUNCE) {
         BouncingDvd(modifier)
@@ -173,17 +174,18 @@ fun AmbientScene(
         contentAlignment = alignment,
     ) {
         val end = alignment == Alignment.BottomEnd
-        AmbientBlock(clock24h, weather, nowPlaying, caption, if (end) Alignment.End else Alignment.Start, now)
+        AmbientBlock(clock24h, weather, nowPlaying, caption, credit, if (end) Alignment.End else Alignment.Start, now)
     }
 }
 
-/** As horas em grande e, por baixo, a data com o tempo, o canal a dar e o título da foto. */
+/** As horas em grande e, por baixo, a data com o tempo, o canal a dar, o título da foto e o crédito. */
 @Composable
 private fun AmbientBlock(
     clock24h: Boolean,
     weather: WeatherNow?,
     nowPlaying: String?,
     caption: String?,
+    credit: String?,
     align: Alignment.Horizontal,
     now: Long,
     color: Color = Color.White,
@@ -215,6 +217,11 @@ private fun AmbientBlock(
         if (caption != null) {
             Spacer(Modifier.height(6.dp))
             Text(caption, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        // O autor e a licença (Wikimedia) ou o crédito (NASA): muitas fotos pedem atribuição, por isso numa linha só sua.
+        if (credit != null) {
+            Spacer(Modifier.height(2.dp))
+            Text(s.photoCredit(credit), style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

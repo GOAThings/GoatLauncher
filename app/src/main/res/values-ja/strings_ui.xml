@@ -72,6 +72,10 @@
     <string name="reddit">Reddit</string>
     <string name="reddit_hint">今週の人気写真。30分ごとに切り替わります</string>
     <string name="other_subreddit">別のサブレディット</string>
+    <string name="photos_of_the_day">今日の写真</string>
+    <string name="wikimedia_hint">自然・風景・アート。作者とライセンス付き</string>
+    <string name="nasa_hint">今日の天文写真</string>
+    <string name="photo_credit">クレジット: %1$s</string>
     <string name="use">使用</string>
     <string name="clock24h">24時間表示</string>
     <string name="greeting">あいさつ</string>

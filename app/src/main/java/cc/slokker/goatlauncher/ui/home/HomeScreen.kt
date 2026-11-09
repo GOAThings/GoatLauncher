@@ -998,7 +998,9 @@ fun HomeScreen(vm: LauncherViewModel) {
                     clock24h = account.clock24h,
                     weather = weather?.takeIf { account.showWeather },
                     nowPlaying = nowPlaying(watchNext),
-                    caption = photo?.title?.let(::cleanRedditTitle),
+                    // O Reddit põe etiquetas no título ("[OC]"); as outras fontes trazem o crédito e um título limpo.
+                    caption = photo?.let { if (it.credit == null) cleanRedditTitle(it.title) else it.title }?.ifBlank { null },
+                    credit = photo?.credit,
                 )
             }
         }

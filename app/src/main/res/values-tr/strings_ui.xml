@@ -72,6 +72,10 @@
     <string name="reddit">Reddit</string>
     <string name="reddit_hint">Haftanın en iyi fotoğrafları; 30 dakikada bir değişir</string>
     <string name="other_subreddit">Başka subreddit</string>
+    <string name="photos_of_the_day">Günün fotoğrafı</string>
+    <string name="wikimedia_hint">Doğa, yerler ve sanat; yazar ve lisans bilgisiyle</string>
+    <string name="nasa_hint">Günün astronomi fotoğrafı</string>
+    <string name="photo_credit">Kaynak: %1$s</string>
     <string name="use">Kullan</string>
     <string name="clock24h">24 saat biçimi</string>
     <string name="greeting">Karşılama</string>

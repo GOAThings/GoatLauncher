@@ -25,6 +25,7 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.ImageImport
+import cc.slokker.goatlauncher.data.OnlinePhoto
 import cc.slokker.goatlauncher.data.SunTimes
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.ui.LocalStrings
@@ -93,11 +94,13 @@ private fun DreamContent(c: AppContainer) {
     val account by c.settings.account.collectAsState()
     val context = LocalContext.current
     val strings = remember { Strings(context) }
-    // A imagem do fundo que roda (Reddit ou pasta): a que o ecrã inicial mostrou por último, ou uma da pasta.
-    val rotating by produceState<Any?>(null, account.wallpaper) {
+    // A foto online que o ecrã inicial mostrou por último (com o crédito, quando a fonte o dá).
+    val photo by produceState<OnlinePhoto?>(null, account.wallpaper) { value = c.wallpapers.lastShown(account.wallpaper) }
+    // A imagem do fundo que roda (fotos online ou pasta): a foto acima, ou uma da pasta.
+    val rotating by produceState<Any?>(null, account.wallpaper, photo) {
         value = when (account.wallpaper.type) {
             Wallpaper.TYPE_FOLDER -> ImageImport.images(File(account.wallpaper.value)).randomOrNull()
-            else -> c.wallpapers.lastShown(account.wallpaper)?.url
+            else -> photo?.url
         }
     }
     val watchNext by produceState(emptyMap(), Unit) { value = runCatching { c.watchNext.load() }.getOrNull().orEmpty() }
@@ -123,7 +126,9 @@ private fun DreamContent(c: AppContainer) {
                 clock24h = account.clock24h,
                 weather = c.weather.cached().takeIf { account.showWeather },
                 nowPlaying = nowPlaying(watchNext),
-                caption = null,
+                // Só com crédito (Wikimedia, NASA): a atribuição tem de aparecer onde a foto aparece.
+                caption = photo?.takeIf { it.credit != null }?.title?.ifBlank { null },
+                credit = photo?.credit,
             )
         }
     }

@@ -72,6 +72,10 @@
     <string name="reddit">Reddit</string>
     <string name="reddit_hint">Foto teratas minggu ini; berganti setiap 30 menit</string>
     <string name="other_subreddit">Subreddit lain</string>
+    <string name="photos_of_the_day">Foto hari ini</string>
+    <string name="wikimedia_hint">Alam, tempat, dan seni, dengan pembuat dan lisensi</string>
+    <string name="nasa_hint">Gambar astronomi hari ini</string>
+    <string name="photo_credit">Kredit: %1$s</string>
     <string name="use">Gunakan</string>
     <string name="clock24h">Jam 24 jam</string>
     <string name="greeting">Sapaan</string>

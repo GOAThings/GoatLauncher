@@ -7,7 +7,8 @@ import com.google.gson.JsonObject
 /*
  * Formato das definições guardadas na conta (o backend guarda o JSON tal como o recebe):
  *
- *   "account": { "wallpaper": {"type": "builtin" | "file" | "url" | "reddit", "value": "lake" | "wall-123.jpg" | "https://…" | "EarthPorn"},
+ *   "account": { "wallpaper": {"type": "builtin" | "file" | "url" | "folder" | "reddit" | "wikimedia" | "nasa",
+ *                              "value": "lake" | "wall-123.jpg" | "https://…" | "/storage/…" | "EarthPorn" | "potd" | "apod"},
  *                "clock_24h": true, "show_greeting": true, "show_continue_watching": true, "show_app_name": true,
  *                "layout": "android" | "appletv",
  *                "continue_style": "row" | "shelf" | "spotlight" | "column" | "carousel", "show_weather": true,
@@ -31,6 +32,9 @@ import com.google.gson.JsonObject
  */
 
 data class Wallpaper(val type: String, val value: String) {
+    /** Fotos de uma fonte online, uma de cada vez (ver OnlineWallpapers). */
+    val isOnlinePhotos: Boolean get() = type == TYPE_REDDIT || type == TYPE_WIKIMEDIA || type == TYPE_NASA
+
     companion object {
         const val TYPE_BUILTIN = "builtin"
         const val TYPE_URL = "url"
@@ -46,6 +50,13 @@ data class Wallpaper(val type: String, val value: String) {
 
         /** Imagens de um subreddit, a mudar de tempos a tempos (ver RedditFeed). [value] é o subreddit. */
         const val TYPE_REDDIT = "reddit"
+
+        /** A imagem do dia do Wikimedia Commons (ver WikimediaFeed); [value] é sempre "potd". */
+        const val TYPE_WIKIMEDIA = "wikimedia"
+
+        /** A Astronomy Picture of the Day da NASA (ver ApodFeed); [value] é sempre "apod". */
+        const val TYPE_NASA = "nasa"
+
         /** Fotos do r/EarthPorn; sem rede (ou antes de chegarem) vê-se o fundo "Lago" desenhado. */
         val DEFAULT = Wallpaper(TYPE_REDDIT, "EarthPorn")
     }
@@ -87,7 +98,7 @@ data class AccountSettings(
     val continueStyle: String = STYLE_ROW,
     /** O tempo (ícone e temperatura) ao lado da saudação, em cima à direita. */
     val showWeather: Boolean = true,
-    /** Fundo do Reddit: fotos mais estreitas do que isto (px) ficam de fora; 0 = todas. */
+    /** Fundos de fotos online (Reddit, Wikimedia, NASA): fotos mais estreitas do que isto (px) ficam de fora; 0 = todas. */
     val redditMinWidth: Int = 1920,
     /** Modo ambiente: minutos sem tocar no comando até o ecrã inicial ficar só com o fundo e as horas; 0 = desligado. */
     val idleMinutes: Int = 0,

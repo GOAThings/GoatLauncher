@@ -72,6 +72,10 @@
     <string name="reddit">Reddit</string>
     <string name="reddit_hint">Mejores fotos de la semana; cambia cada 30 minutos</string>
     <string name="other_subreddit">Otro subreddit</string>
+    <string name="photos_of_the_day">Foto del día</string>
+    <string name="wikimedia_hint">Naturaleza, lugares y arte, con autor y licencia</string>
+    <string name="nasa_hint">La imagen astronómica del día</string>
+    <string name="photo_credit">Crédito: %1$s</string>
     <string name="use">Usar</string>
     <string name="clock24h">Reloj de 24 horas</string>
     <string name="greeting">Saludo</string>

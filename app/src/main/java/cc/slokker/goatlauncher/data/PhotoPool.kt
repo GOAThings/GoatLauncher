@@ -26,6 +26,31 @@ interface PhotoFeed {
     fun fetch(id: String): List<OnlinePhoto>
 }
 
+/** A fonte respondeu com o código HTTP [code] (ver [PhotoPool]). */
+class FeedHttpException(val code: Int) : Exception("HTTP $code")
+
+/** Texto simples a partir do HTML que as fontes põem nos créditos e descrições: sem etiquetas nem entidades. */
+internal fun plainText(html: String): String = html
+    .replace(Regex("""<br\s*/?>|</(?:p|div|li)>""", RegexOption.IGNORE_CASE), " ")
+    .replace(Regex("<[^>]*>"), "")
+    .replace(Regex("""&#(\d+);""")) { m -> m.groupValues[1].toIntOrNull()?.let { String(Character.toChars(it)) } ?: "" }
+    .replace(Regex("""&#x([0-9a-fA-F]+);""")) { m -> m.groupValues[1].toIntOrNull(16)?.let { String(Character.toChars(it)) } ?: "" }
+    .replace("&nbsp;", " ").replace("&quot;", "\"").replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">")
+    .replace("&amp;", "&")
+    .replace(' ', ' ')
+    .replace(Regex("""\s+"""), " ")
+    // As ligações deixam espaços antes da pontuação ("Orion , Spain", "( Ardea herodias )").
+    .replace(Regex("""\s+([,.;:)])"""), "$1")
+    .replace(Regex("""\(\s+"""), "(")
+    .trim()
+
+/** [text] com no máximo [max] caracteres, cortado numa palavra e com "…". */
+internal fun shorten(text: String, max: Int): String {
+    if (text.length <= max) return text
+    val cut = text.take(max).substringBeforeLast(' ').ifBlank { text.take(max) }
+    return cut.trimEnd(',', ';', ':', ' ', '-', '·') + "…"
+}
+
 /**
  * Fotos para o fundo a partir de uma fonte online ([feed]), uma de cada vez: a mesma até passar o intervalo, depois
  * outra ao acaso. A lista fica guardada em [prefsName] e só se volta a pedir a cada [PhotoFeed.refreshMs] (o fundo

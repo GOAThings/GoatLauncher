@@ -1,0 +1,973 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:apod="https://science.nasa.gov/apod/">
+<channel>
+	<title>APOD Basic</title>
+	<description>APOD Basic markup feed.</description>
+	<link>https://science.nasa.gov/</link>
+	<atom:link href="https://science.nasa.gov/feed/apod-basic/" rel="self" type="application/rss+xml" />
+	<language>en-us</language>
+	<item>
+		<title>Rigel and the Witch Head Nebula</title>
+		<link>https://science.nasa.gov/image-article/apod-2026-november-9-rigel-and-the-witch-head-nebula/</link>
+		<guid isPermaLink="true">https://science.nasa.gov/image-article/apod-2026-november-9-rigel-and-the-witch-head-nebula/</guid>
+		<pubDate>Mon, 09 Nov 2026 05:05:00 +0000</pubDate>
+		<apod:url>https://science.nasa.gov/image-article/apod-2026-november-9-rigel-and-the-witch-head-nebula/</apod:url>
+		<apod:hdurl>https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg?w=3000&#038;h=1990&#038;fit=clip&#038;crop=faces%2Cfocalpoint</apod:hdurl>
+		<apod:discussion>https://asterisk.apod.com/discuss_apod.php?date=261109</apod:discussion>
+		<apod:credit><![CDATA[<a href="https://app.astrobin.com/u/PiotrC">Piotr Czerski</a>]]></apod:credit>
+		<apod:copyright><![CDATA[<a href="https://app.astrobin.com/u/PiotrC">Piotr Czerski</a>]]></apod:copyright>
+		<apod:alt>A starfield filled with red glowing gas is seen surroinging a bright blue star near the center. To the upper right of the star is an unusually shaped blue-tinted nebula.</apod:alt>
+		<apod:primary_image_alt>A starfield filled with red glowing gas is seen surroinging a bright blue star near the center. To the upper right of the star is an unusually shaped blue-tinted nebula.</apod:primary_image_alt>
+		<apod:explanation><![CDATA[<strong>Explanation:</strong> Does the blue nebula look like the head of a witch? The nebula is <a href="https://earthsky.org/todays-image/witch-head-nebula-orion/">known popularly</a> as the Witch Head Nebula because, it is said, the nebula's shape resembles a <a href="https://en.wikipedia.org/wiki/Halloween#/media/File:Halloween_Witch_2011.JPG">Halloween-style caricature</a> of a witch's head. Exactly how, though, can be a topic of <a href="https://unsplash.com/photos/a-cat-wearing-glasses-and-a-jacket-on-a-rug-nzfEUQrZZGc">imaginative speculation</a>. What is clear is that <a href="https://en.wikipedia.org/wiki/IC_2118">IC 2118</a> is about 50 <a href="https://spaceplace.nasa.gov/light-year/">light-years</a> across and made of gas and dust that points to -- because it has been partly eroded by -- the nearby star <a href="https://en.wikipedia.org/wiki/Rigel">Rigel</a>. One of the brighter stars in the constellation Orion, <a href="https://science.nasa.gov/image-article/apod-2023-april-7-rigel-wide/">Rigel</a> lies just below the center of the <a href="https://app.astrobin.com/u/PiotrC?i=ttmxgn">featured image</a>. The blue color of the Witch Head Nebula and is caused not only by <a href="https://science.nasa.gov/image-article/apod-2026-may-8-comet-r3-panstarrs-before-rigel/">Rigel's intense blue starlight</a> but also because the <a href="https://curator.jsc.nasa.gov/dust/">dust grains</a> scatter blue light more efficiently than red. The same <a href="http://hyperphysics.phy-astr.gsu.edu/hbase/atmos/blusky.html">physical process</a> causes Earth's daytime <a href="https://spaceplace.nasa.gov/blue-sky/en/">sky to appear blue</a>, although the scatterers in planet <a href="https://science.nasa.gov/earth/earth-atmosphere/earths-atmosphere-a-multi-layered-cake/">Earth's atmosphere</a> are molecules of <a href="https://www.nasa.gov/solar-system/nasas-curiosity-rover-finds-biologically-useful-nitrogen-on-mars/">nitrogen</a> and <a href="https://astrobiology.nasa.gov/news/lightning-oxygen-and-life-detection/">oxygen</a>.<br><br><strong>Tomorrow's picture:</strong> suddenly Saturn]]></apod:explanation>
+		<description><![CDATA[<strong>Explanation:</strong> Does the blue nebula look like the head of a witch? The nebula is <a href="https://earthsky.org/todays-image/witch-head-nebula-orion/">known popularly</a> as the Witch Head Nebula because, it is said, the nebula's shape resembles a <a href="https://en.wikipedia.org/wiki/Halloween#/media/File:Halloween_Witch_2011.JPG">Halloween-style caricature</a> of a witch's head. Exactly how, though, can be a topic of <a href="https://unsplash.com/photos/a-cat-wearing-glasses-and-a-jacket-on-a-rug-nzfEUQrZZGc">imaginative speculation</a>. What is clear is that <a href="https://en.wikipedia.org/wiki/IC_2118">IC 2118</a> is about 50 <a href="https://spaceplace.nasa.gov/light-year/">light-years</a> across and made of gas and dust that points to -- because it has been partly eroded by -- the nearby star <a href="https://en.wikipedia.org/wiki/Rigel">Rigel</a>. One of the brighter stars in the constellation Orion, <a href="https://science.nasa.gov/image-article/apod-2023-april-7-rigel-wide/">Rigel</a> lies just below the center of the <a href="https://app.astrobin.com/u/PiotrC?i=ttmxgn">featured image</a>. The blue color of the Witch Head Nebula and is caused not only by <a href="https://science.nasa.gov/image-article/apod-2026-may-8-comet-r3-panstarrs-before-rigel/">Rigel's intense blue starlight</a> but also because the <a href="https://curator.jsc.nasa.gov/dust/">dust grains</a> scatter blue light more efficiently than red. The same <a href="http://hyperphysics.phy-astr.gsu.edu/hbase/atmos/blusky.html">physical process</a> causes Earth's daytime <a href="https://spaceplace.nasa.gov/blue-sky/en/">sky to appear blue</a>, although the scatterers in planet <a href="https://science.nasa.gov/earth/earth-atmosphere/earths-atmosphere-a-multi-layered-cake/">Earth's atmosphere</a> are molecules of <a href="https://www.nasa.gov/solar-system/nasas-curiosity-rover-finds-biologically-useful-nitrogen-on-mars/">nitrogen</a> and <a href="https://astrobiology.nasa.gov/news/lightning-oxygen-and-life-detection/">oxygen</a>.<br><br><strong>Tomorrow's picture:</strong> suddenly Saturn]]></description>
+		<content:encoded><![CDATA[<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> APOD: 2026 November 9 - Rigel and the Witch Head Nebula</title>
+<link rel="canonical" href="https://science.nasa.gov/image-article/apod-2026-november-9-rigel-and-the-witch-head-nebula/">
+<!-- gsfc meta tags -->
+<meta name="orgcode" content="661">
+<meta name="rno" content="Dana Bolles">
+<meta name="content-owner" content="Robert Nemiroff">
+<meta name="webmaster" content="Stephen.F.Fantasia.1">
+<meta name="description" content="Explanation: Does the blue nebula look like the head of a witch? The nebula is known popularly as the Witch Head Nebula because, it is said, the nebula&#039;s shape resembles a Halloween-style caricature of a witch&#039;s head. Exactly how, though, can be a topic of imaginative speculation. What is clear is that IC 2118 is about 50 light-years across and made of gas and dust that points to -- because it has been partly eroded by -- the nearby star Rigel. One of the brighter stars in the constellation Orion, Rigel lies just below the center of the featured image. The blue color of the Witch Head Nebula and is caused not only by Rigel&#039;s intense blue starlight but also because the dust grains scatter blue light more efficiently than red. The same physical process causes Earth&#039;s daytime sky to appear blue, although the scatterers in planet Earth&#039;s atmosphere are molecules of nitrogen and oxygen.Tomorrow&#039;s picture: suddenly Saturn">
+<!-- -->
+<meta name="keywords" content="rigel and the witch head nebula">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rigel and the Witch Head Nebula">
+<meta property="og:url" content="https://science.nasa.gov/image-article/apod-2026-november-9-rigel-and-the-witch-head-nebula/">
+<meta property="og:site_name" content="NASA Science">
+<meta property="og:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg?w=3000&#038;h=1990&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:secure_url" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg?w=3000&#038;h=1990&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:alt" content="A starfield filled with red glowing gas is seen surroinging a bright blue star near the center. To the upper right of the star is an unusually shaped blue-tinted nebula.">
+<meta property="article:published_time" content="2026-11-09T00:05:00-05:00">
+<meta property="article:modified_time" content="2026-11-04T10:32:17-05:00">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rigel and the Witch Head Nebula">
+<meta name="twitter:site" content="@NASA">
+<meta name="twitter:creator" content="@NASA">
+<meta name="twitter:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg?w=3000&#038;h=1990&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+</head>
+<body BGCOLOR="#F4F4FF" text="#000000" link="#0000FF" vlink="#7F0F9F"
+alink="#FF0000">
+
+<center>
+<h1> Astronomy Picture of the Day </h1>
+<p>
+
+<a href="https://science.nasa.gov/apod/archive/">Discover the cosmos!</a>
+Each day a different image or photograph of our fascinating universe is
+featured, along with a brief explanation written by a professional astronomer.
+<p>
+
+2026 November 9<br>
+
+<a href="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg">
+<IMG SRC="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/WitchHead_Czerski_3000.jpg" alt="A starfield filled with red glowing gas is seen surroinging a bright blue star near the center. To the upper right of the star is an unusually shaped blue-tinted nebula."></a>
+</center>
+
+<center>
+<b> Rigel and the Witch Head Nebula </b> <br>
+
+<b>Image Credit &
+<a href="https://science.nasa.gov/apod/about-apod/">Copyright</a>:</b>
+
+<a href="https://app.astrobin.com/u/PiotrC">Piotr Czerski</a>
+</center>
+
+<p>
+
+<b> Explanation: </b>
+
+<strong>Explanation:</strong> Does the blue nebula look like the head of a witch? The nebula is <a href="https://earthsky.org/todays-image/witch-head-nebula-orion/">known popularly</a> as the Witch Head Nebula because, it is said, the nebula's shape resembles a <a href="https://en.wikipedia.org/wiki/Halloween#/media/File:Halloween_Witch_2011.JPG">Halloween-style caricature</a> of a witch's head. Exactly how, though, can be a topic of <a href="https://unsplash.com/photos/a-cat-wearing-glasses-and-a-jacket-on-a-rug-nzfEUQrZZGc">imaginative speculation</a>. What is clear is that <a href="https://en.wikipedia.org/wiki/IC_2118">IC 2118</a> is about 50 <a href="https://spaceplace.nasa.gov/light-year/">light-years</a> across and made of gas and dust that points to -- because it has been partly eroded by -- the nearby star <a href="https://en.wikipedia.org/wiki/Rigel">Rigel</a>. One of the brighter stars in the constellation Orion, <a href="https://science.nasa.gov/image-article/apod-2023-april-7-rigel-wide/">Rigel</a> lies just below the center of the <a href="https://app.astrobin.com/u/PiotrC?i=ttmxgn">featured image</a>. The blue color of the Witch Head Nebula and is caused not only by <a href="https://science.nasa.gov/image-article/apod-2026-may-8-comet-r3-panstarrs-before-rigel/">Rigel's intense blue starlight</a> but also because the <a href="https://curator.jsc.nasa.gov/dust/">dust grains</a> scatter blue light more efficiently than red. The same <a href="http://hyperphysics.phy-astr.gsu.edu/hbase/atmos/blusky.html">physical process</a> causes Earth's daytime <a href="https://spaceplace.nasa.gov/blue-sky/en/">sky to appear blue</a>, although the scatterers in planet <a href="https://science.nasa.gov/earth/earth-atmosphere/earths-atmosphere-a-multi-layered-cake/">Earth's atmosphere</a> are molecules of <a href="https://www.nasa.gov/solar-system/nasas-curiosity-rover-finds-biologically-useful-nitrogen-on-mars/">nitrogen</a> and <a href="https://astrobiology.nasa.gov/news/lightning-oxygen-and-life-detection/">oxygen</a>.<br><br><strong>Tomorrow's picture:</strong> suddenly Saturn
+<p> <center>
+
+
+<p> <hr>
+<a href="https://science.nasa.gov/image-article/apod-2026-november-8-major-fireball-meteor/">&lt;</a>
+| <a href="https://science.nasa.gov/apod/archive/">Archive</a>
+| <a href="https://science.nasa.gov/apod/archive/">Index</a>
+| <a href="https://science.nasa.gov/apod/archive/">Search</a>
+| <a href="https://science.nasa.gov/apod/calendar/">Calendar</a>
+| <a href="/feed/apod-basic/">RSS</a>
+| <a href="https://science.nasa.gov/apod/education-links/">Education</a>
+| <a href="https://science.nasa.gov/apod/about-apod/">About APOD</a>
+| <a href="https://asterisk.apod.com/discuss_apod.php?date=261109">Discuss</a>
+| &gt;
+
+<hr><p>
+<b> Authors & editors: </b>
+Robert Nemiroff, Jerry Bonnell, Cecilia Chirenti, Keighley Rockcliffe<br>
+<b>NASA Official: </b> Dana Bolles<a href="https://science.nasa.gov/apod/about-apod/">Specific rights apply</a>.<br>
+<a href="http://www.nasa.gov/about/highlights/HP_Privacy.html">NASA Web
+Privacy Policy and Important Notices</a><br>
+<b>A service of:</b>
+<a href="http://astrophysics.gsfc.nasa.gov/">ASD</a> at
+<a href="http://www.nasa.gov/">NASA</a> /
+<a href="http://www.nasa.gov/centers/goddard/">GSFC</a>
+<br><b>&</b> <a href="http://www.mtu.edu/">Michigan Tech. U.</a><br>
+</center>
+</body>
+</html>]]></content:encoded>
+	</item>
+	<item>
+		<title>Major Fireball Meteor</title>
+		<link>https://science.nasa.gov/image-article/apod-2026-november-8-major-fireball-meteor/</link>
+		<guid isPermaLink="true">https://science.nasa.gov/image-article/apod-2026-november-8-major-fireball-meteor/</guid>
+		<pubDate>Sun, 08 Nov 2026 05:05:00 +0000</pubDate>
+		<apod:url>https://science.nasa.gov/image-article/apod-2026-november-8-major-fireball-meteor/</apod:url>
+		<apod:hdurl>https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg?w=0&#038;h=0&#038;fit=clip&#038;crop=faces%2Cfocalpoint</apod:hdurl>
+		<apod:discussion>https://asterisk.apod.com/discuss_apod.php?date=261108</apod:discussion>
+		<apod:credit><![CDATA[<a href="https://www.instagram.com/olliemtaylor/">Ollie Taylor</a>]]></apod:credit>
+		<apod:copyright><![CDATA[<a href="https://www.instagram.com/olliemtaylor/">Ollie Taylor</a>]]></apod:copyright>
+		<apod:alt>A mountainous landscape with snow and trees is seen  below a starry sky. A pink band is visible on the horizon.  Coming down from the sky is a bright meteor trail. Just above the meteor are the stars of the Big Dipper.  Please see the explanation for more detailed information.</apod:alt>
+		<apod:primary_image_alt>A mountainous landscape with snow and trees is seen  below a starry sky. A pink band is visible on the horizon.  Coming down from the sky is a bright meteor trail. Just above the meteor are the stars of the Big Dipper.  Please see the explanation for more detailed information.</apod:primary_image_alt>
+		<apod:explanation><![CDATA[<strong>Explanation:</strong> <a href="https://science.nasa.gov/image-article/apod-2010-july-22-the-meteor-of-1860/">The sky glows</a> with soft pinkish colors of fading twilight in this serendipitous mountaintop vista. Taken in subfreezing temperatures, the <a href="https://www.esa.int/ESA_Multimedia/Images/2017/11/Autumn_fireball">thoughtfully composed photo</a> shows snowy, rugged peaks seen from a mountain pass on 2017 November 14. Below lies the village of <a href="https://youtu.be/bVNV2-wma5E">La Villa, Alta Badia</a> in <a href="https://en.wikipedia.org/wiki/Italy">Italy</a>'s <a href="https://science.nasa.gov/image-article/apod-2024-november-6-comet-tsuchinshan-atlas-over-the-dolomites/">Dolomite Alps</a>. Above the nestled village lights, the <a href="https://science.nasa.gov/asset/hubble/constellation-ursa-major/">constellation Ursa Major</a> hangs over the northern horizon. But most <a href="https://unsplash.com/photos/white-and-gray-long-fur-cat-AGehl6k8xVo">stunning</a> is the intense <a href="https://cneos.jpl.nasa.gov/fireballs/intro.html">fireball</a> meteor. It was <a href="https://www.esa.int/ESA_Multimedia/Images/2017/11/Autumn_fireball">captured</a> during the camera's exposure by chance as it flashed east to west across the northern horizon, under Ursa Major's familiar <a href="https://science.nasa.gov/image-article/apod-2013-april-21-the-big-dipper/">Big Dipper</a> <a href="https://science.nasa.gov/solar-system/what-are-asterisms/">asterism</a>. Sightings of <a href="https://www.amsmeteors.org/2017/11/four-major-fireballs-within-ten-hours/">this major fireball meteor</a> were widely reported in European skies, making it one of the most reported fireball events ever for planet Earth's <a href="https://www.amsmeteors.org/">American Meteor Society</a> and the <a href="https://www.imo.net/">International Meteor Organization</a>. The meteor's measured track over <a href="https://en.wikipedia.org/wiki/Germany">Germany</a> is consistent with its origin near the active <a href="https://science.nasa.gov/image-article/apod-2025-august-12-perseids-from-perseus/">radiant</a> of November's Northern <a href="https://science.nasa.gov/image-article/apod-2025-august-12-perseids-from-perseus/">Taurid Meteor Shower</a>, a shower associated with dust from <a href="https://science.nasa.gov/image-article/apod-2003-december-23-comet-encke-returns/">Encke's comet</a>.<br><br><strong>Tomorrow's picture:</strong> witch sky?]]></apod:explanation>
+		<description><![CDATA[<strong>Explanation:</strong> <a href="https://science.nasa.gov/image-article/apod-2010-july-22-the-meteor-of-1860/">The sky glows</a> with soft pinkish colors of fading twilight in this serendipitous mountaintop vista. Taken in subfreezing temperatures, the <a href="https://www.esa.int/ESA_Multimedia/Images/2017/11/Autumn_fireball">thoughtfully composed photo</a> shows snowy, rugged peaks seen from a mountain pass on 2017 November 14. Below lies the village of <a href="https://youtu.be/bVNV2-wma5E">La Villa, Alta Badia</a> in <a href="https://en.wikipedia.org/wiki/Italy">Italy</a>'s <a href="https://science.nasa.gov/image-article/apod-2024-november-6-comet-tsuchinshan-atlas-over-the-dolomites/">Dolomite Alps</a>. Above the nestled village lights, the <a href="https://science.nasa.gov/asset/hubble/constellation-ursa-major/">constellation Ursa Major</a> hangs over the northern horizon. But most <a href="https://unsplash.com/photos/white-and-gray-long-fur-cat-AGehl6k8xVo">stunning</a> is the intense <a href="https://cneos.jpl.nasa.gov/fireballs/intro.html">fireball</a> meteor. It was <a href="https://www.esa.int/ESA_Multimedia/Images/2017/11/Autumn_fireball">captured</a> during the camera's exposure by chance as it flashed east to west across the northern horizon, under Ursa Major's familiar <a href="https://science.nasa.gov/image-article/apod-2013-april-21-the-big-dipper/">Big Dipper</a> <a href="https://science.nasa.gov/solar-system/what-are-asterisms/">asterism</a>. Sightings of <a href="https://www.amsmeteors.org/2017/11/four-major-fireballs-within-ten-hours/">this major fireball meteor</a> were widely reported in European skies, making it one of the most reported fireball events ever for planet Earth's <a href="https://www.amsmeteors.org/">American Meteor Society</a> and the <a href="https://www.imo.net/">International Meteor Organization</a>. The meteor's measured track over <a href="https://en.wikipedia.org/wiki/Germany">Germany</a> is consistent with its origin near the active <a href="https://science.nasa.gov/image-article/apod-2025-august-12-perseids-from-perseus/">radiant</a> of November's Northern <a href="https://science.nasa.gov/image-article/apod-2025-august-12-perseids-from-perseus/">Taurid Meteor Shower</a>, a shower associated with dust from <a href="https://science.nasa.gov/image-article/apod-2003-december-23-comet-encke-returns/">Encke's comet</a>.<br><br><strong>Tomorrow's picture:</strong> witch sky?]]></description>
+		<content:encoded><![CDATA[<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> APOD: 2026 November 8 - Major Fireball Meteor</title>
+<link rel="canonical" href="https://science.nasa.gov/image-article/apod-2026-november-8-major-fireball-meteor/">
+<!-- gsfc meta tags -->
+<meta name="orgcode" content="661">
+<meta name="rno" content="Dana Bolles">
+<meta name="content-owner" content="Robert Nemiroff">
+<meta name="webmaster" content="Stephen.F.Fantasia.1">
+<meta name="description" content="Explanation: The sky glows with soft pinkish colors of fading twilight in this serendipitous mountaintop vista. Taken in subfreezing temperatures, the thoughtfully composed photo shows snowy, rugged peaks seen from a mountain pass on 2017 November 14. Below lies the village of La Villa, Alta Badia in Italy&#039;s Dolomite Alps. Above the nestled village lights, the constellation Ursa Major hangs over the northern horizon. But most stunning is the intense fireball meteor. It was captured during the camera&#039;s exposure by chance as it flashed east to west across the northern horizon, under Ursa Major&#039;s familiar Big Dipper asterism. Sightings of this major fireball meteor were widely reported in European skies, making it one of the most reported fireball events ever for planet Earth&#039;s American Meteor Society and the International Meteor Organization. The meteor&#039;s measured track over Germany is consistent with its origin near the active radiant of November&#039;s Northern Taurid Meteor Shower, a shower associated with dust from Encke&#039;s comet.Tomorrow&#039;s picture: witch sky?">
+<!-- -->
+<meta name="keywords" content="major fireball meteor">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Major Fireball Meteor">
+<meta property="og:url" content="https://science.nasa.gov/image-article/apod-2026-november-8-major-fireball-meteor/">
+<meta property="og:site_name" content="NASA Science">
+<meta property="og:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg?w=0&#038;h=0&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:secure_url" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg?w=0&#038;h=0&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:alt" content="A mountainous landscape with snow and trees is seen  below a starry sky. A pink band is visible on the horizon.  Coming down from the sky is a bright meteor trail. Just above the meteor are the stars of the Big Dipper.  Please see the explanation for more detailed information.">
+<meta property="article:published_time" content="2026-11-08T00:05:00-05:00">
+<meta property="article:modified_time" content="2026-11-04T10:32:05-05:00">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Major Fireball Meteor">
+<meta name="twitter:site" content="@NASA">
+<meta name="twitter:creator" content="@NASA">
+<meta name="twitter:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg?w=0&#038;h=0&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+</head>
+<body BGCOLOR="#F4F4FF" text="#000000" link="#0000FF" vlink="#7F0F9F"
+alink="#FF0000">
+
+<center>
+<h1> Astronomy Picture of the Day </h1>
+<p>
+
+<a href="https://science.nasa.gov/apod/archive/">Discover the cosmos!</a>
+Each day a different image or photograph of our fascinating universe is
+featured, along with a brief explanation written by a professional astronomer.
+<p>
+
+2026 November 8<br>
+
+<a href="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg">
+<IMG SRC="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/meteor2017_Taylor_1200.jpg" alt="A mountainous landscape with snow and trees is seen  below a starry sky. A pink band is visible on the horizon.  Coming down from the sky is a bright meteor trail. Just above the meteor are the stars of the Big Dipper.  Please see the explanation for more detailed information."></a>
+</center>
+
+<center>
+<b> Major Fireball Meteor </b> <br>
+
+<b>Image Credit &
+<a href="https://science.nasa.gov/apod/about-apod/">Copyright</a>:</b>
+
+<a href="https://www.instagram.com/olliemtaylor/">Ollie Taylor</a>
+</center>
+
+<p>
+
+<b> Explanation: </b>
+
+<strong>Explanation:</strong> <a href="https://science.nasa.gov/image-article/apod-2010-july-22-the-meteor-of-1860/">The sky glows</a> with soft pinkish colors of fading twilight in this serendipitous mountaintop vista. Taken in subfreezing temperatures, the <a href="https://www.esa.int/ESA_Multimedia/Images/2017/11/Autumn_fireball">thoughtfully composed photo</a> shows snowy, rugged peaks seen from a mountain pass on 2017 November 14. Below lies the village of <a href="https://youtu.be/bVNV2-wma5E">La Villa, Alta Badia</a> in <a href="https://en.wikipedia.org/wiki/Italy">Italy</a>'s <a href="https://science.nasa.gov/image-article/apod-2024-november-6-comet-tsuchinshan-atlas-over-the-dolomites/">Dolomite Alps</a>. Above the nestled village lights, the <a href="https://science.nasa.gov/asset/hubble/constellation-ursa-major/">constellation Ursa Major</a> hangs over the northern horizon. But most <a href="https://unsplash.com/photos/white-and-gray-long-fur-cat-AGehl6k8xVo">stunning</a> is the intense <a href="https://cneos.jpl.nasa.gov/fireballs/intro.html">fireball</a> meteor. It was <a href="https://www.esa.int/ESA_Multimedia/Images/2017/11/Autumn_fireball">captured</a> during the camera's exposure by chance as it flashed east to west across the northern horizon, under Ursa Major's familiar <a href="https://science.nasa.gov/image-article/apod-2013-april-21-the-big-dipper/">Big Dipper</a> <a href="https://science.nasa.gov/solar-system/what-are-asterisms/">asterism</a>. Sightings of <a href="https://www.amsmeteors.org/2017/11/four-major-fireballs-within-ten-hours/">this major fireball meteor</a> were widely reported in European skies, making it one of the most reported fireball events ever for planet Earth's <a href="https://www.amsmeteors.org/">American Meteor Society</a> and the <a href="https://www.imo.net/">International Meteor Organization</a>. The meteor's measured track over <a href="https://en.wikipedia.org/wiki/Germany">Germany</a> is consistent with its origin near the active <a href="https://science.nasa.gov/image-article/apod-2025-august-12-perseids-from-perseus/">radiant</a> of November's Northern <a href="https://science.nasa.gov/image-article/apod-2025-august-12-perseids-from-perseus/">Taurid Meteor Shower</a>, a shower associated with dust from <a href="https://science.nasa.gov/image-article/apod-2003-december-23-comet-encke-returns/">Encke's comet</a>.<br><br><strong>Tomorrow's picture:</strong> witch sky?
+<p> <center>
+
+<b> Tomorrow's picture: </b><a href="https://science.nasa.gov/image-article/apod-2026-november-9-rigel-and-the-witch-head-nebula/">APOD: 2026 November 9 &#8211; Rigel and the Witch Head Nebula</a>
+
+<p> <hr>
+<a href="https://science.nasa.gov/image-article/apod-2026-november-7-de-gerlache-kocher-massif/">&lt;</a>
+| <a href="https://science.nasa.gov/apod/archive/">Archive</a>
+| <a href="https://science.nasa.gov/apod/archive/">Index</a>
+| <a href="https://science.nasa.gov/apod/archive/">Search</a>
+| <a href="https://science.nasa.gov/apod/calendar/">Calendar</a>
+| <a href="/feed/apod-basic/">RSS</a>
+| <a href="https://science.nasa.gov/apod/education-links/">Education</a>
+| <a href="https://science.nasa.gov/apod/about-apod/">About APOD</a>
+| <a href="https://asterisk.apod.com/discuss_apod.php?date=261108">Discuss</a>
+| <a href="https://science.nasa.gov/image-article/apod-2026-november-9-rigel-and-the-witch-head-nebula/">&gt;</a>
+
+<hr><p>
+<b> Authors & editors: </b>
+Robert Nemiroff, Jerry Bonnell, Cecilia Chirenti, Keighley Rockcliffe<br>
+<b>NASA Official: </b> Dana Bolles<a href="https://science.nasa.gov/apod/about-apod/">Specific rights apply</a>.<br>
+<a href="http://www.nasa.gov/about/highlights/HP_Privacy.html">NASA Web
+Privacy Policy and Important Notices</a><br>
+<b>A service of:</b>
+<a href="http://astrophysics.gsfc.nasa.gov/">ASD</a> at
+<a href="http://www.nasa.gov/">NASA</a> /
+<a href="http://www.nasa.gov/centers/goddard/">GSFC</a>
+<br><b>&</b> <a href="http://www.mtu.edu/">Michigan Tech. U.</a><br>
+</center>
+</body>
+</html>]]></content:encoded>
+	</item>
+	<item>
+		<title>De Gerlache-Kocher Massif</title>
+		<link>https://science.nasa.gov/image-article/apod-2026-november-7-de-gerlache-kocher-massif/</link>
+		<guid isPermaLink="true">https://science.nasa.gov/image-article/apod-2026-november-7-de-gerlache-kocher-massif/</guid>
+		<pubDate>Sat, 07 Nov 2026 05:05:00 +0000</pubDate>
+		<apod:url>https://science.nasa.gov/image-article/apod-2026-november-7-de-gerlache-kocher-massif/</apod:url>
+		<apod:hdurl>https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/GerlacheKocherMassif_Sans.jpg?w=1500&#038;h=1022&#038;fit=clip&#038;crop=faces%2Cfocalpoint</apod:hdurl>
+		<apod:discussion>https://asterisk.apod.com/discuss_apod.php?date=261107</apod:discussion>
+		<apod:credit><![CDATA[<a href="https://www.flickr.com/photos/204361611@N08/">Alejandro Sanz</a>]]></apod:credit>
+		<apod:copyright><![CDATA[<a href="https://www.flickr.com/photos/204361611@N08/">Alejandro Sanz</a>]]></apod:copyright>
+		<apod:alt>Mountains and craters at the lunar limb.</apod:alt>
+		<apod:primary_image_alt>Mountains and craters at the lunar limb.</apod:primary_image_alt>
+		<apod:explanation><![CDATA[<strong>Explanation:</strong> De Gerlache-Kocher <a href="https://en.wikipedia.org/wiki/Massif">massif</a> looms on the visible horizon in this close-up of the edge of the Moon. The mountainous formation rises about 4 kilometers above its surroundings and is located very close to the lunar south pole. Boasting <a href="https://lroc.im-ldi.com/images/271">permanently shadowed</a> crater floors that likely contain deposits of water ice and peaks that receive almost continuous sunlight for solar power generation, the south polar region is consider a prime location for the first human settlement on the Moon. <a href="https://ui.adsabs.harvard.edu/abs/2023LPICo2989.2037E/abstract">In fact</a>, De Gerlache-Kocher massif itself has been considered as a potential <a href="https://www.universetoday.com/articles/nasa-narrows-artemis-landing-sites-to-9-key-regions">landing site</a> for future crewed <a href="https://www.nasa.gov/mission/artemis-iv/">Artemis missions to the Moon</a>. The remarkable telescopic image of the massif at the lunar limb was captured on October 31. Then, a favorable libration angle or <a href="https://svs.gsfc.nasa.gov/10836/">lunar wobble</a> enhanced this oblique view <a href="https://science.nasa.gov/image-article/apod-2024-august-30-southern-moonscape/">across the Moon's south pole.</a><br><br><strong>Tomorrow's picture: </strong>meteoric]]></apod:explanation>
+		<description><![CDATA[<strong>Explanation:</strong> De Gerlache-Kocher <a href="https://en.wikipedia.org/wiki/Massif">massif</a> looms on the visible horizon in this close-up of the edge of the Moon. The mountainous formation rises about 4 kilometers above its surroundings and is located very close to the lunar south pole. Boasting <a href="https://lroc.im-ldi.com/images/271">permanently shadowed</a> crater floors that likely contain deposits of water ice and peaks that receive almost continuous sunlight for solar power generation, the south polar region is consider a prime location for the first human settlement on the Moon. <a href="https://ui.adsabs.harvard.edu/abs/2023LPICo2989.2037E/abstract">In fact</a>, De Gerlache-Kocher massif itself has been considered as a potential <a href="https://www.universetoday.com/articles/nasa-narrows-artemis-landing-sites-to-9-key-regions">landing site</a> for future crewed <a href="https://www.nasa.gov/mission/artemis-iv/">Artemis missions to the Moon</a>. The remarkable telescopic image of the massif at the lunar limb was captured on October 31. Then, a favorable libration angle or <a href="https://svs.gsfc.nasa.gov/10836/">lunar wobble</a> enhanced this oblique view <a href="https://science.nasa.gov/image-article/apod-2024-august-30-southern-moonscape/">across the Moon's south pole.</a><br><br><strong>Tomorrow's picture: </strong>meteoric]]></description>
+		<content:encoded><![CDATA[<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> APOD: 2026 November 7 - De Gerlache-Kocher Massif</title>
+<link rel="canonical" href="https://science.nasa.gov/image-article/apod-2026-november-7-de-gerlache-kocher-massif/">
+<!-- gsfc meta tags -->
+<meta name="orgcode" content="661">
+<meta name="rno" content="Dana Bolles">
+<meta name="content-owner" content="Robert Nemiroff">
+<meta name="webmaster" content="Stephen.F.Fantasia.1">
+<meta name="description" content="Explanation: De Gerlache-Kocher massif looms on the visible horizon in this close-up of the edge of the Moon. The mountainous formation rises about 4 kilometers above its surroundings and is located very close to the lunar south pole. Boasting permanently shadowed crater floors that likely contain deposits of water ice and peaks that receive almost continuous sunlight for solar power generation, the south polar region is consider a prime location for the first human settlement on the Moon. In fact, De Gerlache-Kocher massif itself has been considered as a potential landing site for future crewed Artemis missions to the Moon. The remarkable telescopic image of the massif at the lunar limb was captured on October 31. Then, a favorable libration angle or lunar wobble enhanced this oblique view across the Moon&#039;s south pole.Tomorrow&#039;s picture: meteoric">
+<!-- -->
+<meta name="keywords" content="de gerlache-kocher massif">
+<meta property="og:type" content="article">
+<meta property="og:title" content="De Gerlache-Kocher Massif">
+<meta property="og:url" content="https://science.nasa.gov/image-article/apod-2026-november-7-de-gerlache-kocher-massif/">
+<meta property="og:site_name" content="NASA Science">
+<meta property="og:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/GerlacheKocherMassif_Sans.jpg?w=1500&#038;h=1022&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:secure_url" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/GerlacheKocherMassif_Sans.jpg?w=1500&#038;h=1022&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:alt" content="Mountains and craters at the lunar limb.">
+<meta property="article:published_time" content="2026-11-07T00:05:00-05:00">
+<meta property="article:modified_time" content="2026-11-07T10:34:15-05:00">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="De Gerlache-Kocher Massif">
+<meta name="twitter:site" content="@NASA">
+<meta name="twitter:creator" content="@NASA">
+<meta name="twitter:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/GerlacheKocherMassif_Sans.jpg?w=1500&#038;h=1022&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+</head>
+<body BGCOLOR="#F4F4FF" text="#000000" link="#0000FF" vlink="#7F0F9F"
+alink="#FF0000">
+
+<center>
+<h1> Astronomy Picture of the Day </h1>
+<p>
+
+<a href="https://science.nasa.gov/apod/archive/">Discover the cosmos!</a>
+Each day a different image or photograph of our fascinating universe is
+featured, along with a brief explanation written by a professional astronomer.
+<p>
+
+2026 November 7<br>
+
+<a href="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/GerlacheKocherMassif_Sans.jpg">
+<IMG SRC="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/GerlacheKocherMassif_Sans.jpg" alt="Mountains and craters at the lunar limb."></a>
+</center>
+
+<center>
+<b> De Gerlache-Kocher Massif </b> <br>
+
+<b>Image Credit &
+<a href="https://science.nasa.gov/apod/about-apod/">Copyright</a>:</b>
+
+<a href="https://www.flickr.com/photos/204361611@N08/">Alejandro Sanz</a>
+</center>
+
+<p>
+
+<b> Explanation: </b>
+
+<strong>Explanation:</strong> De Gerlache-Kocher <a href="https://en.wikipedia.org/wiki/Massif">massif</a> looms on the visible horizon in this close-up of the edge of the Moon. The mountainous formation rises about 4 kilometers above its surroundings and is located very close to the lunar south pole. Boasting <a href="https://lroc.im-ldi.com/images/271">permanently shadowed</a> crater floors that likely contain deposits of water ice and peaks that receive almost continuous sunlight for solar power generation, the south polar region is consider a prime location for the first human settlement on the Moon. <a href="https://ui.adsabs.harvard.edu/abs/2023LPICo2989.2037E/abstract">In fact</a>, De Gerlache-Kocher massif itself has been considered as a potential <a href="https://www.universetoday.com/articles/nasa-narrows-artemis-landing-sites-to-9-key-regions">landing site</a> for future crewed <a href="https://www.nasa.gov/mission/artemis-iv/">Artemis missions to the Moon</a>. The remarkable telescopic image of the massif at the lunar limb was captured on October 31. Then, a favorable libration angle or <a href="https://svs.gsfc.nasa.gov/10836/">lunar wobble</a> enhanced this oblique view <a href="https://science.nasa.gov/image-article/apod-2024-august-30-southern-moonscape/">across the Moon's south pole.</a><br><br><strong>Tomorrow's picture: </strong>meteoric
+<p> <center>
+
+<b> Tomorrow's picture: </b><a href="https://science.nasa.gov/image-article/apod-2026-november-8-major-fireball-meteor/">APOD: 2026 November 8 &#8211; Major Fireball Meteor</a>
+
+<p> <hr>
+<a href="https://science.nasa.gov/image-article/apod-2026-november-6-a-farewell-to-swift/">&lt;</a>
+| <a href="https://science.nasa.gov/apod/archive/">Archive</a>
+| <a href="https://science.nasa.gov/apod/archive/">Index</a>
+| <a href="https://science.nasa.gov/apod/archive/">Search</a>
+| <a href="https://science.nasa.gov/apod/calendar/">Calendar</a>
+| <a href="/feed/apod-basic/">RSS</a>
+| <a href="https://science.nasa.gov/apod/education-links/">Education</a>
+| <a href="https://science.nasa.gov/apod/about-apod/">About APOD</a>
+| <a href="https://asterisk.apod.com/discuss_apod.php?date=261107">Discuss</a>
+| <a href="https://science.nasa.gov/image-article/apod-2026-november-8-major-fireball-meteor/">&gt;</a>
+
+<hr><p>
+<b> Authors & editors: </b>
+Jerry Bonnell, Cecilia Chirenti, Robert Nemiroff, Keighley Rockcliffe<br>
+<b>NASA Official: </b> Dana Bolles<a href="https://science.nasa.gov/apod/about-apod/">Specific rights apply</a>.<br>
+<a href="http://www.nasa.gov/about/highlights/HP_Privacy.html">NASA Web
+Privacy Policy and Important Notices</a><br>
+<b>A service of:</b>
+<a href="http://astrophysics.gsfc.nasa.gov/">ASD</a> at
+<a href="http://www.nasa.gov/">NASA</a> /
+<a href="http://www.nasa.gov/centers/goddard/">GSFC</a>
+<br><b>&</b> <a href="http://www.mtu.edu/">Michigan Tech. U.</a><br>
+</center>
+</body>
+</html>]]></content:encoded>
+	</item>
+	<item>
+		<title>A Farewell to Swift</title>
+		<link>https://science.nasa.gov/image-article/apod-2026-november-6-a-farewell-to-swift/</link>
+		<guid isPermaLink="true">https://science.nasa.gov/image-article/apod-2026-november-6-a-farewell-to-swift/</guid>
+		<pubDate>Fri, 06 Nov 2026 05:05:00 +0000</pubDate>
+		<apod:url>https://science.nasa.gov/image-article/apod-2026-november-6-a-farewell-to-swift/</apod:url>
+		<apod:hdurl>https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg?w=5252&#038;h=3744&#038;fit=clip&#038;crop=faces%2Cfocalpoint</apod:hdurl>
+		<apod:discussion>https://asterisk.apod.com/discuss_apod.php?date=261106</apod:discussion>
+		<apod:credit><![CDATA[<a href="https://www.nasa.gov/">NASA</a>/<a href="https://science.nasa.gov/mission/swift/">Swift</a> and <a href="https://www.andreaplanet.com/andreamosaic/">AndreaMosaic</a>]]></apod:credit>
+		<apod:copyright><![CDATA[<a href="https://www.nasa.gov/">NASA</a>/<a href="https://science.nasa.gov/mission/swift/">Swift</a> and <a href="https://www.andreaplanet.com/andreamosaic/">AndreaMosaic</a>]]></apod:copyright>
+		<apod:alt>A mosaic image of the Neil Gehrels Swift Observatory, created from one million images of astronomical objects captured by the satellite’s Ultraviolet/Optical Telescope.</apod:alt>
+		<apod:primary_image_alt>A mosaic image of the Neil Gehrels Swift Observatory, created from one million images of astronomical objects captured by the satellite’s Ultraviolet/Optical Telescope.</apod:primary_image_alt>
+		<apod:explanation><![CDATA[<strong>Explanation:</strong> It is time to say goodbye to <a href="https://www.nasa.gov/">NASA</a>'s <a href="https://science.nasa.gov/mission/swift/">Neil Gehrels Swift Observatory</a>. After nearly 22 years of service, the satellite <a href="https://science.nasa.gov/blogs/swift/2026/11/02/nasas-swift-observatory-to-re-enter-atmosphere/">re-entered Earth's atmosphere</a> on November 4 at 7:39 EST over the <a href="https://en.wikipedia.org/wiki/North_Sumatra">North Sumatra</a> region of <a href="https://en.wikipedia.org/wiki/Indonesia">Indonesia</a>. The <a href="https://svs.gsfc.nasa.gov/12980">featured image</a> is a mosaic created in 2018 using some of the first million <a href="https://science.nasa.gov/image-article/apod-2009-september-17-ultraviolet-andromeda/">images</a> captured by the satellite's <a href="https://www.swift.psu.edu/uvot/">Ultraviolet/Optical Telescope</a>. Swift had a combination of instruments, including an <a href="https://www.swift.psu.edu/xrt/">X-ray telescope</a> and a <a href="https://swift.gsfc.nasa.gov/about_swift/bat_desc.html">gamma-ray telescope</a>, that worked together to enable humanity to study, in unprecedented detail, the fastest and most energetic <a href="https://science.nasa.gov/image-article/apod-2022-october-17-x-ray-rings-around-a-gamma-ray-burst/">explosions</a> in the universe. The most recent <a href="https://science.nasa.gov/image-article/apod-2026-february-11-a-year-of-sunspots/">solar maximum</a> accelerated the decay of the satellite's orbit. An <a href="https://science.nasa.gov/mission/swift/swift-boost-mission/">innovative mission</a> to <a href="https://science.nasa.gov/image-article/apod-2026-july-8-swift-boost-mission/">rescue Swift</a> by boosting its orbit was <a href="https://science.nasa.gov/blogs/swift/">not successful</a>. Swift burned on <a href="https://orbitalradar.com/swift-tracker">reentry</a> like a shooting star, but the impressive data acquired by the telescope over its mission will continue to bring light to the mysteries of the cosmos for years to come. May it keep inspiring new missions <a href="https://images.unsplash.com/photo-1501532358732-8b50b34df1c4">to boldly go</a> into space, explore new data and seek out new science. <br> <br><strong>Tomorrow's picture:</strong> Moon Massif]]></apod:explanation>
+		<description><![CDATA[<strong>Explanation:</strong> It is time to say goodbye to <a href="https://www.nasa.gov/">NASA</a>'s <a href="https://science.nasa.gov/mission/swift/">Neil Gehrels Swift Observatory</a>. After nearly 22 years of service, the satellite <a href="https://science.nasa.gov/blogs/swift/2026/11/02/nasas-swift-observatory-to-re-enter-atmosphere/">re-entered Earth's atmosphere</a> on November 4 at 7:39 EST over the <a href="https://en.wikipedia.org/wiki/North_Sumatra">North Sumatra</a> region of <a href="https://en.wikipedia.org/wiki/Indonesia">Indonesia</a>. The <a href="https://svs.gsfc.nasa.gov/12980">featured image</a> is a mosaic created in 2018 using some of the first million <a href="https://science.nasa.gov/image-article/apod-2009-september-17-ultraviolet-andromeda/">images</a> captured by the satellite's <a href="https://www.swift.psu.edu/uvot/">Ultraviolet/Optical Telescope</a>. Swift had a combination of instruments, including an <a href="https://www.swift.psu.edu/xrt/">X-ray telescope</a> and a <a href="https://swift.gsfc.nasa.gov/about_swift/bat_desc.html">gamma-ray telescope</a>, that worked together to enable humanity to study, in unprecedented detail, the fastest and most energetic <a href="https://science.nasa.gov/image-article/apod-2022-october-17-x-ray-rings-around-a-gamma-ray-burst/">explosions</a> in the universe. The most recent <a href="https://science.nasa.gov/image-article/apod-2026-february-11-a-year-of-sunspots/">solar maximum</a> accelerated the decay of the satellite's orbit. An <a href="https://science.nasa.gov/mission/swift/swift-boost-mission/">innovative mission</a> to <a href="https://science.nasa.gov/image-article/apod-2026-july-8-swift-boost-mission/">rescue Swift</a> by boosting its orbit was <a href="https://science.nasa.gov/blogs/swift/">not successful</a>. Swift burned on <a href="https://orbitalradar.com/swift-tracker">reentry</a> like a shooting star, but the impressive data acquired by the telescope over its mission will continue to bring light to the mysteries of the cosmos for years to come. May it keep inspiring new missions <a href="https://images.unsplash.com/photo-1501532358732-8b50b34df1c4">to boldly go</a> into space, explore new data and seek out new science. <br> <br><strong>Tomorrow's picture:</strong> Moon Massif]]></description>
+		<content:encoded><![CDATA[<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> APOD: 2026 November 6 - A Farewell to Swift</title>
+<link rel="canonical" href="https://science.nasa.gov/image-article/apod-2026-november-6-a-farewell-to-swift/">
+<!-- gsfc meta tags -->
+<meta name="orgcode" content="661">
+<meta name="rno" content="Dana Bolles">
+<meta name="content-owner" content="Cecilia Chirenti">
+<meta name="webmaster" content="Stephen.F.Fantasia.1">
+<meta name="description" content="Explanation: It is time to say goodbye to NASA&#039;s Neil Gehrels Swift Observatory. After nearly 22 years of service, the satellite re-entered Earth&#039;s atmosphere on November 4 at 7:39 EST over the North Sumatra region of Indonesia. The featured image is a mosaic created in 2018 using some of the first million images captured by the satellite&#039;s Ultraviolet/Optical Telescope. Swift had a combination of instruments, including an X-ray telescope and a gamma-ray telescope, that worked together to enable humanity to study, in unprecedented detail, the fastest and most energetic explosions in the universe. The most recent solar maximum accelerated the decay of the satellite&#039;s orbit. An innovative mission to rescue Swift by boosting its orbit was not successful. Swift burned on reentry like a shooting star, but the impressive data acquired by the telescope over its mission will continue to bring light to the mysteries of the cosmos for years to come. May it keep inspiring new missions to boldly go into space, explore new data and seek out new science.  Tomorrow&#039;s picture: Moon Massif">
+<!-- -->
+<meta name="keywords" content="a farewell to swift">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A Farewell to Swift">
+<meta property="og:url" content="https://science.nasa.gov/image-article/apod-2026-november-6-a-farewell-to-swift/">
+<meta property="og:site_name" content="NASA Science">
+<meta property="og:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg?w=5252&#038;h=3744&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:secure_url" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg?w=5252&#038;h=3744&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:alt" content="A mosaic image of the Neil Gehrels Swift Observatory, created from one million images of astronomical objects captured by the satellite’s Ultraviolet/Optical Telescope.">
+<meta property="article:published_time" content="2026-11-06T00:05:00-05:00">
+<meta property="article:modified_time" content="2026-11-06T15:45:53-05:00">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="A Farewell to Swift">
+<meta name="twitter:site" content="@NASA">
+<meta name="twitter:creator" content="@NASA">
+<meta name="twitter:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg?w=5252&#038;h=3744&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+</head>
+<body BGCOLOR="#F4F4FF" text="#000000" link="#0000FF" vlink="#7F0F9F"
+alink="#FF0000">
+
+<center>
+<h1> Astronomy Picture of the Day </h1>
+<p>
+
+<a href="https://science.nasa.gov/apod/archive/">Discover the cosmos!</a>
+Each day a different image or photograph of our fascinating universe is
+featured, along with a brief explanation written by a professional astronomer.
+<p>
+
+2026 November 6<br>
+
+<a href="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg">
+<IMG SRC="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/november/Swift_Millionth_Image_Mosaic.jpg" alt="A mosaic image of the Neil Gehrels Swift Observatory, created from one million images of astronomical objects captured by the satellite’s Ultraviolet/Optical Telescope."></a>
+</center>
+
+<center>
+<b> A Farewell to Swift </b> <br>
+
+<b>Image Credit &
+<a href="https://science.nasa.gov/apod/about-apod/">Copyright</a>:</b>
+
+<a href="https://www.nasa.gov/">NASA</a>/<a href="https://science.nasa.gov/mission/swift/">Swift</a> and <a href="https://www.andreaplanet.com/andreamosaic/">AndreaMosaic</a>
+</center>
+
+<p>
+
+<b> Explanation: </b>
+
+<strong>Explanation:</strong> It is time to say goodbye to <a href="https://www.nasa.gov/">NASA</a>'s <a href="https://science.nasa.gov/mission/swift/">Neil Gehrels Swift Observatory</a>. After nearly 22 years of service, the satellite <a href="https://science.nasa.gov/blogs/swift/2026/11/02/nasas-swift-observatory-to-re-enter-atmosphere/">re-entered Earth's atmosphere</a> on November 4 at 7:39 EST over the <a href="https://en.wikipedia.org/wiki/North_Sumatra">North Sumatra</a> region of <a href="https://en.wikipedia.org/wiki/Indonesia">Indonesia</a>. The <a href="https://svs.gsfc.nasa.gov/12980">featured image</a> is a mosaic created in 2018 using some of the first million <a href="https://science.nasa.gov/image-article/apod-2009-september-17-ultraviolet-andromeda/">images</a> captured by the satellite's <a href="https://www.swift.psu.edu/uvot/">Ultraviolet/Optical Telescope</a>. Swift had a combination of instruments, including an <a href="https://www.swift.psu.edu/xrt/">X-ray telescope</a> and a <a href="https://swift.gsfc.nasa.gov/about_swift/bat_desc.html">gamma-ray telescope</a>, that worked together to enable humanity to study, in unprecedented detail, the fastest and most energetic <a href="https://science.nasa.gov/image-article/apod-2022-october-17-x-ray-rings-around-a-gamma-ray-burst/">explosions</a> in the universe. The most recent <a href="https://science.nasa.gov/image-article/apod-2026-february-11-a-year-of-sunspots/">solar maximum</a> accelerated the decay of the satellite's orbit. An <a href="https://science.nasa.gov/mission/swift/swift-boost-mission/">innovative mission</a> to <a href="https://science.nasa.gov/image-article/apod-2026-july-8-swift-boost-mission/">rescue Swift</a> by boosting its orbit was <a href="https://science.nasa.gov/blogs/swift/">not successful</a>. Swift burned on <a href="https://orbitalradar.com/swift-tracker">reentry</a> like a shooting star, but the impressive data acquired by the telescope over its mission will continue to bring light to the mysteries of the cosmos for years to come. May it keep inspiring new missions <a href="https://images.unsplash.com/photo-1501532358732-8b50b34df1c4">to boldly go</a> into space, explore new data and seek out new science. <br> <br><strong>Tomorrow's picture:</strong> Moon Massif
+<p> <center>
+
+<b> Tomorrow's picture: </b><a href="https://science.nasa.gov/image-article/apod-2026-november-7-de-gerlache-kocher-massif/">APOD: 2026 November 7 – De Gerlache-Kocher Massif</a>
+
+<p> <hr>
+<a href="https://science.nasa.gov/image-article/apod-2026-november-5-enceladus-in-silhouette/">&lt;</a>
+| <a href="https://science.nasa.gov/apod/archive/">Archive</a>
+| <a href="https://science.nasa.gov/apod/archive/">Index</a>
+| <a href="https://science.nasa.gov/apod/archive/">Search</a>
+| <a href="https://science.nasa.gov/apod/calendar/">Calendar</a>
+| <a href="/feed/apod-basic/">RSS</a>
+| <a href="https://science.nasa.gov/apod/education-links/">Education</a>
+| <a href="https://science.nasa.gov/apod/about-apod/">About APOD</a>
+| <a href="https://asterisk.apod.com/discuss_apod.php?date=261106">Discuss</a>
+| <a href="https://science.nasa.gov/image-article/apod-2026-november-7-de-gerlache-kocher-massif/">&gt;</a>
+
+<hr><p>
+<b> Authors & editors: </b>
+Cecilia Chirenti, Robert Nemiroff, Jerry Bonnell, Keighley Rockcliffe<br>
+<b>NASA Official: </b> Dana Bolles<a href="https://science.nasa.gov/apod/about-apod/">Specific rights apply</a>.<br>
+<a href="http://www.nasa.gov/about/highlights/HP_Privacy.html">NASA Web
+Privacy Policy and Important Notices</a><br>
+<b>A service of:</b>
+<a href="http://astrophysics.gsfc.nasa.gov/">ASD</a> at
+<a href="http://www.nasa.gov/">NASA</a> /
+<a href="http://www.nasa.gov/centers/goddard/">GSFC</a>
+<br><b>&</b> <a href="http://www.mtu.edu/">Michigan Tech. U.</a><br>
+</center>
+</body>
+</html>]]></content:encoded>
+	</item>
+	<item>
+		<title>The Mutual Occultation of Ganymede and Io</title>
+		<link>https://science.nasa.gov/image-article/apod-2026-october-28-the-mutual-occultation-of-ganymede-and-io/</link>
+		<guid isPermaLink="true">https://science.nasa.gov/image-article/apod-2026-october-28-the-mutual-occultation-of-ganymede-and-io/</guid>
+		<pubDate>Wed, 28 Oct 2026 04:05:00 +0000</pubDate>
+		<apod:url>https://science.nasa.gov/image-article/apod-2026-october-28-the-mutual-occultation-of-ganymede-and-io/</apod:url>
+		<apod:hdurl>https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/occultation.jpeg?w=1600&#038;h=1000&#038;fit=clip&#038;crop=faces%2Cfocalpoint</apod:hdurl>
+		<apod:discussion>https://asterisk.apod.com/discuss_apod.php?date=261028</apod:discussion>
+		<apod:credit><![CDATA[Michael Wong]]></apod:credit>
+		<apod:copyright><![CDATA[<a href="https://www.astromw.com/">Michael Wong</a>]]></apod:copyright>
+		<apod:alt>The disk of Jupiter sits to the right. The giant red spot rotates into view and the horizontal cloud streams swirl. To the left, Ganymede passes in front of Io. An inlet shows this zoomed in. Ganymede casts a shadow on Jupiter&#039;s disk.</apod:alt>
+		<apod:primary_image_alt>The disk of Jupiter sits to the right. The giant red spot rotates into view and the horizontal cloud streams swirl. To the left, Ganymede passes in front of Io. An inlet shows this zoomed in. Ganymede casts a shadow on Jupiter&#039;s disk.</apod:primary_image_alt>
+		<apod:explanation><![CDATA[<strong>Explanation:</strong> Jupiter is one of the least lonely planets in the Solar System, at least when it comes to <a href="https://science.nasa.gov/solar-system/moons/">natural satellites</a>. <a href="https://spaceplace.nasa.gov/how-many-moons/en/">115 moons</a> have been discovered orbiting Jupiter so far! (<em>Saturn has the most with 293, but <a href="https://ssd.jpl.nasa.gov/sats/discovery.html">who’s counting</a>.</em>) <a href="https://science.nasa.gov/jupiter/jupiter-moons/ganymede/">Ganymede</a> and <a href="https://science.nasa.gov/jupiter/jupiter-moons/io/">Io</a>, two of Jupiter’s <a href="https://www.nasa.gov/general/415-years-ago-astronomer-galileo-discovers-jupiters-moons/">Galilean moons</a>, met in the sky on October 20th, 2026. Today’s video captures the meeting, with <a href="https://science.nasa.gov/image-article/apod-2021-june-14-ganymede-from-juno/">Ganymede</a> briefly blocking <a href="https://science.nasa.gov/image-article/apod-2026-january-20-io-in-true-color/">Io</a> from view. This event, when an astronomical object passes in front of another and either completely or partially blocks it, is called a mutual occultation. The <a href="https://www.alpo-astronomy.org/jupiter">mutual occultations of Galilean moons</a> are rare to witness because they require Earth’s edge-on view of their orbits. This occurs once every 6 years when Jupiter reaches <a href="https://earthsky.org/astronomy-essentials/jupiter-equinox-mutual-events-moon-2021/">its equinox</a> and appears less “tilted”. Ganymede is also <a href="https://science.nasa.gov/image-article/apod-2022-april-27-moon-shadow-on-jupiter/">casting its shadow</a> on Jupiter’s right side. Any <a href="https://en.wikipedia.org/wiki/Jupiter_in_fiction">fictional Jovian species</a> within the shadow would experience a <a href="https://science.nasa.gov/image-article/apod-2026-august-17-a-golden-corona-eclipse/">solar eclipse</a>!<br><br><strong>Tomorrow's picture:</strong> a planet grows horns]]></apod:explanation>
+		<description><![CDATA[<strong>Explanation:</strong> Jupiter is one of the least lonely planets in the Solar System, at least when it comes to <a href="https://science.nasa.gov/solar-system/moons/">natural satellites</a>. <a href="https://spaceplace.nasa.gov/how-many-moons/en/">115 moons</a> have been discovered orbiting Jupiter so far! (<em>Saturn has the most with 293, but <a href="https://ssd.jpl.nasa.gov/sats/discovery.html">who’s counting</a>.</em>) <a href="https://science.nasa.gov/jupiter/jupiter-moons/ganymede/">Ganymede</a> and <a href="https://science.nasa.gov/jupiter/jupiter-moons/io/">Io</a>, two of Jupiter’s <a href="https://www.nasa.gov/general/415-years-ago-astronomer-galileo-discovers-jupiters-moons/">Galilean moons</a>, met in the sky on October 20th, 2026. Today’s video captures the meeting, with <a href="https://science.nasa.gov/image-article/apod-2021-june-14-ganymede-from-juno/">Ganymede</a> briefly blocking <a href="https://science.nasa.gov/image-article/apod-2026-january-20-io-in-true-color/">Io</a> from view. This event, when an astronomical object passes in front of another and either completely or partially blocks it, is called a mutual occultation. The <a href="https://www.alpo-astronomy.org/jupiter">mutual occultations of Galilean moons</a> are rare to witness because they require Earth’s edge-on view of their orbits. This occurs once every 6 years when Jupiter reaches <a href="https://earthsky.org/astronomy-essentials/jupiter-equinox-mutual-events-moon-2021/">its equinox</a> and appears less “tilted”. Ganymede is also <a href="https://science.nasa.gov/image-article/apod-2022-april-27-moon-shadow-on-jupiter/">casting its shadow</a> on Jupiter’s right side. Any <a href="https://en.wikipedia.org/wiki/Jupiter_in_fiction">fictional Jovian species</a> within the shadow would experience a <a href="https://science.nasa.gov/image-article/apod-2026-august-17-a-golden-corona-eclipse/">solar eclipse</a>!<br><br><strong>Tomorrow's picture:</strong> a planet grows horns]]></description>
+		<content:encoded><![CDATA[<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> APOD: 2026 October 28 - The Mutual Occultation of Ganymede and Io</title>
+<link rel="canonical" href="https://science.nasa.gov/image-article/apod-2026-october-28-the-mutual-occultation-of-ganymede-and-io/">
+<!-- gsfc meta tags -->
+<meta name="orgcode" content="661">
+<meta name="rno" content="Dana Bolles">
+<meta name="content-owner" content="Robert Nemiroff">
+<meta name="webmaster" content="Stephen.F.Fantasia.1">
+<meta name="description" content="Explanation: Jupiter is one of the least lonely planets in the Solar System, at least when it comes to natural satellites. 115 moons have been discovered orbiting Jupiter so far! (Saturn has the most with 293, but who’s counting.) Ganymede and Io, two of Jupiter’s Galilean moons, met in the sky on October 20th, 2026. Today’s video captures the meeting, with Ganymede briefly blocking Io from view. This event, when an astronomical object passes in front of another and either completely or partially blocks it, is called a mutual occultation. The mutual occultations of Galilean moons are rare to witness because they require Earth’s edge-on view of their orbits. This occurs once every 6 years when Jupiter reaches its equinox and appears less “tilted”. Ganymede is also casting its shadow on Jupiter’s right side. Any fictional Jovian species within the shadow would experience a solar eclipse!Tomorrow&#039;s picture: a planet grows horns">
+<!-- -->
+<meta name="keywords" content="the mutual occultation of ganymede and io">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The Mutual Occultation of Ganymede and Io">
+<meta property="og:url" content="https://science.nasa.gov/image-article/apod-2026-october-28-the-mutual-occultation-of-ganymede-and-io/">
+<meta property="og:site_name" content="NASA Science">
+<meta property="og:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/occultation.jpeg?w=1600&#038;h=1000&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:secure_url" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/occultation.jpeg?w=1600&#038;h=1000&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:alt" content="The disk of Jupiter sits to the right. Large horizontal bands of clouds are visible on Jupiter and the giant red spot is rotating into view. To the left, Ganymede and Io orbit Jupiter. An inlet shows this zoomed in. Ganymede casts a shadow on Jupiter&#039;s disk.">
+<meta property="article:published_time" content="2026-10-28T00:05:00-04:00">
+<meta property="article:modified_time" content="2026-10-27T12:22:11-04:00">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Mutual Occultation of Ganymede and Io">
+<meta name="twitter:site" content="@NASA">
+<meta name="twitter:creator" content="@NASA">
+<meta name="twitter:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/occultation.jpeg?w=1600&#038;h=1000&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+</head>
+<body BGCOLOR="#F4F4FF" text="#000000" link="#0000FF" vlink="#7F0F9F"
+alink="#FF0000">
+
+<center>
+<h1> Astronomy Picture of the Day </h1>
+<p>
+
+<a href="https://science.nasa.gov/apod/archive/">Discover the cosmos!</a>
+Each day a different image or photograph of our fascinating universe is
+featured, along with a brief explanation written by a professional astronomer.
+<p>
+
+2026 October 28<br>
+
+<video controls title="">
+<source src="https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/october/occultation.mp4" type="video/mp4">
+</video>
+</center>
+
+<center>
+<b> The Mutual Occultation of Ganymede and Io </b> <br>
+
+<b>Image Credit &
+<a href="https://science.nasa.gov/apod/about-apod/">Copyright</a>:</b>
+
+Michael Wong
+</center>
+
+<p>
+
+<b> Explanation: </b>
+
+<strong>Explanation:</strong> Jupiter is one of the least lonely planets in the Solar System, at least when it comes to <a href="https://science.nasa.gov/solar-system/moons/">natural satellites</a>. <a href="https://spaceplace.nasa.gov/how-many-moons/en/">115 moons</a> have been discovered orbiting Jupiter so far! (<em>Saturn has the most with 293, but <a href="https://ssd.jpl.nasa.gov/sats/discovery.html">who’s counting</a>.</em>) <a href="https://science.nasa.gov/jupiter/jupiter-moons/ganymede/">Ganymede</a> and <a href="https://science.nasa.gov/jupiter/jupiter-moons/io/">Io</a>, two of Jupiter’s <a href="https://www.nasa.gov/general/415-years-ago-astronomer-galileo-discovers-jupiters-moons/">Galilean moons</a>, met in the sky on October 20th, 2026. Today’s video captures the meeting, with <a href="https://science.nasa.gov/image-article/apod-2021-june-14-ganymede-from-juno/">Ganymede</a> briefly blocking <a href="https://science.nasa.gov/image-article/apod-2026-january-20-io-in-true-color/">Io</a> from view. This event, when an astronomical object passes in front of another and either completely or partially blocks it, is called a mutual occultation. The <a href="https://www.alpo-astronomy.org/jupiter">mutual occultations of Galilean moons</a> are rare to witness because they require Earth’s edge-on view of their orbits. This occurs once every 6 years when Jupiter reaches <a href="https://earthsky.org/astronomy-essentials/jupiter-equinox-mutual-events-moon-2021/">its equinox</a> and appears less “tilted”. Ganymede is also <a href="https://science.nasa.gov/image-article/apod-2022-april-27-moon-shadow-on-jupiter/">casting its shadow</a> on Jupiter’s right side. Any <a href="https://en.wikipedia.org/wiki/Jupiter_in_fiction">fictional Jovian species</a> within the shadow would experience a <a href="https://science.nasa.gov/image-article/apod-2026-august-17-a-golden-corona-eclipse/">solar eclipse</a>!<br><br><strong>Tomorrow's picture:</strong> a planet grows horns
+<p> <center>
+
+<b> Tomorrow's picture: </b><a href="https://science.nasa.gov/image-article/apod-29-october-2026-the-horns-of-venus/">APOD: 29 October 2026 &#8211; The Horns of Venus</a>
+
+<p> <hr>
+<a href="https://science.nasa.gov/image-article/apod-2026-october-27-noctilucent-clouds-over-sweden/">&lt;</a>
+| <a href="https://science.nasa.gov/apod/archive/">Archive</a>
+| <a href="https://science.nasa.gov/apod/archive/">Index</a>
+| <a href="https://science.nasa.gov/apod/archive/">Search</a>
+| <a href="https://science.nasa.gov/apod/calendar/">Calendar</a>
+| <a href="/feed/apod-basic/">RSS</a>
+| <a href="https://science.nasa.gov/apod/education-links/">Education</a>
+| <a href="https://science.nasa.gov/apod/about-apod/">About APOD</a>
+| <a href="https://asterisk.apod.com/discuss_apod.php?date=261028">Discuss</a>
+| <a href="https://science.nasa.gov/image-article/apod-29-october-2026-the-horns-of-venus/">&gt;</a>
+
+<hr><p>
+<b> Authors & editors: </b>
+Keighley Rockcliffe, Robert Nemiroff, Jerry Bonnell, Cecilia Chirenti<br>
+<b>NASA Official: </b> Dana Bolles<a href="https://science.nasa.gov/apod/about-apod/">Specific rights apply</a>.<br>
+<a href="http://www.nasa.gov/about/highlights/HP_Privacy.html">NASA Web
+Privacy Policy and Important Notices</a><br>
+<b>A service of:</b>
+<a href="http://astrophysics.gsfc.nasa.gov/">ASD</a> at
+<a href="http://www.nasa.gov/">NASA</a> /
+<a href="http://www.nasa.gov/centers/goddard/">GSFC</a>
+<br><b>&</b> <a href="http://www.mtu.edu/">Michigan Tech. U.</a><br>
+</center>
+</body>
+</html>]]></content:encoded>
+	</item>
+	<item>
+		<title>Rosetta&#039;s Selfie</title>
+		<link>https://science.nasa.gov/image-article/apod-2026-october-24-rosettas-selfie/</link>
+		<guid isPermaLink="true">https://science.nasa.gov/image-article/apod-2026-october-24-rosettas-selfie/</guid>
+		<pubDate>Sat, 24 Oct 2026 04:05:00 +0000</pubDate>
+		<apod:url>https://science.nasa.gov/image-article/apod-2026-october-24-rosettas-selfie/</apod:url>
+		<apod:hdurl>https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/ESA_Rosetta_Philae_CIVA_141007.png?w=1024&#038;h=1024&#038;fit=clip&#038;crop=faces%2Cfocalpoint</apod:hdurl>
+		<apod:discussion>https://asterisk.apod.com/discuss_apod.php?date=261024</apod:discussion>
+		<apod:credit><![CDATA[<a href="http://rosetta.esa.int/">ESA/Rosetta/Philae/CIV</a>A]]></apod:credit>
+		<apod:copyright><![CDATA[<a href="http://rosetta.esa.int/">ESA/Rosetta/Philae/CIV</a>A]]></apod:copyright>
+		<apod:alt>Image of a Rosetta spacecraft solar array in foreground and the nucleus of comet 67P in background.</apod:alt>
+		<apod:primary_image_alt>Image of a Rosetta spacecraft solar array in foreground and the nucleus of comet 67P in background.</apod:primary_image_alt>
+		<apod:explanation><![CDATA[<strong>Explanation:</strong> <a href="https://blogs.esa.int/rosetta/2014/10/14/mission-selfie-from-16-km/">This Rosetta spacecraft selfie</a> was snapped on October 7th, 2014. At the time the <a href="https://rosetta.esa.int/">comet-chasing spacecraft</a> was about 472 million kilometers from planet Earth, but only 16 kilometers from the surface of <a href="https://science.nasa.gov/image-article/apod-2021-november-13-rosettas-comet-in-gemini/">comet 67P/Churyumov-Gerasimenko</a>. Looming beyond the spacecraft near the top of the frame, dust and gas stream away from the comet's curious <a href="https://science.nasa.gov/image-article/apod-2014-august-7-rosettas-rendezvous/">double-lobed nucleus</a>. Bright sunlight glints off one of Rosetta's 14 meter long solar arrays. In fact, two exposures, one short and one long, were combined to record the dramatic high contrast scene using the CIVA camera system on Rosetta's still-attached <a href="https://en.wikipedia.org/wiki/Philae_(spacecraft)">Philae lander</a>. Its chosen <a href="https://ui.adsabs.harvard.edu/abs/2016DPS....4810101T/abstract">primary landing site</a> was on the visible hemisphere of the smaller lobe of the nucleus. This was the last image from Philae's camera before the lander separated from Rosetta on November 12. Shortly after separation Philae took another image looking back toward the orbiter and <a href="http://www.esa.int/spaceinvideos/Videos/2014/09/Philae_s_descent_and_science_on_the_surface">began its descent</a> to the nucleus of the comet.<br><br><strong>Tomorrow's picture: </strong>dark matters<br>]]></apod:explanation>
+		<description><![CDATA[<strong>Explanation:</strong> <a href="https://blogs.esa.int/rosetta/2014/10/14/mission-selfie-from-16-km/">This Rosetta spacecraft selfie</a> was snapped on October 7th, 2014. At the time the <a href="https://rosetta.esa.int/">comet-chasing spacecraft</a> was about 472 million kilometers from planet Earth, but only 16 kilometers from the surface of <a href="https://science.nasa.gov/image-article/apod-2021-november-13-rosettas-comet-in-gemini/">comet 67P/Churyumov-Gerasimenko</a>. Looming beyond the spacecraft near the top of the frame, dust and gas stream away from the comet's curious <a href="https://science.nasa.gov/image-article/apod-2014-august-7-rosettas-rendezvous/">double-lobed nucleus</a>. Bright sunlight glints off one of Rosetta's 14 meter long solar arrays. In fact, two exposures, one short and one long, were combined to record the dramatic high contrast scene using the CIVA camera system on Rosetta's still-attached <a href="https://en.wikipedia.org/wiki/Philae_(spacecraft)">Philae lander</a>. Its chosen <a href="https://ui.adsabs.harvard.edu/abs/2016DPS....4810101T/abstract">primary landing site</a> was on the visible hemisphere of the smaller lobe of the nucleus. This was the last image from Philae's camera before the lander separated from Rosetta on November 12. Shortly after separation Philae took another image looking back toward the orbiter and <a href="http://www.esa.int/spaceinvideos/Videos/2014/09/Philae_s_descent_and_science_on_the_surface">began its descent</a> to the nucleus of the comet.<br><br><strong>Tomorrow's picture: </strong>dark matters<br>]]></description>
+		<content:encoded><![CDATA[<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> APOD: 2026 October 24 - Rosetta&#039;s Selfie</title>
+<link rel="canonical" href="https://science.nasa.gov/image-article/apod-2026-october-24-rosettas-selfie/">
+<!-- gsfc meta tags -->
+<meta name="orgcode" content="661">
+<meta name="rno" content="Dana Bolles">
+<meta name="content-owner" content="Robert Nemiroff">
+<meta name="webmaster" content="Stephen.F.Fantasia.1">
+<meta name="description" content="Explanation: This Rosetta spacecraft selfie was snapped on October 7th, 2014. At the time the comet-chasing spacecraft was about 472 million kilometers from planet Earth, but only 16 kilometers from the surface of comet 67P/Churyumov-Gerasimenko. Looming beyond the spacecraft near the top of the frame, dust and gas stream away from the comet&#039;s curious double-lobed nucleus. Bright sunlight glints off one of Rosetta&#039;s 14 meter long solar arrays. In fact, two exposures, one short and one long, were combined to record the dramatic high contrast scene using the CIVA camera system on Rosetta&#039;s still-attached Philae lander. Its chosen primary landing site was on the visible hemisphere of the smaller lobe of the nucleus. This was the last image from Philae&#039;s camera before the lander separated from Rosetta on November 12. Shortly after separation Philae took another image looking back toward the orbiter and began its descent to the nucleus of the comet.Tomorrow&#039;s picture: dark matters">
+<!-- -->
+<meta name="keywords" content="rosetta&#039;s selfie">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rosetta&#039;s Selfie">
+<meta property="og:url" content="https://science.nasa.gov/image-article/apod-2026-october-24-rosettas-selfie/">
+<meta property="og:site_name" content="NASA Science">
+<meta property="og:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/ESA_Rosetta_Philae_CIVA_141007.png?w=1024&#038;h=1024&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:secure_url" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/ESA_Rosetta_Philae_CIVA_141007.png?w=1024&#038;h=1024&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:alt" content="Image of a Rosetta spacecraft solar array in foreground and the nucleus of comet 67P in background.">
+<meta property="article:published_time" content="2026-10-24T00:05:00-04:00">
+<meta property="article:modified_time" content="2026-10-23T18:25:18-04:00">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rosetta&#039;s Selfie">
+<meta name="twitter:site" content="@NASA">
+<meta name="twitter:creator" content="@NASA">
+<meta name="twitter:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/ESA_Rosetta_Philae_CIVA_141007.png?w=1024&#038;h=1024&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+</head>
+<body BGCOLOR="#F4F4FF" text="#000000" link="#0000FF" vlink="#7F0F9F"
+alink="#FF0000">
+
+<center>
+<h1> Astronomy Picture of the Day </h1>
+<p>
+
+<a href="https://science.nasa.gov/apod/archive/">Discover the cosmos!</a>
+Each day a different image or photograph of our fascinating universe is
+featured, along with a brief explanation written by a professional astronomer.
+<p>
+
+2026 October 24<br>
+
+<a href="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/ESA_Rosetta_Philae_CIVA_141007.png">
+<IMG SRC="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/ESA_Rosetta_Philae_CIVA_141007.png" alt="Image of a Rosetta spacecraft solar array in foreground and the nucleus of comet 67P in background."></a>
+</center>
+
+<center>
+<b> Rosetta&#039;s Selfie </b> <br>
+
+<b>Image Credit &
+<a href="https://science.nasa.gov/apod/about-apod/">Copyright</a>:</b>
+
+<a href="http://rosetta.esa.int/">ESA/Rosetta/Philae/CIV</a>A
+</center>
+
+<p>
+
+<b> Explanation: </b>
+
+<strong>Explanation:</strong> <a href="https://blogs.esa.int/rosetta/2014/10/14/mission-selfie-from-16-km/">This Rosetta spacecraft selfie</a> was snapped on October 7th, 2014. At the time the <a href="https://rosetta.esa.int/">comet-chasing spacecraft</a> was about 472 million kilometers from planet Earth, but only 16 kilometers from the surface of <a href="https://science.nasa.gov/image-article/apod-2021-november-13-rosettas-comet-in-gemini/">comet 67P/Churyumov-Gerasimenko</a>. Looming beyond the spacecraft near the top of the frame, dust and gas stream away from the comet's curious <a href="https://science.nasa.gov/image-article/apod-2014-august-7-rosettas-rendezvous/">double-lobed nucleus</a>. Bright sunlight glints off one of Rosetta's 14 meter long solar arrays. In fact, two exposures, one short and one long, were combined to record the dramatic high contrast scene using the CIVA camera system on Rosetta's still-attached <a href="https://en.wikipedia.org/wiki/Philae_(spacecraft)">Philae lander</a>. Its chosen <a href="https://ui.adsabs.harvard.edu/abs/2016DPS....4810101T/abstract">primary landing site</a> was on the visible hemisphere of the smaller lobe of the nucleus. This was the last image from Philae's camera before the lander separated from Rosetta on November 12. Shortly after separation Philae took another image looking back toward the orbiter and <a href="http://www.esa.int/spaceinvideos/Videos/2014/09/Philae_s_descent_and_science_on_the_surface">began its descent</a> to the nucleus of the comet.<br><br><strong>Tomorrow's picture: </strong>dark matters<br>
+<p> <center>
+
+<b> Tomorrow's picture: </b><a href="https://science.nasa.gov/image-article/apod-2026-october-25-dark-matter-in-a-simulated-universe/">APOD: 2026 October 25 &#8211; Dark Matter in a Simulated Universe</a>
+
+<p> <hr>
+<a href="https://science.nasa.gov/image-article/apod-2026-october-23-andromeda-in-southern-spring/">&lt;</a>
+| <a href="https://science.nasa.gov/apod/archive/">Archive</a>
+| <a href="https://science.nasa.gov/apod/archive/">Index</a>
+| <a href="https://science.nasa.gov/apod/archive/">Search</a>
+| <a href="https://science.nasa.gov/apod/calendar/">Calendar</a>
+| <a href="/feed/apod-basic/">RSS</a>
+| <a href="https://science.nasa.gov/apod/education-links/">Education</a>
+| <a href="https://science.nasa.gov/apod/about-apod/">About APOD</a>
+| <a href="https://asterisk.apod.com/discuss_apod.php?date=261024">Discuss</a>
+| <a href="https://science.nasa.gov/image-article/apod-2026-october-25-dark-matter-in-a-simulated-universe/">&gt;</a>
+
+<hr><p>
+<b> Authors & editors: </b>
+Jerry Bonnell, Cecilia Chirenti, Robert Nemiroff, Keighley Rockcliffe<br>
+<b>NASA Official: </b> Dana Bolles<a href="https://science.nasa.gov/apod/about-apod/">Specific rights apply</a>.<br>
+<a href="http://www.nasa.gov/about/highlights/HP_Privacy.html">NASA Web
+Privacy Policy and Important Notices</a><br>
+<b>A service of:</b>
+<a href="http://astrophysics.gsfc.nasa.gov/">ASD</a> at
+<a href="http://www.nasa.gov/">NASA</a> /
+<a href="http://www.nasa.gov/centers/goddard/">GSFC</a>
+<br><b>&</b> <a href="http://www.mtu.edu/">Michigan Tech. U.</a><br>
+</center>
+</body>
+</html>]]></content:encoded>
+	</item>
+	<item>
+		<title>Sonified: Eagle Nebula Pillars</title>
+		<link>https://science.nasa.gov/image-article/apod-2026-october-18-sonified-eagle-nebula-pillars/</link>
+		<guid isPermaLink="true">https://science.nasa.gov/image-article/apod-2026-october-18-sonified-eagle-nebula-pillars/</guid>
+		<pubDate>Sun, 18 Oct 2026 04:05:00 +0000</pubDate>
+		<apod:url>https://science.nasa.gov/image-article/apod-2026-october-18-sonified-eagle-nebula-pillars/</apod:url>
+		<apod:hdurl>https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/SonifiedEagleNebulaPillars.jpg?w=3048&#038;h=1708&#038;fit=clip&#038;crop=faces%2Cfocalpoint</apod:hdurl>
+		<apod:discussion>https://asterisk.apod.com/discuss_apod.php?date=261018</apod:discussion>
+		<apod:credit><![CDATA[<em>Image Credit:</em><strong> </strong><a href="https://www.nasa.gov/">NASA</a>, <a href="https://www.esa.int/">ESA</a>, &amp; <a href="https://www.nasa.gov/stem-content/the-hubble-heritage-project/">The Hubble Heritage Project</a> (<a href="https://www.stsci.edu/">STScI</a>/<a href="https://www.aura-astronomy.org/">AURA</a>);<br><em>Sonification: </em><a href="https://www.nasa.gov/">NASA</a>, <a href="https://cxc.harvard.edu/">CXC</a>, <a href="https://www.cfa.harvard.edu/about/about-smithsonian-astrophysical-observatory">SAO</a>, <a href="https://cxc.harvard.edu/cdo/cxcstaff/staff_details.php?si=117">K. Arcand</a>, <a href="https://www.astromattrusso.com/">M. Russo</a> &amp; A. Santaguida]]></apod:credit>
+		<apod:copyright><![CDATA[<em>Image Credit:</em><strong> </strong><a href="https://www.nasa.gov/">NASA</a>, <a href="https://www.esa.int/">ESA</a>, &amp; <a href="https://www.nasa.gov/stem-content/the-hubble-heritage-project/">The Hubble Heritage Project</a> (<a href="https://www.stsci.edu/">STScI</a>/<a href="https://www.aura-astronomy.org/">AURA</a>);<br><em>Sonification: </em><a href="https://www.nasa.gov/">NASA</a>, <a href="https://cxc.harvard.edu/">CXC</a>, <a href="https://www.cfa.harvard.edu/about/about-smithsonian-astrophysical-observatory">SAO</a>, <a href="https://cxc.harvard.edu/cdo/cxcstaff/staff_details.php?si=117">K. Arcand</a>, <a href="https://www.astromattrusso.com/">M. Russo</a> &amp; A. Santaguida]]></apod:copyright>
+		<apod:alt>Hubble image of Eagle Nebula Pillars with superimposed graph.</apod:alt>
+		<apod:primary_image_alt>Hubble image of Eagle Nebula Pillars with superimposed graph.</apod:primary_image_alt>
+		<apod:explanation><![CDATA[<strong>Explanation:</strong> Yes, but have you ever experienced the Eagle Nebula with your <em>ears</em>? The famous nebula <a href="https://en.wikipedia.org/wiki/Eagle_Nebula">M16</a> is best known for the feast it gives your eyes, highlighting bright young stars forming deep inside <a href="https://science.nasa.gov/image-article/apod-2024-october-22-m16-pillars-of-star-creation/">dark towering structures</a>. These <a href="https://starchild.gsfc.nasa.gov/docs/StarChild/questions/question19.html">light-years</a> long columns of cold gas and <a href="https://science.nasa.gov/image-article/apod-2003-july-6-fractal-interstellar-dust-up-close/">dust</a> are some 6,500 light-years distant <a href="https://youtu.be/lj3t_gjuXWk">toward</a> the constellation of the Serpent (<a href="https://en.wikipedia.org/wiki/Serpens">Serpens</a>). Sculpted and eroded by the energetic <a href="https://science.nasa.gov/ems/10_ultravioletwaves">ultraviolet light</a> and powerful winds from <a href="https://science.nasa.gov/image-article/apod-2018-june-20-pillars-of-the-eagle-nebula-in-infrared/">M16</a>'s cluster of massive stars, the cosmic pillars themselves are destined for <a href="https://www.reddit.com/r/funny/comments/6fiqjx/my_friends_dog_ate_through_48_rolls_of_charmin/#lightbox">destruction</a>. But the turbulent environment of star formation <a href="https://science.nasa.gov/image-article/apod-2019-august-10-m16-close-up/">within M16</a>, whose spectacular details are captured in <a href="https://www.si.edu/object/data-sonification-m16-eagle-nebula-pillars-creation-optical-only%3Ayt_uCG9R01EI8o">this</a> combined <a href="https://science.nasa.gov/mission/hubble/overview/about-hubble/">Hubble</a> (<a href="https://science.nasa.gov/ems/09_visiblelight">visible</a>) and Chandra (<a href="https://science.nasa.gov/ems/11_xrays">X-ray</a>) image, is likely similar to the environment that formed our own <a href="https://science.nasa.gov/sun/">Sun</a>. In the <a href="https://www.instagram.com/p/CFci3R1gEOh/">featured video</a>, listen for stars and dust sounding off as the line of <a href="https://chandra.si.edu/photo/2020/sonify/">sonification</a> moves left to right, with vertical position determining <a href="https://en.wikipedia.org/wiki/Pitch_(music)">pitch</a>.<br><br><strong>Tomorrow's picture:</strong> what could it be?]]></apod:explanation>
+		<description><![CDATA[<strong>Explanation:</strong> Yes, but have you ever experienced the Eagle Nebula with your <em>ears</em>? The famous nebula <a href="https://en.wikipedia.org/wiki/Eagle_Nebula">M16</a> is best known for the feast it gives your eyes, highlighting bright young stars forming deep inside <a href="https://science.nasa.gov/image-article/apod-2024-october-22-m16-pillars-of-star-creation/">dark towering structures</a>. These <a href="https://starchild.gsfc.nasa.gov/docs/StarChild/questions/question19.html">light-years</a> long columns of cold gas and <a href="https://science.nasa.gov/image-article/apod-2003-july-6-fractal-interstellar-dust-up-close/">dust</a> are some 6,500 light-years distant <a href="https://youtu.be/lj3t_gjuXWk">toward</a> the constellation of the Serpent (<a href="https://en.wikipedia.org/wiki/Serpens">Serpens</a>). Sculpted and eroded by the energetic <a href="https://science.nasa.gov/ems/10_ultravioletwaves">ultraviolet light</a> and powerful winds from <a href="https://science.nasa.gov/image-article/apod-2018-june-20-pillars-of-the-eagle-nebula-in-infrared/">M16</a>'s cluster of massive stars, the cosmic pillars themselves are destined for <a href="https://www.reddit.com/r/funny/comments/6fiqjx/my_friends_dog_ate_through_48_rolls_of_charmin/#lightbox">destruction</a>. But the turbulent environment of star formation <a href="https://science.nasa.gov/image-article/apod-2019-august-10-m16-close-up/">within M16</a>, whose spectacular details are captured in <a href="https://www.si.edu/object/data-sonification-m16-eagle-nebula-pillars-creation-optical-only%3Ayt_uCG9R01EI8o">this</a> combined <a href="https://science.nasa.gov/mission/hubble/overview/about-hubble/">Hubble</a> (<a href="https://science.nasa.gov/ems/09_visiblelight">visible</a>) and Chandra (<a href="https://science.nasa.gov/ems/11_xrays">X-ray</a>) image, is likely similar to the environment that formed our own <a href="https://science.nasa.gov/sun/">Sun</a>. In the <a href="https://www.instagram.com/p/CFci3R1gEOh/">featured video</a>, listen for stars and dust sounding off as the line of <a href="https://chandra.si.edu/photo/2020/sonify/">sonification</a> moves left to right, with vertical position determining <a href="https://en.wikipedia.org/wiki/Pitch_(music)">pitch</a>.<br><br><strong>Tomorrow's picture:</strong> what could it be?]]></description>
+		<content:encoded><![CDATA[<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> APOD: 2026 October 18 - Sonified: Eagle Nebula Pillars</title>
+<link rel="canonical" href="https://science.nasa.gov/image-article/apod-2026-october-18-sonified-eagle-nebula-pillars/">
+<!-- gsfc meta tags -->
+<meta name="orgcode" content="661">
+<meta name="rno" content="Dana Bolles">
+<meta name="content-owner" content="Robert Nemiroff">
+<meta name="webmaster" content="Stephen.F.Fantasia.1">
+<meta name="description" content="Explanation: Yes, but have you ever experienced the Eagle Nebula with your ears? The famous nebula M16 is best known for the feast it gives your eyes, highlighting bright young stars forming deep inside dark towering structures. These light-years long columns of cold gas and dust are some 6,500 light-years distant toward the constellation of the Serpent (Serpens). Sculpted and eroded by the energetic ultraviolet light and powerful winds from M16&#039;s cluster of massive stars, the cosmic pillars themselves are destined for destruction. But the turbulent environment of star formation within M16, whose spectacular details are captured in this combined Hubble (visible) and Chandra (X-ray) image, is likely similar to the environment that formed our own Sun. In the featured video, listen for stars and dust sounding off as the line of sonification moves left to right, with vertical position determining pitch.Tomorrow&#039;s picture: what could it be?">
+<!-- -->
+<meta name="keywords" content="sonified: eagle nebula pillars">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Sonified: Eagle Nebula Pillars">
+<meta property="og:url" content="https://science.nasa.gov/image-article/apod-2026-october-18-sonified-eagle-nebula-pillars/">
+<meta property="og:site_name" content="NASA Science">
+<meta property="og:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/SonifiedEagleNebulaPillars.jpg?w=3048&#038;h=1708&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:secure_url" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/SonifiedEagleNebulaPillars.jpg?w=3048&#038;h=1708&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:alt" content="Hubble image of Eagle Nebula Pillars with superimposed graph.">
+<meta property="article:published_time" content="2026-10-18T00:05:00-04:00">
+<meta property="article:modified_time" content="2026-10-16T08:27:20-04:00">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sonified: Eagle Nebula Pillars">
+<meta name="twitter:site" content="@NASA">
+<meta name="twitter:creator" content="@NASA">
+<meta name="twitter:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/SonifiedEagleNebulaPillars.jpg?w=3048&#038;h=1708&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+</head>
+<body BGCOLOR="#F4F4FF" text="#000000" link="#0000FF" vlink="#7F0F9F"
+alink="#FF0000">
+
+<center>
+<h1> Astronomy Picture of the Day </h1>
+<p>
+
+<a href="https://science.nasa.gov/apod/archive/">Discover the cosmos!</a>
+Each day a different image or photograph of our fascinating universe is
+featured, along with a brief explanation written by a professional astronomer.
+<p>
+
+2026 October 18<br>
+
+<iframe width="960" height="540" src="//www.youtube.com/embed/DzrCEm1ZBRY?rel=0" frameborder="0" allowfullscreen></iframe>
+</center>
+
+<center>
+<b> Sonified: Eagle Nebula Pillars </b> <br>
+
+<b>Image Credit &
+<a href="https://science.nasa.gov/apod/about-apod/">Copyright</a>:</b>
+
+<em>Image Credit:</em><strong> </strong><a href="https://www.nasa.gov/">NASA</a>, <a href="https://www.esa.int/">ESA</a>, &amp; <a href="https://www.nasa.gov/stem-content/the-hubble-heritage-project/">The Hubble Heritage Project</a> (<a href="https://www.stsci.edu/">STScI</a>/<a href="https://www.aura-astronomy.org/">AURA</a>);<br><em>Sonification: </em><a href="https://www.nasa.gov/">NASA</a>, <a href="https://cxc.harvard.edu/">CXC</a>, <a href="https://www.cfa.harvard.edu/about/about-smithsonian-astrophysical-observatory">SAO</a>, <a href="https://cxc.harvard.edu/cdo/cxcstaff/staff_details.php?si=117">K. Arcand</a>, <a href="https://www.astromattrusso.com/">M. Russo</a> &amp; A. Santaguida
+</center>
+
+<p>
+
+<b> Explanation: </b>
+
+<strong>Explanation:</strong> Yes, but have you ever experienced the Eagle Nebula with your <em>ears</em>? The famous nebula <a href="https://en.wikipedia.org/wiki/Eagle_Nebula">M16</a> is best known for the feast it gives your eyes, highlighting bright young stars forming deep inside <a href="https://science.nasa.gov/image-article/apod-2024-october-22-m16-pillars-of-star-creation/">dark towering structures</a>. These <a href="https://starchild.gsfc.nasa.gov/docs/StarChild/questions/question19.html">light-years</a> long columns of cold gas and <a href="https://science.nasa.gov/image-article/apod-2003-july-6-fractal-interstellar-dust-up-close/">dust</a> are some 6,500 light-years distant <a href="https://youtu.be/lj3t_gjuXWk">toward</a> the constellation of the Serpent (<a href="https://en.wikipedia.org/wiki/Serpens">Serpens</a>). Sculpted and eroded by the energetic <a href="https://science.nasa.gov/ems/10_ultravioletwaves">ultraviolet light</a> and powerful winds from <a href="https://science.nasa.gov/image-article/apod-2018-june-20-pillars-of-the-eagle-nebula-in-infrared/">M16</a>'s cluster of massive stars, the cosmic pillars themselves are destined for <a href="https://www.reddit.com/r/funny/comments/6fiqjx/my_friends_dog_ate_through_48_rolls_of_charmin/#lightbox">destruction</a>. But the turbulent environment of star formation <a href="https://science.nasa.gov/image-article/apod-2019-august-10-m16-close-up/">within M16</a>, whose spectacular details are captured in <a href="https://www.si.edu/object/data-sonification-m16-eagle-nebula-pillars-creation-optical-only%3Ayt_uCG9R01EI8o">this</a> combined <a href="https://science.nasa.gov/mission/hubble/overview/about-hubble/">Hubble</a> (<a href="https://science.nasa.gov/ems/09_visiblelight">visible</a>) and Chandra (<a href="https://science.nasa.gov/ems/11_xrays">X-ray</a>) image, is likely similar to the environment that formed our own <a href="https://science.nasa.gov/sun/">Sun</a>. In the <a href="https://www.instagram.com/p/CFci3R1gEOh/">featured video</a>, listen for stars and dust sounding off as the line of <a href="https://chandra.si.edu/photo/2020/sonify/">sonification</a> moves left to right, with vertical position determining <a href="https://en.wikipedia.org/wiki/Pitch_(music)">pitch</a>.<br><br><strong>Tomorrow's picture:</strong> what could it be?
+<p> <center>
+
+<b> Tomorrow's picture: </b><a href="https://science.nasa.gov/image-article/apod-2026-october-19-treble-clef-unusual-x-ray-hot-radio-source/">APOD: 2026 October 19 &#8211; Treble Clef: Unusual X-ray Hot Radio Source</a>
+
+<p> <hr>
+<a href="https://science.nasa.gov/image-article/apod-2026-october-17-3d-67p/">&lt;</a>
+| <a href="https://science.nasa.gov/apod/archive/">Archive</a>
+| <a href="https://science.nasa.gov/apod/archive/">Index</a>
+| <a href="https://science.nasa.gov/apod/archive/">Search</a>
+| <a href="https://science.nasa.gov/apod/calendar/">Calendar</a>
+| <a href="/feed/apod-basic/">RSS</a>
+| <a href="https://science.nasa.gov/apod/education-links/">Education</a>
+| <a href="https://science.nasa.gov/apod/about-apod/">About APOD</a>
+| <a href="https://asterisk.apod.com/discuss_apod.php?date=261018">Discuss</a>
+| <a href="https://science.nasa.gov/image-article/apod-2026-october-19-treble-clef-unusual-x-ray-hot-radio-source/">&gt;</a>
+
+<hr><p>
+<b> Authors & editors: </b>
+Robert Nemiroff, Jerry Bonnell, Cecilia Chirenti, Keighley Rockcliffe<br>
+<b>NASA Official: </b> Dana Bolles<a href="https://science.nasa.gov/apod/about-apod/">Specific rights apply</a>.<br>
+<a href="http://www.nasa.gov/about/highlights/HP_Privacy.html">NASA Web
+Privacy Policy and Important Notices</a><br>
+<b>A service of:</b>
+<a href="http://astrophysics.gsfc.nasa.gov/">ASD</a> at
+<a href="http://www.nasa.gov/">NASA</a> /
+<a href="http://www.nasa.gov/centers/goddard/">GSFC</a>
+<br><b>&</b> <a href="http://www.mtu.edu/">Michigan Tech. U.</a><br>
+</center>
+</body>
+</html>]]></content:encoded>
+	</item>
+	<item>
+		<title>Chasing the International Space Station</title>
+		<link>https://science.nasa.gov/image-article/apod-2026-october-16-chasing-the-international-space-station/</link>
+		<guid isPermaLink="true">https://science.nasa.gov/image-article/apod-2026-october-16-chasing-the-international-space-station/</guid>
+		<pubDate>Fri, 16 Oct 2026 04:05:00 +0000</pubDate>
+		<apod:url>https://science.nasa.gov/image-article/apod-2026-october-16-chasing-the-international-space-station/</apod:url>
+		<apod:hdurl>https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/CRS35-Holland30s1080p.jpg?w=1620&#038;h=1080&#038;fit=clip&#038;crop=faces%2Cfocalpoint</apod:hdurl>
+		<apod:discussion>https://asterisk.apod.com/discuss_apod.php?date=261016</apod:discussion>
+		<apod:credit><![CDATA[<a href="https://www.youtube.com/user/eric72holland">Eric Holland</a>]]></apod:credit>
+		<apod:copyright><![CDATA[<a href="https://www.youtube.com/user/eric72holland">Eric Holland</a>]]></apod:copyright>
+		<apod:alt>Video of a rocket launch in dark,  predawn skies as seen from the beach..</apod:alt>
+		<apod:primary_image_alt>Video of a rocket launch in dark,  predawn skies as seen from the beach..</apod:primary_image_alt>
+		<apod:explanation><![CDATA[<strong>Explanation:</strong> <a href="https://www.nasa.gov/news-release/nasa-science-cargo-launch-on-35th-spacex-resupply-mission-to-station/">Blasting into the predawn sky</a> on Tuesday, October 13, a Falcon 9 rocket and Dragon spacecraft are headed for <a href="https://www.nasa.gov/missions/station/iss-research/observing-our-planet-from-low-earth-orbit/">low Earth orbit</a> in this stunning timelapse video captured from Indian Harbour Beach, Florida. Starting with a launch from Space Launch Complex 40 at Cape Canaveral Space Force Station, Falcon and Dragon are chasing the <a href="https://www.nasa.gov/international-space-station/">International Space Station</a> on NASA's 35th Commercial Resupply Services mission. On cue, the space station itself enters the frame from the top. Almost 8 seconds into the 30 second timelapse. the bright streak of the ISS appears heading "down" toward the horizon. The first and second stages of the Falcon 9 are separating as the spectacular exhaust plume jellyfish grows, already catching the light of the rising Sun. The visible sequence of first stage boost back, re-entry, and landing burns begins around 20 seconds into the video. With the second stage following the ISS toward the distant horizon, <a href="https://science.nasa.gov/image-article/apod-2026-march-19-launch-plume-spacex-jellyfish/">the jellyfish plume</a> continues to drift in the predawn sky, even after the successful first stage landing at planet Earth's Landing Zone 40.<br><br><strong>Tomorrow's picture: </strong>pixels in space]]></apod:explanation>
+		<description><![CDATA[<strong>Explanation:</strong> <a href="https://www.nasa.gov/news-release/nasa-science-cargo-launch-on-35th-spacex-resupply-mission-to-station/">Blasting into the predawn sky</a> on Tuesday, October 13, a Falcon 9 rocket and Dragon spacecraft are headed for <a href="https://www.nasa.gov/missions/station/iss-research/observing-our-planet-from-low-earth-orbit/">low Earth orbit</a> in this stunning timelapse video captured from Indian Harbour Beach, Florida. Starting with a launch from Space Launch Complex 40 at Cape Canaveral Space Force Station, Falcon and Dragon are chasing the <a href="https://www.nasa.gov/international-space-station/">International Space Station</a> on NASA's 35th Commercial Resupply Services mission. On cue, the space station itself enters the frame from the top. Almost 8 seconds into the 30 second timelapse. the bright streak of the ISS appears heading "down" toward the horizon. The first and second stages of the Falcon 9 are separating as the spectacular exhaust plume jellyfish grows, already catching the light of the rising Sun. The visible sequence of first stage boost back, re-entry, and landing burns begins around 20 seconds into the video. With the second stage following the ISS toward the distant horizon, <a href="https://science.nasa.gov/image-article/apod-2026-march-19-launch-plume-spacex-jellyfish/">the jellyfish plume</a> continues to drift in the predawn sky, even after the successful first stage landing at planet Earth's Landing Zone 40.<br><br><strong>Tomorrow's picture: </strong>pixels in space]]></description>
+		<content:encoded><![CDATA[<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> APOD: 2026 October 16 - Chasing the International Space Station</title>
+<link rel="canonical" href="https://science.nasa.gov/image-article/apod-2026-october-16-chasing-the-international-space-station/">
+<!-- gsfc meta tags -->
+<meta name="orgcode" content="661">
+<meta name="rno" content="Dana Bolles">
+<meta name="content-owner" content="Robert Nemiroff">
+<meta name="webmaster" content="Stephen.F.Fantasia.1">
+<meta name="description" content="Explanation: Blasting into the predawn sky on Tuesday, October 13, a Falcon 9 rocket and Dragon spacecraft are headed for low Earth orbit in this stunning timelapse video captured from Indian Harbour Beach, Florida. Starting with a launch from Space Launch Complex 40 at Cape Canaveral Space Force Station, Falcon and Dragon are chasing the International Space Station on NASA&#039;s 35th Commercial Resupply Services mission. On cue, the space station itself enters the frame from the top. Almost 8 seconds into the 30 second timelapse. the bright streak of the ISS appears heading &quot;down&quot; toward the horizon. The first and second stages of the Falcon 9 are separating as the spectacular exhaust plume jellyfish grows, already catching the light of the rising Sun. The visible sequence of first stage boost back, re-entry, and landing burns begins around 20 seconds into the video. With the second stage following the ISS toward the distant horizon, the jellyfish plume continues to drift in the predawn sky, even after the successful first stage landing at planet Earth&#039;s Landing Zone 40.Tomorrow&#039;s picture: pixels in space">
+<!-- -->
+<meta name="keywords" content="chasing the international space station">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Chasing the International Space Station">
+<meta property="og:url" content="https://science.nasa.gov/image-article/apod-2026-october-16-chasing-the-international-space-station/">
+<meta property="og:site_name" content="NASA Science">
+<meta property="og:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/CRS35-Holland30s1080p.jpg?w=1620&#038;h=1080&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:secure_url" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/CRS35-Holland30s1080p.jpg?w=1620&#038;h=1080&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:alt" content="A rocket launch in dark ,predawn skies as viewed from the beach.">
+<meta property="article:published_time" content="2026-10-16T00:05:00-04:00">
+<meta property="article:modified_time" content="2026-10-21T10:12:26-04:00">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Chasing the International Space Station">
+<meta name="twitter:site" content="@NASA">
+<meta name="twitter:creator" content="@NASA">
+<meta name="twitter:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/CRS35-Holland30s1080p.jpg?w=1620&#038;h=1080&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+</head>
+<body BGCOLOR="#F4F4FF" text="#000000" link="#0000FF" vlink="#7F0F9F"
+alink="#FF0000">
+
+<center>
+<h1> Astronomy Picture of the Day </h1>
+<p>
+
+<a href="https://science.nasa.gov/apod/archive/">Discover the cosmos!</a>
+Each day a different image or photograph of our fascinating universe is
+featured, along with a brief explanation written by a professional astronomer.
+<p>
+
+2026 October 16<br>
+
+<video controls title="">
+<source src="https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/2026/october/CRS35-Holland30s1080p.mp4" type="video/mp4">
+</video>
+</center>
+
+<center>
+<b> Chasing the International Space Station </b> <br>
+
+<b>Image Credit &
+<a href="https://science.nasa.gov/apod/about-apod/">Copyright</a>:</b>
+
+<a href="https://www.youtube.com/user/eric72holland">Eric Holland</a>
+</center>
+
+<p>
+
+<b> Explanation: </b>
+
+<strong>Explanation:</strong> <a href="https://www.nasa.gov/news-release/nasa-science-cargo-launch-on-35th-spacex-resupply-mission-to-station/">Blasting into the predawn sky</a> on Tuesday, October 13, a Falcon 9 rocket and Dragon spacecraft are headed for <a href="https://www.nasa.gov/missions/station/iss-research/observing-our-planet-from-low-earth-orbit/">low Earth orbit</a> in this stunning timelapse video captured from Indian Harbour Beach, Florida. Starting with a launch from Space Launch Complex 40 at Cape Canaveral Space Force Station, Falcon and Dragon are chasing the <a href="https://www.nasa.gov/international-space-station/">International Space Station</a> on NASA's 35th Commercial Resupply Services mission. On cue, the space station itself enters the frame from the top. Almost 8 seconds into the 30 second timelapse. the bright streak of the ISS appears heading "down" toward the horizon. The first and second stages of the Falcon 9 are separating as the spectacular exhaust plume jellyfish grows, already catching the light of the rising Sun. The visible sequence of first stage boost back, re-entry, and landing burns begins around 20 seconds into the video. With the second stage following the ISS toward the distant horizon, <a href="https://science.nasa.gov/image-article/apod-2026-march-19-launch-plume-spacex-jellyfish/">the jellyfish plume</a> continues to drift in the predawn sky, even after the successful first stage landing at planet Earth's Landing Zone 40.<br><br><strong>Tomorrow's picture: </strong>pixels in space
+<p> <center>
+
+<b> Tomorrow's picture: </b><a href="https://science.nasa.gov/image-article/apod-2026-october-17-3d-67p/">APOD: 2026 October 17 &#8211; 3D 67P</a>
+
+<p> <hr>
+<a href="https://science.nasa.gov/image-article/apod-2026-october-15-the-milky-way-over-manhattan/">&lt;</a>
+| <a href="https://science.nasa.gov/apod/archive/">Archive</a>
+| <a href="https://science.nasa.gov/apod/archive/">Index</a>
+| <a href="https://science.nasa.gov/apod/archive/">Search</a>
+| <a href="https://science.nasa.gov/apod/calendar/">Calendar</a>
+| <a href="/feed/apod-basic/">RSS</a>
+| <a href="https://science.nasa.gov/apod/education-links/">Education</a>
+| <a href="https://science.nasa.gov/apod/about-apod/">About APOD</a>
+| <a href="https://asterisk.apod.com/discuss_apod.php?date=261016">Discuss</a>
+| <a href="https://science.nasa.gov/image-article/apod-2026-october-17-3d-67p/">&gt;</a>
+
+<hr><p>
+<b> Authors & editors: </b>
+Jerry Bonnell, Cecilia Chirenti, Robert Nemiroff, Keighley Rockcliffe<br>
+<b>NASA Official: </b> Dana Bolles<a href="https://science.nasa.gov/apod/about-apod/">Specific rights apply</a>.<br>
+<a href="http://www.nasa.gov/about/highlights/HP_Privacy.html">NASA Web
+Privacy Policy and Important Notices</a><br>
+<b>A service of:</b>
+<a href="http://astrophysics.gsfc.nasa.gov/">ASD</a> at
+<a href="http://www.nasa.gov/">NASA</a> /
+<a href="http://www.nasa.gov/centers/goddard/">GSFC</a>
+<br><b>&</b> <a href="http://www.mtu.edu/">Michigan Tech. U.</a><br>
+</center>
+</body>
+</html>]]></content:encoded>
+	</item>
+	<item>
+		<title>The Milky Way over Manhattan</title>
+		<link>https://science.nasa.gov/image-article/apod-2026-october-15-the-milky-way-over-manhattan/</link>
+		<guid isPermaLink="true">https://science.nasa.gov/image-article/apod-2026-october-15-the-milky-way-over-manhattan/</guid>
+		<pubDate>Thu, 15 Oct 2026 04:05:00 +0000</pubDate>
+		<apod:url>https://science.nasa.gov/image-article/apod-2026-october-15-the-milky-way-over-manhattan/</apod:url>
+		<apod:hdurl>https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/Manhattan%20Milkyway.jpg?w=2160&#038;h=3840&#038;fit=clip&#038;crop=faces%2Cfocalpoint</apod:hdurl>
+		<apod:discussion>https://asterisk.apod.com/discuss_apod.php?date=261015</apod:discussion>
+		<apod:credit><![CDATA[<a href="https://www.instagram.com/frozen.spectrum/">Jason Kurth</a>, <a href="https://www.instagram.com/tmbucksley/?hl=en">Ty Buckley</a>]]></apod:credit>
+		<apod:copyright><![CDATA[<a href="https://www.instagram.com/frozen.spectrum/">Jason Kurth</a>, <a href="https://www.instagram.com/tmbucksley/?hl=en">Ty Buckley</a>]]></apod:copyright>
+		<apod:alt>A black and white view of the Manhattan skyline merges into a night sky with stars and a visible, though faint, Milky Way. Please see explanation for more details.</apod:alt>
+		<apod:primary_image_alt>A black and white view of the Manhattan skyline merges into a night sky with stars and a visible, though faint, Milky Way. Please see explanation for more details.</apod:primary_image_alt>
+		<apod:explanation><![CDATA[<strong>Explanation:</strong> The <a href="https://science.nasa.gov/image-article/apod-2022-november-12-eclipse-in-the-city/">city lights</a> outshine the stars in the <a href="https://en.wikipedia.org/wiki/The_City_That_Never_Sleeps_(nickname)">City That Never Sleeps</a>. Who would have thought that the <a href="https://science.nasa.gov/image-article/apod-2025-august-2-fireflies-meteors-and-milky-way/">Milky Way</a> could be visible in this sky? This <a href="https://www.instagram.com/p/DeNUSc7u_KQ/">image</a> was taken with a filter that blocks most <a href="https://science.nasa.gov/ems/09_visiblelight/">visible light</a>, capturing instead only light in the near-<a href="https://science.nasa.gov/ems/07_infraredwaves/">infrared</a> region of the <a href="https://science.nasa.gov/ems/01_intro/">electromagnetic spectrum</a> (with lower energy than visible light). The astrophotographer's <a href="https://petapixel.com/2026/10/07/photographer-captures-the-milky-way-over-manhattan-despite-the-light-pollution/">clever setup</a> blocks most of the <a href="https://science.nasa.gov/image-article/apod-2026-june-26-milky-way-urban-style/">light pollution</a> from the city: old <a href="https://scienceinschool.org/article/2015/starlight-inside-light-bulb/">incandescent light bulbs</a> and some <a href="https://www.youtube.com/watch?v=ok__l1Acuwg">neon lights</a> are still <a href="https://www.researchgate.net/figure/Spectrum-of-the-near-infrared-band-of-a-neon-lamp-detected-by-a-commercial-spectrometer_fig2_302915423">bright</a> in the near-infrared, but <a href="https://science.nasa.gov/asset/webb/spectrum-of-a-fluorescent-light-bulb-vs-spectrum-of-the-sun/">fluorescent</a> and <a href="https://www.researchgate.net/figure/Emission-spectra-of-different-light-sources-a-incandescent-tungsten-light-bulb-b_fig1_312320039">LED</a> light bulbs are not. Of course, <a href="https://science.nasa.gov/universe/stars/">stars</a> are also bright in the near-infrared! This image is a reminder that we all live <a href="https://iauarchive.eso.org/news/announcements/detail/ann20019/">under the same sky</a>, and astronomy allows all of us to learn more about <a href="https://www.youtube.com/watch?v=uLu1cTKBspI">humanity's place in the Cosmos</a>. <br><br><strong>Tomorrow's picture: </strong>Chasing the ISS]]></apod:explanation>
+		<description><![CDATA[<strong>Explanation:</strong> The <a href="https://science.nasa.gov/image-article/apod-2022-november-12-eclipse-in-the-city/">city lights</a> outshine the stars in the <a href="https://en.wikipedia.org/wiki/The_City_That_Never_Sleeps_(nickname)">City That Never Sleeps</a>. Who would have thought that the <a href="https://science.nasa.gov/image-article/apod-2025-august-2-fireflies-meteors-and-milky-way/">Milky Way</a> could be visible in this sky? This <a href="https://www.instagram.com/p/DeNUSc7u_KQ/">image</a> was taken with a filter that blocks most <a href="https://science.nasa.gov/ems/09_visiblelight/">visible light</a>, capturing instead only light in the near-<a href="https://science.nasa.gov/ems/07_infraredwaves/">infrared</a> region of the <a href="https://science.nasa.gov/ems/01_intro/">electromagnetic spectrum</a> (with lower energy than visible light). The astrophotographer's <a href="https://petapixel.com/2026/10/07/photographer-captures-the-milky-way-over-manhattan-despite-the-light-pollution/">clever setup</a> blocks most of the <a href="https://science.nasa.gov/image-article/apod-2026-june-26-milky-way-urban-style/">light pollution</a> from the city: old <a href="https://scienceinschool.org/article/2015/starlight-inside-light-bulb/">incandescent light bulbs</a> and some <a href="https://www.youtube.com/watch?v=ok__l1Acuwg">neon lights</a> are still <a href="https://www.researchgate.net/figure/Spectrum-of-the-near-infrared-band-of-a-neon-lamp-detected-by-a-commercial-spectrometer_fig2_302915423">bright</a> in the near-infrared, but <a href="https://science.nasa.gov/asset/webb/spectrum-of-a-fluorescent-light-bulb-vs-spectrum-of-the-sun/">fluorescent</a> and <a href="https://www.researchgate.net/figure/Emission-spectra-of-different-light-sources-a-incandescent-tungsten-light-bulb-b_fig1_312320039">LED</a> light bulbs are not. Of course, <a href="https://science.nasa.gov/universe/stars/">stars</a> are also bright in the near-infrared! This image is a reminder that we all live <a href="https://iauarchive.eso.org/news/announcements/detail/ann20019/">under the same sky</a>, and astronomy allows all of us to learn more about <a href="https://www.youtube.com/watch?v=uLu1cTKBspI">humanity's place in the Cosmos</a>. <br><br><strong>Tomorrow's picture: </strong>Chasing the ISS]]></description>
+		<content:encoded><![CDATA[<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> APOD: 2026 October 15 - The Milky Way over Manhattan</title>
+<link rel="canonical" href="https://science.nasa.gov/image-article/apod-2026-october-15-the-milky-way-over-manhattan/">
+<!-- gsfc meta tags -->
+<meta name="orgcode" content="661">
+<meta name="rno" content="Dana Bolles">
+<meta name="content-owner" content="Cecilia Chirenti">
+<meta name="webmaster" content="Stephen.F.Fantasia.1">
+<meta name="description" content="Explanation: The city lights outshine the stars in the City That Never Sleeps. Who would have thought that the Milky Way could be visible in this sky? This image was taken with a filter that blocks most visible light, capturing instead only light in the near-infrared region of the electromagnetic spectrum (with lower energy than visible light). The astrophotographer&#039;s clever setup blocks most of the light pollution from the city: old incandescent light bulbs and some neon lights are still bright in the near-infrared, but fluorescent and LED light bulbs are not. Of course, stars are also bright in the near-infrared! This image is a reminder that we all live under the same sky, and astronomy allows all of us to learn more about humanity&#039;s place in the Cosmos. Tomorrow&#039;s picture: Chasing the ISS">
+<!-- -->
+<meta name="keywords" content="the milky way over manhattan">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The Milky Way over Manhattan">
+<meta property="og:url" content="https://science.nasa.gov/image-article/apod-2026-october-15-the-milky-way-over-manhattan/">
+<meta property="og:site_name" content="NASA Science">
+<meta property="og:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/Manhattan%20Milkyway.jpg?w=2160&#038;h=3840&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:secure_url" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/Manhattan%20Milkyway.jpg?w=2160&#038;h=3840&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+<meta property="og:image:alt" content="A black and white view of the Manhattan skyline merges into a night sky with stars and a visible, though faint, Milky Way. Please see explanation for more details.">
+<meta property="article:published_time" content="2026-10-15T00:05:00-04:00">
+<meta property="article:modified_time" content="2026-10-14T16:25:02-04:00">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Milky Way over Manhattan">
+<meta name="twitter:site" content="@NASA">
+<meta name="twitter:creator" content="@NASA">
+<meta name="twitter:image" content="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/Manhattan%20Milkyway.jpg?w=2160&#038;h=3840&#038;fit=clip&#038;crop=faces%2Cfocalpoint">
+</head>
+<body BGCOLOR="#F4F4FF" text="#000000" link="#0000FF" vlink="#7F0F9F"
+alink="#FF0000">
+
+<center>
+<h1> Astronomy Picture of the Day </h1>
+<p>
+
+<a href="https://science.nasa.gov/apod/archive/">Discover the cosmos!</a>
+Each day a different image or photograph of our fascinating universe is
+featured, along with a brief explanation written by a professional astronomer.
+<p>
+
+2026 October 15<br>
+
+<a href="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/Manhattan%20Milkyway.jpg">
+<IMG SRC="https://assets.science.nasa.gov/dynamicimage/assets/science/cds/apod/apod/2026/october/Manhattan%20Milkyway.jpg" alt="A black and white view of the Manhattan skyline merges into a night sky with stars and a visible, though faint, Milky Way. Please see explanation for more details."></a>
+</center>
+
+<center>
+<b> The Milky Way over Manhattan </b> <br>
+
+<b>Image Credit &
+<a href="https://science.nasa.gov/apod/about-apod/">Copyright</a>:</b>
+
+<a href="https://www.instagram.com/frozen.spectrum/">Jason Kurth</a>, <a href="https://www.instagram.com/tmbucksley/?hl=en">Ty Buckley</a>
+</center>
+
+<p>
+
+<b> Explanation: </b>
+
+<strong>Explanation:</strong> The <a href="https://science.nasa.gov/image-article/apod-2022-november-12-eclipse-in-the-city/">city lights</a> outshine the stars in the <a href="https://en.wikipedia.org/wiki/The_City_That_Never_Sleeps_(nickname)">City That Never Sleeps</a>. Who would have thought that the <a href="https://science.nasa.gov/image-article/apod-2025-august-2-fireflies-meteors-and-milky-way/">Milky Way</a> could be visible in this sky? This <a href="https://www.instagram.com/p/DeNUSc7u_KQ/">image</a> was taken with a filter that blocks most <a href="https://science.nasa.gov/ems/09_visiblelight/">visible light</a>, capturing instead only light in the near-<a href="https://science.nasa.gov/ems/07_infraredwaves/">infrared</a> region of the <a href="https://science.nasa.gov/ems/01_intro/">electromagnetic spectrum</a> (with lower energy than visible light). The astrophotographer's <a href="https://petapixel.com/2026/10/07/photographer-captures-the-milky-way-over-manhattan-despite-the-light-pollution/">clever setup</a> blocks most of the <a href="https://science.nasa.gov/image-article/apod-2026-june-26-milky-way-urban-style/">light pollution</a> from the city: old <a href="https://scienceinschool.org/article/2015/starlight-inside-light-bulb/">incandescent light bulbs</a> and some <a href="https://www.youtube.com/watch?v=ok__l1Acuwg">neon lights</a> are still <a href="https://www.researchgate.net/figure/Spectrum-of-the-near-infrared-band-of-a-neon-lamp-detected-by-a-commercial-spectrometer_fig2_302915423">bright</a> in the near-infrared, but <a href="https://science.nasa.gov/asset/webb/spectrum-of-a-fluorescent-light-bulb-vs-spectrum-of-the-sun/">fluorescent</a> and <a href="https://www.researchgate.net/figure/Emission-spectra-of-different-light-sources-a-incandescent-tungsten-light-bulb-b_fig1_312320039">LED</a> light bulbs are not. Of course, <a href="https://science.nasa.gov/universe/stars/">stars</a> are also bright in the near-infrared! This image is a reminder that we all live <a href="https://iauarchive.eso.org/news/announcements/detail/ann20019/">under the same sky</a>, and astronomy allows all of us to learn more about <a href="https://www.youtube.com/watch?v=uLu1cTKBspI">humanity's place in the Cosmos</a>. <br><br><strong>Tomorrow's picture: </strong>Chasing the ISS
+<p> <center>
+
+<b> Tomorrow's picture: </b><a href="https://science.nasa.gov/image-article/apod-2026-october-16-chasing-the-international-space-station/">APOD: 2026 October 16 – Chasing the International Space Station</a>
+
+<p> <hr>
+<a href="https://science.nasa.gov/image-article/apod-2026-october-14-mars-and-the-beehive-under-an-aurora/">&lt;</a>
+| <a href="https://science.nasa.gov/apod/archive/">Archive</a>
+| <a href="https://science.nasa.gov/apod/archive/">Index</a>
+| <a href="https://science.nasa.gov/apod/archive/">Search</a>
+| <a href="https://science.nasa.gov/apod/calendar/">Calendar</a>
+| <a href="/feed/apod-basic/">RSS</a>
+| <a href="https://science.nasa.gov/apod/education-links/">Education</a>
+| <a href="https://science.nasa.gov/apod/about-apod/">About APOD</a>
+| <a href="https://asterisk.apod.com/discuss_apod.php?date=261015">Discuss</a>
+| <a href="https://science.nasa.gov/image-article/apod-2026-october-16-chasing-the-international-space-station/">&gt;</a>
+
+<hr><p>
+<b> Authors & editors: </b>
+Cecilia Chirenti, Robert Nemiroff, Jerry Bonnell, Keighley Rockcliffe<br>
+<b>NASA Official: </b> Dana Bolles<a href="https://science.nasa.gov/apod/about-apod/">Specific rights apply</a>.<br>
+<a href="http://www.nasa.gov/about/highlights/HP_Privacy.html">NASA Web
+Privacy Policy and Important Notices</a><br>
+<b>A service of:</b>
+<a href="http://astrophysics.gsfc.nasa.gov/">ASD</a> at
+<a href="http://www.nasa.gov/">NASA</a> /
+<a href="http://www.nasa.gov/centers/goddard/">GSFC</a>
+<br><b>&</b> <a href="http://www.mtu.edu/">Michigan Tech. U.</a><br>
+</center>
+</body>
+</html>]]></content:encoded>
+	</item>
+</channel>
+</rss>

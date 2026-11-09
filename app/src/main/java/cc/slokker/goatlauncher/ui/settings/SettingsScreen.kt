@@ -105,7 +105,9 @@ import cc.slokker.goatlauncher.data.AccountSettings
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import cc.slokker.goatlauncher.data.Place
+import cc.slokker.goatlauncher.data.ApodFeed
 import cc.slokker.goatlauncher.data.RedditFeed
+import cc.slokker.goatlauncher.data.WikimediaFeed
 import cc.slokker.goatlauncher.HomeGuardService
 import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.data.Wallpaper
@@ -1102,10 +1104,18 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
             }
         }
 
-        // Reddit: subreddits de fotos sugeridos, ou outro escrito à mão.
-        item { SectionLabel(s.reddit) }
+        // Fotos do dia, sem conta nem chave: a imagem do dia do Wikimedia Commons e a da NASA. A resolução mínima
+        // vale para todas as fotos online (também as do Reddit).
+        item { SectionLabel(s.photosOfTheDay) }
         item {
-            Text(s.redditHint, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 4.dp))
+            PhotoSourceRow(WIKIMEDIA_NAME, s.wikimediaHint, current.type == Wallpaper.TYPE_WIKIMEDIA) {
+                vm.setWallpaper(Wallpaper(Wallpaper.TYPE_WIKIMEDIA, WikimediaFeed.ID))
+            }
+        }
+        item {
+            PhotoSourceRow(NASA_NAME, s.nasaHint, current.type == Wallpaper.TYPE_NASA) {
+                vm.setWallpaper(Wallpaper(Wallpaper.TYPE_NASA, ApodFeed.ID))
+            }
         }
         item {
             // OK passa à seguinte: qualquer → Full HD → 2K → 4K → qualquer.
@@ -1116,6 +1126,12 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
                 onClick = { vm.setRedditMinWidth(next) },
                 trailing = { Chevron() },
             )
+        }
+
+        // Reddit: subreddits de fotos sugeridos, ou outro escrito à mão.
+        item { SectionLabel(s.reddit) }
+        item {
+            Text(s.redditHint, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 4.dp))
         }
         val isReddit = current.type == Wallpaper.TYPE_REDDIT
         items(RedditFeed.SUGGESTED, key = { "r-$it" }) { sub ->
@@ -1146,6 +1162,17 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
             }
         }
     }
+}
+
+/** Uma fonte de fotos do dia (nome da fonte e o que mostra), com o visto quando é o fundo atual. */
+@Composable
+private fun PhotoSourceRow(title: String, subtitle: String, selected: Boolean, onClick: () -> Unit) {
+    GlassRow(
+        title = title,
+        subtitle = subtitle,
+        onClick = onClick,
+        trailing = { if (selected) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
+    )
 }
 
 /** Ligação ao YouTube por código (como na app de TV do YouTube): a TV nunca vê a password. */
@@ -1231,6 +1258,8 @@ private fun clockText(minutes: Int, h24: Boolean): String {
 private fun wallpaperName(w: Wallpaper, s: cc.slokker.goatlauncher.ui.Strings): String = when (w.type) {
     Wallpaper.TYPE_BUILTIN -> Wallpapers.byId(w.value).name(s)
     Wallpaper.TYPE_REDDIT -> "r/${w.value}"
+    Wallpaper.TYPE_WIKIMEDIA -> WIKIMEDIA_NAME
+    Wallpaper.TYPE_NASA -> NASA_NAME
     Wallpaper.TYPE_FOLDER -> s.wallpaperFolder(w.value.substringAfterLast('/'))
     else -> s.wallpaperImage
 }
@@ -1238,6 +1267,10 @@ private fun wallpaperName(w: Wallpaper, s: cc.slokker.goatlauncher.ui.Strings): 
 private val IDLE_MINUTES = listOf(0, 1, 2, 5, 10, 30)
 private val AUTOSTART_DELAYS = listOf(0, 3, 5, 10, 20)
 private val REDDIT_MIN_WIDTHS = listOf(0, 1920, 2560, 3840)
+
+/** Os nomes das fontes de fotos do dia (nomes próprios: não se traduzem). */
+private const val WIKIMEDIA_NAME = "Wikimedia Commons"
+private const val NASA_NAME = "NASA APOD"
 
 private fun resolutionName(px: Int, s: Strings): String = when (px) {
     0 -> s.anyResolution

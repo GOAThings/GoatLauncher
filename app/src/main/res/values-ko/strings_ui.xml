@@ -72,6 +72,10 @@
     <string name="reddit">Reddit</string>
     <string name="reddit_hint">이번 주 인기 사진, 30분마다 바뀌어요</string>
     <string name="other_subreddit">다른 서브레딧</string>
+    <string name="photos_of_the_day">오늘의 사진</string>
+    <string name="wikimedia_hint">자연, 장소, 예술 · 작가와 라이선스 표시</string>
+    <string name="nasa_hint">오늘의 천문 사진</string>
+    <string name="photo_credit">출처: %1$s</string>
     <string name="use">사용</string>
     <string name="clock24h">24시간 시계</string>
     <string name="greeting">인사말</string>

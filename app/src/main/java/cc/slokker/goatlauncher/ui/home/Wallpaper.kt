@@ -57,8 +57,8 @@ object Wallpapers {
 }
 
 /**
- * O fundo em ecrã inteiro. Uma imagem (da box, do Reddit, ou de um endereço posto na conta) aparece por cima
- * do fundo por defeito; ao mudar de imagem (o Reddit troca de tempos a tempos), a nova entra com um fade lento.
+ * O fundo em ecrã inteiro. Uma imagem (da box, de uma fonte online, ou de um endereço posto na conta) aparece por
+ * cima do fundo por defeito; ao mudar de imagem (as fotos online trocam de tempos a tempos), a nova entra com um fade lento.
  */
 @Composable
 fun WallpaperView(wallpaper: Wallpaper, rotating: Any?, modifier: Modifier = Modifier) {
@@ -89,13 +89,13 @@ fun WallpaperView(wallpaper: Wallpaper, rotating: Any?, modifier: Modifier = Mod
 
 /**
  * A imagem do fundo (URL ou ficheiro), ou null quando é um desenho da app. Uma imagem da box só existe na TV onde
- * foi escolhida; noutra TV da conta fica o fundo por defeito. No Reddit e na pasta, [rotating] é a de agora.
+ * foi escolhida; noutra TV da conta fica o fundo por defeito. Nas fotos online e na pasta, [rotating] é a de agora.
  */
 fun wallpaperImage(context: Context, wallpaper: Wallpaper, rotating: Any?): Any? = when (wallpaper.type) {
     Wallpaper.TYPE_URL -> wallpaper.value
     Wallpaper.TYPE_FILE -> ImageImport.wallpaperFile(context, wallpaper.value).takeIf { it.exists() }
-    Wallpaper.TYPE_REDDIT, Wallpaper.TYPE_FOLDER -> rotating
-    else -> null
+    Wallpaper.TYPE_FOLDER -> rotating
+    else -> rotating.takeIf { wallpaper.isOnlinePhotos }
 }
 
 /**

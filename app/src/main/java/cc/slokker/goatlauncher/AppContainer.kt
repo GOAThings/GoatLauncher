@@ -94,14 +94,36 @@ class AppContainer(context: Context) {
         }
     }
 
-    val wallpapers = OnlineWallpapers(context, plainHttp)
+    val wallpapers = OnlineWallpapers(context, plainHttp, publicUserAgent())
+
+    /**
+     * O cliente das imagens (Coil, ver LauncherApp). As imagens do Wikimedia recusam (403) a identificação genérica
+     * do OkHttp, por isso os pedidos a esses servidores (e aos da NASA) levam a da app; os outros ficam como estavam.
+     */
+    val imageHttp: OkHttpClient = OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val request = chain.request()
+            val host = request.url.host
+            val photoHost = PHOTO_HOSTS.any { host == it || host.endsWith(".$it") }
+            chain.proceed(if (photoHost) request.newBuilder().header("User-Agent", publicUserAgent()).build() else request)
+        }
+        .build()
     val updater = Updater(context, plainHttp, Gson())
     val weather = WeatherSource(context, plainHttp)
     val youtube = YouTubeSource(context, plainHttp)
 }
 
+/** Os servidores das fotos do fundo que pedem uma identificação da app (ver [publicUserAgent]). */
+private val PHOTO_HOSTS = listOf("wikimedia.org", "nasa.gov")
+
+private fun platform(): String = if (Build.MANUFACTURER.equals("Amazon", ignoreCase = true)) "fire-tv" else "android-tv"
+
 /** `goatlauncher/<versão> (<plataforma>)`, por exemplo `goatlauncher/0.8.9 (android-tv)`. */
-private fun goatClient(): String {
-    val platform = if (Build.MANUFACTURER.equals("Amazon", ignoreCase = true)) "fire-tv" else "android-tv"
-    return "goatlauncher/${BuildConfig.VERSION_NAME} ($platform)"
-}
+private fun goatClient(): String = "goatlauncher/${BuildConfig.VERSION_NAME} (${platform()})"
+
+/**
+ * Para serviços públicos que pedem uma identificação com contacto (a política do Wikimedia): a de [goatClient] com a
+ * página do projeto, por exemplo `goatlauncher/0.9.11 (android-tv; +https://github.com/GOAThings/GoatLauncher)`.
+ */
+private fun publicUserAgent(): String =
+    "goatlauncher/${BuildConfig.VERSION_NAME} (${platform()}; +https://github.com/${Updater.RELEASES_REPO})"

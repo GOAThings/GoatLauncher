@@ -2,9 +2,13 @@ package cc.slokker.goatlauncher
 
 import android.app.Application
 import cc.slokker.goatlauncher.data.BugReport
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import kotlinx.coroutines.launch
 
-class LauncherApp : Application() {
+class LauncherApp : Application(), SingletonImageLoader.Factory {
 
     lateinit var container: AppContainer
         private set
@@ -18,4 +22,9 @@ class LauncherApp : Application() {
         container.phoneApps.start()
         AutoStart.watchWake(this)
     }
+
+    /** O carregador de imagens de sempre, só com o cliente HTTP da app (ver [AppContainer.imageHttp]). */
+    override fun newImageLoader(context: PlatformContext): ImageLoader = ImageLoader.Builder(context)
+        .components { add(OkHttpNetworkFetcherFactory(callFactory = { container.imageHttp })) }
+        .build()
 }
