@@ -1,8 +1,5 @@
 package cc.slokker.goatlauncher.ui
 
-import java.util.Calendar
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.Flow
 import coil3.toBitmap
 import coil3.request.allowHardware
 import android.app.Application
@@ -17,6 +14,8 @@ import cc.slokker.goatlauncher.LauncherApp
 import cc.slokker.goatlauncher.data.ButtonMap
 import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.DeviceSettings
+import cc.slokker.goatlauncher.ui.state.LocalWeather
+import cc.slokker.goatlauncher.ui.state.NightClock
 import cc.slokker.goatlauncher.ui.state.ReportSender
 import cc.slokker.goatlauncher.ui.state.ReportState
 import cc.slokker.goatlauncher.ui.state.UpdateState
@@ -31,7 +30,6 @@ import cc.slokker.goatlauncher.data.SessionStore
 import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.data.WatchNextItem
-import cc.slokker.goatlauncher.data.SunTimes
 import cc.slokker.goatlauncher.data.Place
 import java.io.File
 import cc.slokker.goatlauncher.data.WeatherNow
@@ -181,10 +179,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val network: StateFlow<NetworkKind> = networkKind(application)
         .stateIn(viewModelScope, SharingStarted.Eagerly, NetworkKind.WIFI)
 
-    private val _weather = MutableStateFlow(c.weather.cached())
+    private val localWeather = LocalWeather(viewModelScope, c.weather, settings.account, settings.device)
 
     /** O tempo agora (null sem dados ou com a meteorologia desligada). */
-    val weather: StateFlow<WeatherNow?> = _weather.asStateFlow()
+    val weather: StateFlow<WeatherNow?> = localWeather.weather
 
     private val _toast = MutableStateFlow<String?>(null)
     val toast: StateFlow<String?> = _toast.asStateFlow()
@@ -226,30 +224,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val watchNextRequests = Channel<Unit>(Channel.CONFLATED)
     private val stopObservingWatchNext: () -> Unit
 
-    /** O minuto do dia (desde a meia-noite), de minuto a minuto (para o dia/noite automático). */
-    private val minuteOfDay: Flow<Int> = flow {
-        while (true) {
-            val now = Calendar.getInstance()
-            emit(now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE))
-            delay(60_000L - System.currentTimeMillis() % 60_000L)
-        }
-    }
+    private val nightClock = NightClock(settings.account, localWeather.location)
 
-    /** Onde está a box (pelo IP, a mesma do tempo); null até se saber. */
-    private val location = MutableStateFlow(c.weather.cachedLocation())
+    /** Ver [NightClock.sunTimes]. */
+    val sunTimes: StateFlow<Pair<Int, Int>?> = nightClock.sunTimes.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    /** Nascer e pôr do sol de hoje aqui (minutos desde a meia-noite); null sem localização ou no verão/inverno polar. */
-    val sunTimes: StateFlow<Pair<Int, Int>?> = combine(location, minuteOfDay.map { it / 60 }.distinctUntilChanged()) { loc, _ ->
-        loc?.let { (lat, lon) -> SunTimes.of(lat, lon, System.currentTimeMillis()) }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
-
-    /**
-     * Modo noite em vigor: o escolhido no botão, ou, com o automático ligado, do pôr ao nascer do sol (sem saber
-     * onde a box está, das [AccountSettings.NIGHT_FROM] às [AccountSettings.NIGHT_TO]).
-     */
-    val night: StateFlow<Boolean> = combine(settings.account, minuteOfDay, sunTimes) { a, m, sun ->
-        SunTimes.isNight(a, m, sun)
-    }.distinctUntilChanged().stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    /** Modo noite em vigor (ver [NightClock.night]). */
+    val night: StateFlow<Boolean> = nightClock.night.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     init {
         viewModelScope.launch {
@@ -269,20 +250,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 prefetchImages(all)
             }
         }
-        viewModelScope.launch {
-            // Com o dia/noite automático, a localização para o nascer e o pôr do sol (uma vez por dia, como no tempo).
-            settings.account.map { it.nightAuto }.distinctUntilChanged().collectLatest { on ->
-                if (on) c.weather.location()?.let { location.value = it }
-            }
-        }
-        viewModelScope.launch {
-            // O sítio escolhido nas definições (ou volta ao do IP): muda o dia/noite e o tempo logo.
-            settings.device.map { it.location }.distinctUntilChanged().collectLatest { place ->
-                c.weather.fixed = place?.let { it.lat to it.lon }
-                location.value = c.weather.location()
-                if (settings.account.value.showWeather) c.weather.current()?.let { _weather.value = it }
-            }
-        }
+        localWeather.start()
         viewModelScope.launch {
             // Fundo de fotos online (Wikimedia, NASA): mostra uma foto e troca-a a cada AccountSettings.wallpaperMinutes.
             var lastNight: Boolean? = null
@@ -335,15 +303,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             while (true) {
                 refreshYouTube()
                 delay(YOUTUBE_MS)
-            }
-        }
-        viewModelScope.launch {
-            // Tempo: ao abrir e de 30 em 30 minutos, enquanto estiver ligado nas definições.
-            settings.account.map { it.showWeather }.distinctUntilChanged().collectLatest { on ->
-                while (on) {
-                    c.weather.current()?.let { _weather.value = it }
-                    delay(WEATHER_MS)
-                }
             }
         }
         updates.start()
@@ -935,7 +894,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private companion object {
         const val FOLDER_TONE_TRIES = 8
-        const val WEATHER_MS = 30 * 60_000L
         const val YOUTUBE_MS = 30 * 60_000L
         /** Os cartões que se veem de uma vez numa fila; os outros carregam ao chegar lá. */
         const val PREFETCH_PER_APP = 8

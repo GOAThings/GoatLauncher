@@ -25,17 +25,16 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.ImageImport
 import cc.slokker.goatlauncher.data.OnlinePhoto
-import cc.slokker.goatlauncher.data.SunTimes
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.Strings
 import cc.slokker.goatlauncher.ui.home.AmbientScene
 import cc.slokker.goatlauncher.ui.home.WallpaperView
 import cc.slokker.goatlauncher.ui.home.nowPlaying
+import cc.slokker.goatlauncher.ui.state.NightClock
 import cc.slokker.goatlauncher.ui.theme.GoatTheme
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
 import java.io.File
-import java.util.Calendar
 
 /**
  * O protetor de ecrã do Android (Definições do Android → Protetor de ecrã → GoatLauncher): o mesmo que o modo
@@ -102,22 +101,17 @@ private fun DreamContent(c: AppContainer) {
         }
     }
     val watchNext by produceState(emptyMap(), Unit) { value = runCatching { c.watchNext.load() }.getOrNull().orEmpty() }
-    // Noite: o fundo escurece, como no ecrã inicial (verifica-se de minuto a minuto).
-    val night by produceState(false, account) {
-        while (true) {
-            val now = Calendar.getInstance()
-            val minute = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
-            val place = c.settings.device.value.location?.let { it.lat to it.lon } ?: c.weather.cachedLocation()
-            val sun = place?.let { (lat, lon) -> SunTimes.of(lat, lon, now.timeInMillis) }
-            value = SunTimes.isNight(account, minute, sun)
-            delay(60_000L - System.currentTimeMillis() % 60_000L)
-        }
+    // Noite: o fundo escurece, como no ecrã inicial (a mesma regra, ver NightClock). O sítio é o escolhido nas
+    // definições ou o último que o IP deu (o ecrã inicial é que o vai buscar).
+    val nightClock = remember(c) {
+        NightClock(c.settings.account, c.settings.device.map { d -> d.location?.let { it.lat to it.lon } ?: c.weather.cachedLocation() })
     }
+    val night by nightClock.night.collectAsState(false)
     CompositionLocalProvider(LocalStrings provides strings) {
         Box(Modifier.fillMaxSize().background(Color.Black)) {
             if (account.ambientStyle == AccountSettings.AMBIENT_PHOTOS) {
                 WallpaperView(account.wallpaper, rotating)
-                if (night) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = DREAM_NIGHT_DIM)))
+                if (night) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = NightClock.DIM)))
             }
             AmbientScene(
                 style = account.ambientStyle,
@@ -131,6 +125,3 @@ private fun DreamContent(c: AppContainer) {
         }
     }
 }
-
-/** Igual ao escurecer do modo noite no ecrã inicial. */
-private const val DREAM_NIGHT_DIM = 0.35f

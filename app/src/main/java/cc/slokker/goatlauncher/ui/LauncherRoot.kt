@@ -23,6 +23,7 @@ import cc.slokker.goatlauncher.ui.home.HomeScreen
 import cc.slokker.goatlauncher.ui.home.ToastPill
 import cc.slokker.goatlauncher.ui.common.semanticsOnlyForScreenReaders
 import cc.slokker.goatlauncher.ui.home.WallpaperView
+import cc.slokker.goatlauncher.ui.state.NightClock
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import kotlinx.coroutines.delay
 
@@ -47,7 +48,7 @@ fun LauncherRoot(vm: LauncherViewModel) {
             WallpaperView(account.wallpaper, photo?.url ?: folderImage)
             // Modo noite: o fundo escurece (a interface por cima fica igual).
             val night by vm.night.collectAsStateWithLifecycle()
-            val dim by animateFloatAsState(if (night) NIGHT_DIM else 0f, tween(600), label = "night")
+            val dim by animateFloatAsState(if (night) NightClock.DIM else 0f, tween(600), label = "night")
             Box(Modifier.fillMaxSize().graphicsLayer { alpha = dim }.background(Color.Black))
             when (screen) {
                 // Início, Apps e Definições são separadores do mesmo ecrã (a barra fica, só o conteúdo muda).
@@ -64,5 +65,3 @@ fun LauncherRoot(vm: LauncherViewModel) {
         }
     }
 }
-
-private const val NIGHT_DIM = 0.35f
