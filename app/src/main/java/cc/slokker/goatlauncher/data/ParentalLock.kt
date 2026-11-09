@@ -40,7 +40,8 @@ object ParentalLock {
 
     /** Abrir [pkg] pede o código agora? */
     fun appLocked(device: DeviceSettings, pkg: String): Boolean =
-        device.pin != null && pkg in device.locked && inWindow(device) && !unlocked()
+        device.pin != null && pkg in device.locked &&
+            inWindow(device.lockFrom, device.lockTo, Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) && !unlocked()
 
     /** As definições do próprio controlo parental pedem sempre o código (senão bastava desligá-lo). */
     fun parentalLocked(device: DeviceSettings): Boolean = device.pin != null && !unlocked()
@@ -48,12 +49,14 @@ object ParentalLock {
     /** Mexer nas Definições ou na organização pede o código agora? (Sempre, não só a certas horas.) */
     fun settingsLocked(device: DeviceSettings): Boolean = device.pin != null && device.lockSettings && !unlocked()
 
-    private fun inWindow(device: DeviceSettings): Boolean {
-        val from = device.lockFrom ?: return true
-        val to = device.lockTo ?: return true
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        // 20 → 8 passa a meia-noite; 9 → 17 não.
-        return if (from <= to) hour in from until to else hour >= from || hour < to
+    /**
+     * As apps bloqueadas pedem o código a esta [hour] (0–23)? Sem horas, sempre. 20 → 8 passa a meia-noite; 9 → 17
+     * não. Com as duas horas iguais (20 → 20) são 24 horas: o dia todo, como "das 20:00 às 20:00" se lê. Antes era
+     * nenhuma hora, e as apps abriam sem código.
+     */
+    internal fun inWindow(from: Int?, to: Int?, hour: Int): Boolean {
+        if (from == null || to == null || from == to) return true
+        return if (from < to) hour in from until to else hour >= from || hour < to
     }
 
     private fun hash(salt: String, pin: String): String =

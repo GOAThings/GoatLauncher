@@ -1347,7 +1347,7 @@ private fun ParentalPage(vm: LauncherViewModel, first: FocusRequester, onPage: (
     }
 }
 
-/** Uma hora (0–23) que muda com ← →. A hora de início e a de fim nunca ficam iguais. */
+/** Uma hora (0–23) que muda com ← →. Início e fim iguais querem dizer o dia todo (ver ParentalLock.inWindow). */
 @Composable
 private fun HourRow(title: String, hour: Int, onChange: (Int) -> Unit) {
     val s = LocalStrings.current
