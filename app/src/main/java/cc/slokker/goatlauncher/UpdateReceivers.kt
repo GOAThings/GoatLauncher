@@ -26,9 +26,13 @@ class InstallResultReceiver : BroadcastReceiver() {
             else -> {
                 val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
                 Log.w("LauncherUpdate", "Instalação falhou ($status): $message")
-                // Cancelada pela pessoa: não é erro. O resto aparece por extenso nas Definições.
-                if (status != PackageInstaller.STATUS_FAILURE_ABORTED) {
-                    (context.applicationContext as LauncherApp).container.updater.reportInstallFailure(message ?: status.toString())
+                val updater = (context.applicationContext as LauncherApp).container.updater
+                // Cancelada pela pessoa: não é erro, a atualização volta a estar disponível. O resto aparece por extenso
+                // nas Definições.
+                if (status == PackageInstaller.STATUS_FAILURE_ABORTED) {
+                    updater.reportInstallCancelled()
+                } else {
+                    updater.reportInstallFailure(message ?: status.toString())
                     Toast.makeText(context, Strings.of(context).updateFailed(message ?: status.toString()), Toast.LENGTH_LONG).show()
                 }
             }

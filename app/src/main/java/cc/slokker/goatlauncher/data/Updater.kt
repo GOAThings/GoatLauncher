@@ -40,6 +40,15 @@ class Updater(private val context: Context, private val http: OkHttpClient, priv
         _installFailures.tryEmit(message)
     }
 
+    private val _installCancels = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** A pessoa cancelou a confirmação do instalador do Android (não é um erro: a versão continua disponível). */
+    val installCancels: SharedFlow<Unit> = _installCancels
+
+    fun reportInstallCancelled() {
+        _installCancels.tryEmit(Unit)
+    }
+
     /** Só a versão release se atualiza: o debug tem o mesmo id mas outra chave, e o Android recusaria o APK. */
     val enabled: Boolean = !BuildConfig.DEBUG
 

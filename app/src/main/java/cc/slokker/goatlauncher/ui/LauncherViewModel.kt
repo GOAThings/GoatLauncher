@@ -92,6 +92,12 @@ sealed interface UpdateState {
     data class Downloading(val release: AppRelease, val progress: Float) : UpdateState
     data class Installing(val release: AppRelease) : UpdateState
     data class Failed(val message: String) : UpdateState
+
+    /**
+     * O estado depois de a pessoa cancelar a confirmação do Android: a versão volta a estar disponível. Ficar em
+     * [Installing] deixava as Definições em "A instalar…" e parava as verificações automáticas.
+     */
+    fun cancelled(): UpdateState = if (this is Installing) Available(release) else this
 }
 
 /** Pedido do código do controlo parental: o ecrã mostra o teclado e [onSuccess] corre quando acertar. */
@@ -363,6 +369,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
         viewModelScope.launch {
             c.updater.installFailures.collect { _update.value = UpdateState.Failed(it) }
+        }
+        viewModelScope.launch {
+            c.updater.installCancels.collect { _update.value = _update.value.cancelled() }
         }
         viewModelScope.launch {
             // Procura versões novas pouco depois de abrir e de 12 em 12 horas (o launcher fica aberto dias a fio).
