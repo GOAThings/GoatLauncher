@@ -29,14 +29,19 @@ object AutoStart {
 
     private var wakeJob: Job? = null
 
-    /** Ao acordar do standby (ecrã ligado), abre a app escolhida, se a opção estiver ligada. */
+    /**
+     * Ao acordar do standby (ecrã ligado), abre a app escolhida, se a opção estiver ligada. Decide com as definições
+     * lidas: um processo reiniciado em standby pode acordar antes de as ler, e as por defeito diriam "não abrir".
+     */
     fun watchWake(app: LauncherApp) {
         app.registerReceiver(object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                val device = app.container.settings.device.value
-                val pkg = device.autostart?.takeIf { device.autostartWake } ?: return
+                val settings = app.container.settings
                 wakeJob?.cancel()
                 wakeJob = app.container.scope.launch {
+                    settings.ready.first { it }
+                    val device = settings.device.value
+                    val pkg = device.autostart?.takeIf { device.autostartWake } ?: return@launch
                     delay(device.autostartDelay * 1000L)
                     open(app, pkg)
                 }
