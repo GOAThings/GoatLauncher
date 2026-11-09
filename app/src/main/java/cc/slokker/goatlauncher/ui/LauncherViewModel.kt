@@ -1,7 +1,5 @@
 package cc.slokker.goatlauncher.ui
 
-import coil3.toBitmap
-import coil3.request.allowHardware
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
@@ -20,11 +18,12 @@ import cc.slokker.goatlauncher.ui.state.ReportSender
 import cc.slokker.goatlauncher.ui.state.ReportState
 import cc.slokker.goatlauncher.ui.state.UpdateState
 import cc.slokker.goatlauncher.ui.state.UpdatesController
+import cc.slokker.goatlauncher.ui.state.CoilWallpaperImages
+import cc.slokker.goatlauncher.ui.state.WallpaperRotation
 import cc.slokker.goatlauncher.data.ImageImport
 import cc.slokker.goatlauncher.data.NetworkKind
 import cc.slokker.goatlauncher.data.networkKind
 import cc.slokker.goatlauncher.data.OnlinePhoto
-import cc.slokker.goatlauncher.data.OnlineWallpapers
 import cc.slokker.goatlauncher.data.LauncherApp as App
 import cc.slokker.goatlauncher.data.SessionStore
 import cc.slokker.goatlauncher.data.SystemIntents
@@ -40,8 +39,6 @@ import cc.slokker.goatlauncher.ui.home.CardHeight
 import coil3.SingletonImageLoader
 import coil3.request.Disposable
 import coil3.request.ImageRequest
-import coil3.request.SuccessResult
-import coil3.size.Scale
 import android.os.SystemClock
 import android.util.Log
 import kotlinx.coroutines.CancellationException
@@ -49,7 +46,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import android.graphics.BitmapFactory
 import android.provider.Settings as AndroidSettings
 import androidx.core.content.edit
 import cc.slokker.goatlauncher.HomeGuardService
@@ -144,27 +140,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** A última app com foco no ecrã inicial (ao voltar das definições, o foco regressa a ela). */
     var focusedPackage: String? = null
 
-    private val _photo = MutableStateFlow<OnlinePhoto?>(null)
-
-    /** Com um fundo de fotos online (Wikimedia, NASA): a foto atual (já carregada na cache, para entrar com um fade sem saltos). */
-    val onlinePhoto: StateFlow<OnlinePhoto?> = _photo.asStateFlow()
-
-    /** Com o fundo "pasta": a imagem dela que está a aparecer agora. */
-    private val _folderImage = MutableStateFlow<File?>(null)
-    val folderImage: StateFlow<File?> = _folderImage.asStateFlow()
-
-    /** Imagens que não servem de fundo (ao alto, ou que não carregaram). */
-    private val badPhotos = mutableSetOf<String>()
-
-    /** Largura original de cada foto online já carregada (para a "resolução mínima"). */
-    private val photoWidths = mutableMapOf<String, Int>()
-
-    /**
-     * Se cada foto é clara (true) ou escura (false), para o modo dia/noite. Tem de ficar antes do init: a escolha
-     * do fundo arranca lá e pode chegar aqui antes de o resto da classe estar inicializado (era o crash no onResume).
-     */
-    private val photoLight = mutableMapOf<String, Boolean>()
-
     private val _pinPrompt = MutableStateFlow<PinPrompt?>(null)
     val pinPrompt: StateFlow<PinPrompt?> = _pinPrompt.asStateFlow()
 
@@ -232,6 +207,14 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Modo noite em vigor (ver [NightClock.night]). */
     val night: StateFlow<Boolean> = nightClock.night.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    private val wallpaper = WallpaperRotation(viewModelScope, settings.account, night, c.wallpapers::source, CoilWallpaperImages(context))
+
+    /** Com um fundo de fotos online (Wikimedia, NASA): a foto atual (já carregada na cache, para entrar com um fade sem saltos). */
+    val onlinePhoto: StateFlow<OnlinePhoto?> = wallpaper.onlinePhoto
+
+    /** Com o fundo "pasta": a imagem dela que está a aparecer agora. */
+    val folderImage: StateFlow<File?> = wallpaper.folderImage
+
     init {
         viewModelScope.launch {
             settings.awaitReady()
@@ -251,45 +234,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             }
         }
         localWeather.start()
-        viewModelScope.launch {
-            // Fundo de fotos online (Wikimedia, NASA): mostra uma foto e troca-a a cada AccountSettings.wallpaperMinutes.
-            var lastNight: Boolean? = null
-            combine(settings.account, night) { a, n -> PhotoRotation(a.wallpaper, a.photoMinWidth, a.wallpaperMinutes * 60_000L, n) }
-                .distinctUntilChanged().collectLatest { (wp, minWidth, rotateMs, night) ->
-                val source = c.wallpapers.source(wp)
-                if (source == null) {
-                    _photo.value = null
-                    return@collectLatest
-                }
-                // Ao abrir: a mesma foto da última vez, já (está na cache); a escolha e as verificações vêm depois.
-                if (_photo.value == null) _photo.value = source.pool.lastShown(source.id)
-                // Trocar dia/noite pede logo uma foto do tom certo.
-                var next = lastNight != null && lastNight != night
-                lastNight = night
-                while (true) {
-                    // Um intervalo mais curto do que o tempo que a foto já leva troca-a logo (ver PhotoPool.current).
-                    showPhoto(source, next, minWidth, night, rotateMs)
-                    delay(source.pool.msUntilRotation(source.id, rotateMs))
-                    next = true
-                }
-            }
-        }
-        viewModelScope.launch {
-            // Fundo de uma pasta: uma imagem ao acaso, trocada com o mesmo intervalo das fotos online (e ao passar de dia
-            // para noite, ou ao mudar o intervalo), de preferência do tom certo (clara de dia, escura à noite).
-            combine(settings.account, night) { a, n -> Triple(a.wallpaper, a.wallpaperMinutes * 60_000L, n) }
-                .distinctUntilChanged().collectLatest { (wp, rotateMs, night) ->
-                if (wp.type != Wallpaper.TYPE_FOLDER) {
-                    _folderImage.value = null
-                    return@collectLatest
-                }
-                val dir = File(wp.value)
-                while (true) {
-                    _folderImage.value = pickFolderImage(dir, night)
-                    delay(rotateMs)
-                }
-            }
-        }
+        wallpaper.start()
         viewModelScope.launch { autostartAfterBoot() }
         viewModelScope.launch {
             // A língua guardada na conta (ou só nesta TV): aplica-se quando as definições já foram lidas, para
@@ -360,59 +305,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         watchNextRequests.trySend(Unit)
     }
 
-    /**
-     * Escolhe a foto de [source] e só a mostra depois de carregada (deitada e com pelo menos [minWidth] px);
-     * senão tenta outra. A atual também é verificada: a resolução mínima pode ter subido.
-     */
-    private suspend fun showPhoto(source: OnlineWallpapers.Source, next: Boolean, minWidth: Int, night: Boolean, rotateMs: Long) {
-        // Uma que sirva mas seja do tom errado (dia/noite) fica de reserva, se não aparecer nenhuma do certo.
-        var fallback: OnlinePhoto? = null
-        repeat(10) { attempt ->
-            val small = photoWidths.filterValues { it < minWidth }.keys
-            val wrongTone = photoLight.filterValues { light -> light == night }.keys
-            val image = source.pool.current(source.id, rotateMs, next = next || attempt > 0, skip = badPhotos + small + wrongTone)
-                ?: return@repeat
-            if (!preloadWallpaper(image.url)) {
-                badPhotos += image.url
-                return@repeat
-            }
-            if ((photoWidths[image.url] ?: Int.MAX_VALUE) < minWidth) return@repeat
-            val light = isLight(image.url)
-            if (light != null && light == night) {
-                if (fallback == null) fallback = image
-                return@repeat
-            }
-            _photo.value = image
-            return
-        }
-        fallback?.let { if (it.url != _photo.value?.url) _photo.value = it }
-    }
-
-
-    /** Mede a luminosidade média numa cópia de 32×18 (barata); acima de 35% conta como clara. */
-    private suspend fun isLight(url: String): Boolean? = isLight(url, url)
-
-    /** Uma imagem da pasta, diferente da atual e do tom certo se houver; null se a pasta não tiver imagens. */
-    private suspend fun pickFolderImage(dir: File, night: Boolean): File? {
-        val all = ImageImport.images(dir)
-        val others = (all - setOfNotNull(_folderImage.value)).shuffled().ifEmpty { all }
-        // Mede no máximo umas quantas (cada uma é uma leitura pequena da imagem).
-        return others.take(FOLDER_TONE_TRIES).firstOrNull { f -> isLight(f, f.path).let { it == null || it != night } }
-            ?: others.firstOrNull()
-    }
-
-    private suspend fun isLight(data: Any, key: String): Boolean? = photoLight[key] ?: withContext(Dispatchers.IO) {
-        val result = SingletonImageLoader.get(context).execute(
-            ImageRequest.Builder(context).data(data).size(32, 18).allowHardware(false).build(),
-        )
-        val bmp = (result as? SuccessResult)?.image?.toBitmap() ?: return@withContext null
-        val px = IntArray(bmp.width * bmp.height).also { bmp.getPixels(it, 0, bmp.width, 0, 0, bmp.width, bmp.height) }
-        val luma = px.sumOf { c ->
-            0.2126 * ((c shr 16) and 0xFF) + 0.7152 * ((c shr 8) and 0xFF) + 0.0722 * (c and 0xFF)
-        } / (px.size * 255.0)
-        luma > LIGHT_LUMA
-    }?.also { photoLight[key] = it }
-
     /** O botão dia/noite: troca o que está agora e desliga o automático. */
     fun toggleNight() {
         val on = !night.value
@@ -420,32 +312,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setNightAuto(on: Boolean) = settings.updateAccount { it.copy(nightAuto = on) }
-
-    /** Carrega a imagem para a cache no tamanho do ecrã; false se falhar ou for ao alto. */
-    private suspend fun preloadWallpaper(url: String): Boolean {
-        val metrics = context.resources.displayMetrics
-        val result = SingletonImageLoader.get(context).execute(
-            ImageRequest.Builder(context)
-                .data(url)
-                .size(metrics.widthPixels, metrics.heightPixels)
-                .scale(Scale.FILL)
-                .build(),
-        )
-        val image = (result as? SuccessResult)?.image ?: return false
-        if (url !in photoWidths) originalWidth(url)?.let { photoWidths[url] = it }
-        return image.width > image.height
-    }
-
-    /** A largura da foto original (a da cache em disco do Coil), sem a descodificar. */
-    private suspend fun originalWidth(url: String): Int? = withContext(Dispatchers.IO) {
-        runCatching {
-            SingletonImageLoader.get(context).diskCache?.openSnapshot(url)?.use { snapshot ->
-                val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                BitmapFactory.decodeFile(snapshot.data.toFile().path, options)
-                options.outWidth.takeIf { it > 0 }
-            }
-        }.getOrNull()
-    }
 
     /**
      * Arranque automático: logo depois de a TV ligar, abre a app escolhida (uma vez por arranque, e só se a
@@ -893,7 +759,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     private companion object {
-        const val FOLDER_TONE_TRIES = 8
         const val YOUTUBE_MS = 30 * 60_000L
         /** Os cartões que se veem de uma vez numa fila; os outros carregam ao chegar lá. */
         const val PREFETCH_PER_APP = 8
@@ -901,8 +766,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
         /** O arranque automático só conta nos primeiros minutos depois de ligar (não depois de atualizar a app). */
         const val BOOT_WINDOW_MS = 10 * 60_000L
-
-        const val LIGHT_LUMA = 0.35
 
         const val LANGUAGE_DELAY_MS = 400L
 
@@ -925,5 +788,3 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 }
 
-/** O que decide a rotação das fotos online: mudar qualquer um recomeça-a. */
-private data class PhotoRotation(val wallpaper: Wallpaper, val minWidth: Int, val rotateMs: Long, val night: Boolean)

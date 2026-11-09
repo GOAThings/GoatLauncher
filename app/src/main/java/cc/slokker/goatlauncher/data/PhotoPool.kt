@@ -51,19 +51,30 @@ internal fun shorten(text: String, max: Int): String {
     return cut.trimEnd(',', ';', ':', ' ', '-', '·') + "…"
 }
 
+/** A escolha das fotos de uma fonte: o [PhotoPool] (outra nos testes, ver WallpaperRotation). */
+interface PhotoPicker {
+    /**
+     * A foto a mostrar para [id]: a mesma até passar [rotateMs] (ou [next] = true), depois outra ao acaso.
+     * [skip] são URLs a não usar (ex.: imagens ao alto, que se descobrem ao abrir).
+     */
+    suspend fun current(id: String, rotateMs: Long, next: Boolean = false, skip: Set<String> = emptySet()): OnlinePhoto?
+
+    /** A última foto mostrada de [id] (ao abrir o launcher aparece logo, já está na cache). */
+    suspend fun lastShown(id: String): OnlinePhoto?
+
+    /** Milissegundos até a foto atual de [id] dever mudar. */
+    fun msUntilRotation(id: String, rotateMs: Long): Long
+}
+
 /**
  * Fotos para o fundo a partir de uma fonte online ([feed]), uma de cada vez: a mesma até passar o intervalo, depois
  * outra ao acaso. A lista fica guardada em [prefsName] e só se volta a pedir a cada [PhotoFeed.refreshMs] (o fundo
  * funciona sem rede com a última imagem, que o Coil guarda em disco). Cada id tem a sua lista e a sua foto atual.
  */
-class PhotoPool(private val context: Context, prefsName: String, private val feed: PhotoFeed) {
+class PhotoPool(private val context: Context, prefsName: String, private val feed: PhotoFeed) : PhotoPicker {
     private val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
 
-    /**
-     * A foto a mostrar para [id]: a mesma até passar [rotateMs] (ou [next] = true), depois outra ao acaso.
-     * [skip] são URLs a não usar (ex.: imagens ao alto, que se descobrem ao abrir).
-     */
-    suspend fun current(id: String, rotateMs: Long, next: Boolean = false, skip: Set<String> = emptySet()): OnlinePhoto? =
+    override suspend fun current(id: String, rotateMs: Long, next: Boolean, skip: Set<String>): OnlinePhoto? =
         withContext(Dispatchers.IO) {
             val sub = id.lowercase()
             val list = images(sub).filterNot { it.url in skip }
@@ -82,15 +93,13 @@ class PhotoPool(private val context: Context, prefsName: String, private val fee
             pick
         }
 
-    /** A última foto mostrada de [id] (ao abrir o launcher aparece logo, já está na cache). */
-    suspend fun lastShown(id: String): OnlinePhoto? = withContext(Dispatchers.IO) {
+    override suspend fun lastShown(id: String): OnlinePhoto? = withContext(Dispatchers.IO) {
         val sub = id.lowercase()
         val url = prefs.getString(key(sub, KEY_SHOWN_URL), null) ?: return@withContext null
         images(sub, allowFetch = false).firstOrNull { it.url == url } ?: OnlinePhoto(url, "")
     }
 
-    /** Milissegundos até a foto atual de [id] dever mudar. */
-    fun msUntilRotation(id: String, rotateMs: Long): Long {
+    override fun msUntilRotation(id: String, rotateMs: Long): Long {
         val shownAt = prefs.getLong(key(id.lowercase(), KEY_SHOWN_AT), 0)
         return (shownAt + rotateMs - System.currentTimeMillis()).coerceIn(MIN_WAIT_MS, rotateMs)
     }

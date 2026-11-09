@@ -21,7 +21,7 @@ class OnlineWallpapers(context: Context, http: OkHttpClient, userAgent: String) 
     }
 
     /** Uma fonte e o id dentro dela. */
-    data class Source(val pool: PhotoPool, val id: String)
+    data class Source(val pool: PhotoPicker, val id: String)
 
     /** A fonte das fotos de [wallpaper]; null se o fundo não for de fotos online. */
     fun source(wallpaper: Wallpaper): Source? = when (wallpaper.type) {
