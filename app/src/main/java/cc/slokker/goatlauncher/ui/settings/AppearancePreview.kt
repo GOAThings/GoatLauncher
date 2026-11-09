@@ -1,5 +1,16 @@
 package cc.slokker.goatlauncher.ui.settings
 
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileWidth
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileGap
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.TilesRowWidth
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.ColumnTileWidth
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.ColumnTileGap
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.DockPadding
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.DockShape
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.CardHeight
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselMax
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselSideScale
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselGap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -82,10 +93,6 @@ import kotlin.math.roundToInt
 private val ScreenWidth = 960.dp
 private val ScreenHeight = 540.dp
 
-// As medidas do ecrã inicial (HomeScreen), para a pré-visualização ficar igual.
-private val TileWidth = 148.dp
-private val TileGap = 24.dp
-private val TilesRowWidth = TileWidth * FavoriteCount + TileGap * (FavoriteCount - 1)
 
 /**
  * A pré-visualização da página Aparência: o ecrã inicial em ponto pequeno, com o fundo, as apps e o
@@ -166,9 +173,9 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
                             when {
                                 column -> Row(Modifier.fillMaxSize().padding(top = 12.dp)) {
                                     // Apps ao lado: os favoritos em coluna, o conteúdo da app com foco à direita.
-                                    Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically)) {
+                                    Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(ColumnTileGap, Alignment.CenterVertically)) {
                                         favorites.forEach { app ->
-                                            PreviewTile(vm, app, device.icons[app.packageName], focused = app == focusApp, showLabel = false, width = 116.dp)
+                                            PreviewTile(vm, app, device.icons[app.packageName], focused = app == focusApp, showLabel = false, width = ColumnTileWidth)
                                         }
                                     }
                                     Spacer(Modifier.width(48.dp))
@@ -194,9 +201,9 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
                                     Spacer(Modifier.height(28.dp))
                                     Box(
                                         Modifier
-                                            .requiredWidth(TilesRowWidth + 60.dp)
-                                            .background(dockColor(night), RoundedCornerShape(30.dp))
-                                            .padding(horizontal = 30.dp, vertical = 18.dp),
+                                            .requiredWidth(TilesRowWidth + DockPadding * 2)
+                                            .background(dockColor(night), DockShape)
+                                            .padding(horizontal = DockPadding, vertical = 18.dp),
                                         contentAlignment = Alignment.Center,
                                     ) { tiles() }
                                 }
@@ -339,7 +346,7 @@ private fun RowPreview(app: LauncherApp, items: List<WatchNextItem>) {
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             items.take(5).forEach { item ->
-                val h = 88.dp
+                val h = CardHeight
                 PreviewCard(item, h * item.aspectRatio.coerceIn(0.6f, 2f), h, 8.dp)
             }
         }
@@ -402,10 +409,10 @@ private fun TopShelfPreview(items: List<WatchNextItem>) {
 private fun CarouselPreview(app: LauncherApp, items: List<WatchNextItem>) {
     val s = LocalStrings.current
     BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        val height = maxHeight.coerceAtMost(300.dp)
+        val height = maxHeight.coerceAtMost(CarouselMax)
         val width = height * 16 / 9
-        val side = height * 0.72f
-        val step = width / 2 + 28.dp + side * 16 / 9 / 2
+        val side = height * CarouselSideScale
+        val step = width / 2 + CarouselGap + side * 16 / 9 / 2
         listOf(-1, 1).forEach { d ->
             items.getOrNull(if (d < 0) items.size - 1 else 1)?.takeIf { items.size > 1 }?.let { item ->
                 Box(Modifier.offset(x = step * d)) {

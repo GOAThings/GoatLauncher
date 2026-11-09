@@ -30,7 +30,7 @@ import cc.slokker.goatlauncher.data.YouTubeLogin
 import cc.slokker.goatlauncher.data.api.BackendDevice
 import cc.slokker.goatlauncher.data.api.BackendUser
 import cc.slokker.goatlauncher.data.networkKind
-import cc.slokker.goatlauncher.ui.home.CardHeight
+import cc.slokker.goatlauncher.ui.home.HomeMetrics
 import cc.slokker.goatlauncher.ui.state.CoilCardPrefetch
 import cc.slokker.goatlauncher.ui.state.CoilWallpaperImages
 import cc.slokker.goatlauncher.ui.state.ContinueWatching
@@ -176,7 +176,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         device = settings.device,
         homeApps = { apps.value.orEmpty() },
         youtubeFeed = { settings.account.value.youtubeFeed },
-        prefetch = CoilCardPrefetch(context, CardHeight.value),
+        prefetch = CoilCardPrefetch(context, HomeMetrics.CardHeight.value),
         strings = { strings },
         toast = ::toast,
         demoAllowed = BuildConfig.DEBUG,

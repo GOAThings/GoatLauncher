@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.TopShelfCardMax
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -219,7 +220,6 @@ internal fun TopShelfRow(items: List<WatchNextItem>, onOpen: (WatchNextItem) -> 
     }
 }
 
-private val TopShelfCardMax = 230.dp
 
 /** O estilo "fila de cartões": o "Continuar a ver" do favorito com foco, por cima dos favoritos. */
 @OptIn(ExperimentalFoundationApi::class)

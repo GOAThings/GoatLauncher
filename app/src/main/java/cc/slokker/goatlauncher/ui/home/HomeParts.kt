@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.CardHeight
 import cc.slokker.goatlauncher.ui.theme.tracking
 import android.text.format.DateFormat
 import androidx.compose.animation.core.animateFloatAsState
@@ -61,7 +62,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import java.util.Calendar
 import kotlin.math.abs
 import cc.slokker.goatlauncher.ui.theme.tabular
-val CardHeight = 88.dp
 private val CardShape = GoatShapes.Control
 
 // ---- Relógio ----

@@ -1,5 +1,8 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselMax
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselSideScale
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselGap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
@@ -267,8 +270,8 @@ fun CarouselShelf(
     ) {
         val height = maxHeight.coerceAtMost(CarouselMax)
         val width = height * 16 / 9
-        // Do centro de um cartão ao do vizinho (que fica a [SideScale] do tamanho).
-        val stepPx = with(LocalDensity.current) { (width / 2 + 28.dp + width * SideScale / 2).toPx() }
+        // Do centro de um cartão ao do vizinho (que fica a [CarouselSideScale] do tamanho).
+        val stepPx = with(LocalDensity.current) { (width / 2 + CarouselGap + width * CarouselSideScale / 2).toPx() }
         // Os cartões deslizam para o sítio novo: cada um anima a sua posição em relação ao do meio.
         items.forEachIndexed { i, item ->
             if (abs(i - index) > 2) return@forEachIndexed
@@ -280,7 +283,7 @@ fun CarouselShelf(
                         .zIndex(2f - abs(pos))
                         .graphicsLayer {
                             translationX = pos * stepPx
-                            val scale = 1f - (1f - SideScale) * side
+                            val scale = 1f - (1f - CarouselSideScale) * side
                             scaleX = scale
                             scaleY = scale
                         }
@@ -336,9 +339,6 @@ private fun CarouselText(app: LauncherApp, item: WatchNextItem, width: Dp, modif
     }
 }
 
-/** O tamanho dos cartões dos lados, em relação ao do meio. */
-private const val SideScale = 0.72f
-private val CarouselMax = 300.dp
 private val CarouselShape = RoundedCornerShape(18.dp)
 
 /** Um cartão do carrossel: a imagem 16:9 com [height] de altura (os logos dos canais inteiros, ao centro). */

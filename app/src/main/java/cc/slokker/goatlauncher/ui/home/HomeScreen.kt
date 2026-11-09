@@ -1,5 +1,12 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileWidth
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileGap
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.TilesRowWidth
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.ColumnTileWidth
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.ColumnTileGap
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.DockPadding
+import cc.slokker.goatlauncher.ui.home.HomeMetrics.DockShape
 import cc.slokker.goatlauncher.ui.PinPrompt
 import android.content.pm.ApplicationInfo
 import android.os.SystemClock
@@ -98,7 +105,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
@@ -117,10 +123,6 @@ private const val HINT_MS = 5_000L
 
 /** Duração da troca de separador (o fade do conteúdo), com folga. */
 private const val TAB_FADE_MS = 320L
-
-private val TileWidth = 148.dp
-private val TileGap = 24.dp
-private val TilesRowWidth = TileWidth * FavoriteCount + TileGap * (FavoriteCount - 1)
 
 /**
  * Ecrã inicial, com dois separadores (Início e Apps) e as Definições à parte.
@@ -957,22 +959,14 @@ fun HomeScreen(vm: LauncherViewModel) {
     }
 }
 
-/** Apps ao lado: os favoritos em coluna, mais pequenos para os cinco caberem na altura do ecrã. */
-private val ColumnTileWidth = 116.dp
-private val ColumnTileGap = 14.dp
-
 /** Quantos conteúdos seguintes mostra o painel da "Destaque e a seguir". */
 private const val UP_NEXT_SHOWN = 3
-private val DockShape = RoundedCornerShape(30.dp)
 
 /** Depois de acabar de mover, um clique na app durante este tempo não a abre (é o OK que confirmou a posição). */
 private const val MOVE_CLICK_GUARD_MS = 600L
 
 /** O vidro da doca (Apple TV): escuro no modo noite, claro no modo dia, como o resto do ecrã. */
 fun dockColor(night: Boolean): Color = if (night) Color.Black.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.26f)
-
-/** Folga entre os favoritos das pontas e a borda da doca (o banner com foco cresce 10%). */
-private val DockPadding = 30.dp
 
 private const val MENU_MS = 120
 
