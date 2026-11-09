@@ -112,9 +112,22 @@ data class OnAir(val title: String, val progress: Float?, val endsAt: Long?, val
 data class Programme(val title: String, val startMs: Long)
 
 /**
- * A descrição longa do GoatTV: o título do programa seguinte (começa às [nextStart], o fim do atual) e depois uma
- * linha "21:30 Título" por cada um dos outros, na hora deste aparelho. Uma linha que não seja assim acaba a lista
- * (uma versão antiga do GoatTV só põe o título do seguinte).
+ * O que o GoatTV publica no Watch Next só para o launcher. É um contrato entre os dois repositórios: quem o produz é o
+ * `scheduleText` de `itv/app/src/main/java/cc/slokker/itv/data/HomeScreen.kt` (com `HOME_UPCOMING` programas, ver
+ * AppViewModel), e o GoatTvScheduleTest tem uma cópia dele. Mudar um lado obriga a mudar o outro (e o teste).
+ */
+internal object GoatTvContract {
+    /** As builds do GoatTV que põem os programas seguintes na descrição longa. */
+    val PACKAGES = setOf("cc.slokker.itv", "cc.slokker.itv.debug")
+
+    /** O GoatTV põe lá até cinco títulos, um por linha. */
+    const val MAX_SCHEDULE = 1_500
+}
+
+/**
+ * A descrição longa do GoatTV (ver [GoatTvContract]): o título do programa seguinte (começa às [nextStart], o fim do
+ * atual) e depois uma linha "21:30 Título" por cada um dos outros, na hora deste aparelho. Uma linha que não seja
+ * assim acaba a lista (uma versão antiga do GoatTV só põe o título do seguinte).
  */
 internal fun parseSchedule(text: String, nextStart: Long, now: Long): List<Programme> {
     val lines = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
@@ -255,7 +268,7 @@ class WatchNextSource(private val context: Context) {
             airStart = c.long(COL_START) ?: 0,
             airEnd = c.long(COL_END) ?: 0,
             // Só o GoatTV põe lá os programas seguintes; nas outras apps é uma sinopse.
-            schedule = c.str(COL_LONG_DESCRIPTION)?.take(MAX_SCHEDULE)?.takeIf { pkg == GOATTV || pkg == "$GOATTV.debug" }
+            schedule = c.str(COL_LONG_DESCRIPTION)?.take(GoatTvContract.MAX_SCHEDULE)?.takeIf { pkg in GoatTvContract.PACKAGES }
                 ?.let { parseSchedule(it, c.long(COL_END) ?: 0, System.currentTimeMillis()) }.orEmpty(),
         )
     }
@@ -289,10 +302,7 @@ class WatchNextSource(private val context: Context) {
 
     private companion object {
         const val TAG = "WatchNext"
-        const val GOATTV = "cc.slokker.itv"
         const val MAX_TEXT = 300
-        /** O GoatTV põe lá até cinco títulos, um por linha. */
-        const val MAX_SCHEDULE = 1_500
         const val MAX_PACKAGE = 255
         const val MAX_IMAGE_URI = 4096
         const val MAX_INTENT_URI = 8192
