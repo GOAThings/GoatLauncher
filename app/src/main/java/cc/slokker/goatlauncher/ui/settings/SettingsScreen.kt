@@ -126,6 +126,8 @@ import cc.slokker.goatlauncher.ui.common.glass
 import cc.slokker.goatlauncher.ui.common.onBackKey
 import cc.slokker.goatlauncher.ui.common.requestFocusSafely
 import cc.slokker.goatlauncher.ui.home.Wallpapers
+import cc.slokker.goatlauncher.ui.home.clockText
+import java.util.Calendar
 import cc.slokker.goatlauncher.ui.home.rememberWallpaperBlur
 import cc.slokker.goatlauncher.ui.common.frostedGlass
 import cc.slokker.goatlauncher.ui.theme.GoatColors
@@ -865,7 +867,7 @@ private fun GeneralPage(vm: LauncherViewModel, first: FocusRequester, onPage: (P
             GlassRow(
                 title = s.nightAuto,
                 // Com a localização, do pôr ao nascer do sol de hoje; sem ela, a hora fixa.
-                subtitle = sun?.let { (rise, set) -> s.nightAutoSun(clockText(set, account.clock24h), clockText(rise, account.clock24h)) }
+                subtitle = sun?.let { (rise, set) -> s.nightAutoSun(sunClock(set, s, account.clock24h), sunClock(rise, s, account.clock24h)) }
                     ?: s.nightAutoHint,
                 onClick = { vm.setNightAuto(!account.nightAuto) },
                 trailing = { Toggle(account.nightAuto) },
@@ -1225,11 +1227,15 @@ private fun Chevron() {
     Icon(GoatIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(20.dp))
 }
 
-/** [minutes] desde a meia-noite como "19:42" (ou "7:42 PM" sem o relógio de 24 horas). */
-private fun clockText(minutes: Int, h24: Boolean): String {
-    val h = minutes / 60
-    val m = minutes % 60
-    return if (h24) "%d:%02d".format(h, m) else "%d:%02d %s".format((h + 11) % 12 + 1, m, if (h < 12) "AM" else "PM")
+/** [minutes] desde a meia-noite (de hoje) no formato do relógio de cima: "07:42", ou "7:42 PM", "午前7:42" sem 24 horas. */
+private fun sunClock(minutes: Int, s: Strings, clock24h: Boolean): String {
+    val time = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, minutes / 60)
+        set(Calendar.MINUTE, minutes % 60)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+    return clockText(time, s, clock24h)
 }
 
 private fun wallpaperName(w: Wallpaper, s: cc.slokker.goatlauncher.ui.Strings): String = when (w.type) {

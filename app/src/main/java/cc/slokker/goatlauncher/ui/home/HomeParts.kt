@@ -124,10 +124,10 @@ val LocalClock24h = staticCompositionLocalOf { true }
 
 /** As horas de [time] no formato das Definições e da língua. */
 @Composable
-fun clockText(time: Long): String {
-    val s = LocalStrings.current
-    return SimpleDateFormat(timePattern(s, LocalClock24h.current), s.locale).format(time)
-}
+fun clockText(time: Long): String = clockText(time, LocalStrings.current, LocalClock24h.current)
+
+/** As horas de [time] como no relógio de cima: "07:31" com 24 horas, senão o formato da língua ("7:31 PM", "午後7:31"). */
+fun clockText(time: Long, s: Strings, clock24h: Boolean): String = SimpleDateFormat(timePattern(s, clock24h), s.locale).format(time)
 
 /** Em cima à direita: as horas. */
 @Composable
