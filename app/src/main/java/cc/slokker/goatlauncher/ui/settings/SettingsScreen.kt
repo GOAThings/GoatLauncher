@@ -32,6 +32,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.focusGroup
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -63,6 +64,8 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
 fun SettingsScreen(
     vm: LauncherViewModel,
     autoFocus: Boolean = true,
+    /** Muda quando o código se fecha por cima das Definições: o foco volta para dentro delas (ver HomeState). */
+    refocus: Int = 0,
     onExit: () -> Unit,
 ) {
     val s = LocalStrings.current
@@ -83,7 +86,7 @@ fun SettingsScreen(
     // [autoFocus]: aberta por passar o foco no separador, o foco fica lá até se carregar em ↓.
     var firstPage by remember { mutableStateOf(true) }
     LaunchedEffect(page) {
-        if (page != Page.WallpaperFiles && (autoFocus || !firstPage)) focusSoon(first)
+        if (page != Page.WallpaperFiles && (autoFocus || !firstPage)) first.focusSoon()
         firstPage = false
     }
 
@@ -91,13 +94,13 @@ fun SettingsScreen(
     val device by vm.device.collectAsStateWithLifecycle()
     val unlocks by vm.unlocks.collectAsStateWithLifecycle()
     val locked = remember(device, unlocks) { vm.settingsLocked() }
-    // Fechado o pedido do código (certo ou cancelado), o foco volta para dentro das Definições.
-    val pinOpen by vm.pinPrompt.collectAsStateWithLifecycle()
-    var hadPin by remember { mutableStateOf(false) }
-    LaunchedEffect(pinOpen) {
-        if (pinOpen != null) hadPin = true else if (hadPin) {
-            hadPin = false
-            focusSoon(first)
+    // Fechado o pedido do código (certo ou cancelado), o foco volta para dentro das Definições. Só quando [refocus]
+    // muda com elas abertas (o valor com que abrem é de outra vez).
+    var seenRefocus by remember { mutableIntStateOf(refocus) }
+    LaunchedEffect(refocus) {
+        if (refocus != seenRefocus) {
+            seenRefocus = refocus
+            first.focusSoon()
         }
     }
 

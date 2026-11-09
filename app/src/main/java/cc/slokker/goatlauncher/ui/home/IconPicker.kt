@@ -116,7 +116,7 @@ fun IconPicker(app: LauncherApp, current: String?, vm: LauncherViewModel, onDone
         onDone()
     }
 
-    LaunchedEffect(page) { if (page !is PickerPage.Files) focusSoon(first) }
+    LaunchedEffect(page) { if (page !is PickerPage.Files) first.focusSoon() }
 
     Dialog(onDismissRequest = onDone, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Box(
@@ -241,7 +241,7 @@ private fun PackGrid(
     var filter by remember { mutableStateOf("") }
     val hasIcons = icons?.all?.isNotEmpty() == true
     // O foco vai para o primeiro ícone quando a lista chega (sem ícones, para o botão do pack).
-    LaunchedEffect(icons != null) { if (icons != null) focusSoon(first) }
+    LaunchedEffect(icons != null) { if (icons != null) first.focusSoon() }
 
     Column {
         Row(Modifier.padding(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {

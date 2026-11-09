@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.common.focusSoon
 import cc.slokker.goatlauncher.ui.common.PinPad
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.foundation.background
@@ -21,7 +22,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import cc.slokker.goatlauncher.ui.common.TvTextField
@@ -40,7 +40,6 @@ import cc.slokker.goatlauncher.data.LauncherApp
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.common.GlassRow
 import cc.slokker.goatlauncher.ui.common.dialogPanel
-import cc.slokker.goatlauncher.ui.common.requestFocusSafely
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -66,10 +65,7 @@ internal fun RenameDialog(app: LauncherApp, custom: Boolean, onSave: (String?) -
                 GlassButton(s.cancel, onClick = onDismiss)
             }
         }
-        LaunchedEffect(Unit) {
-            withFrameNanos { }
-            field.requestFocusSafely()
-        }
+        LaunchedEffect(Unit) { field.focusSoon() }
     }
 }
 
@@ -118,10 +114,7 @@ internal fun AppMenu(
             GlassRow(title = s.appInfo, onClick = onInfo)
             if (onUninstall != null) GlassRow(title = s.uninstall, onClick = onUninstall)
         }
-        LaunchedEffect(Unit) {
-            withFrameNanos { }
-            first.requestFocusSafely()
-        }
+        LaunchedEffect(Unit) { first.focusSoon() }
     }
 }
 

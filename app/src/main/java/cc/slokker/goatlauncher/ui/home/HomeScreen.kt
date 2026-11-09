@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.common.focusSoon
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileWidth
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileGap
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.TilesRowWidth
@@ -8,7 +9,6 @@ import cc.slokker.goatlauncher.ui.PinPrompt
 import android.content.pm.ApplicationInfo
 import android.os.SystemClock
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -88,13 +88,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
-import kotlin.math.abs
 
 /** Apps no Início (as primeiras da ordem guardada); as restantes estão no separador Apps. */
 const val FavoriteCount = 5
-
-/** Colunas da grelha do separador Apps (a primeira linha são os favoritos, alinhada com o Início). */
-private const val AppsColumns = 5
 
 /** Quanto tempo o foco tem de ficar num favorito para o "Continuar a ver" mudar para ele. */
 private const val SECTION_SETTLE_MS = 150L
@@ -145,12 +141,13 @@ fun HomeScreen(vm: LauncherViewModel) {
     val homeScroll = rememberScrollState()
     val scope = rememberCoroutineScope()
 
-    var focusedPkg by remember { mutableStateOf(vm.focusedPackage) }
+    // A app com foco, para onde o foco vai, o "mover" e o que está por cima (menu, código…): ver HomeState.
+    val state = remember { HomeState(vm.focusedPackage, pinShown = { vm.pinPrompt.value != null }) }
     // O "Continuar a ver" só muda quando o foco assenta num favorito: a correr pela fila não carrega cada um.
     // O foco é lido num snapshotFlow (não na composição): mudar de app não volta a compor o ecrã todo.
     var sectionPkg by remember { mutableStateOf(vm.focusedPackage) }
     LaunchedEffect(Unit) {
-        snapshotFlow { focusedPkg }.collectLatest { pkg ->
+        snapshotFlow { state.focusedPkg }.collectLatest { pkg ->
             if (sectionPkg != null) delay(SECTION_SETTLE_MS)
             sectionPkg = pkg
         }
@@ -162,17 +159,12 @@ fun HomeScreen(vm: LauncherViewModel) {
     // O conteúdo que enche o fundo: o do destaque, ou (apps ao lado) o primeiro da app com foco.
     val shelfItem = sectionItems.getOrNull(shelfPos)?.takeIf { style.heroBackdrop }
 
-    var menuFor by remember { mutableStateOf<LauncherApp?>(null) }
-    var renameFor by remember { mutableStateOf<LauncherApp?>(null) }
     var tabBarFocused by remember { mutableStateOf(false) }
-    var iconFor by remember { mutableStateOf<LauncherApp?>(null) }
-    var moving by remember { mutableStateOf<String?>(null) }
+    val moving = state.moving
 
-    // O foco vai para a app [targetPkg] (o banner com o [target]) sempre que [focusRequest] muda.
+    // O foco vai para a app state.targetPkg (o banner com o [target]) sempre que state.focusRequest muda.
     val target = remember { FocusRequester() }
     val favFirst = remember { FocusRequester() }
-    var targetPkg by remember { mutableStateOf(vm.focusedPackage) }
-    var focusRequest by remember { mutableIntStateOf(0) }
     val gridState = rememberLazyGridState()
 
     /** Posição de [pkg] na grelha das Apps (contando os dois títulos de secção). */
@@ -181,36 +173,28 @@ fun HomeScreen(vm: LauncherViewModel) {
         return if (i < favorites.size) 1 + i else 2 + i
     }
 
-    LaunchedEffect(focusRequest, list.isNotEmpty()) {
+    LaunchedEffect(state.focusRequest, list.isNotEmpty()) {
         if (list.isEmpty()) return@LaunchedEffect
         val pool = when {
             onApps || appleTv -> gridApps
             else -> favorites
         }
-        val pkg = targetPkg?.takeIf { p -> pool.any { it.packageName == p } } ?: pool.first().packageName
-        targetPkg = pkg
+        val pkg = state.targetPkg?.takeIf { p -> pool.any { it.packageName == p } } ?: pool.first().packageName
+        state.targetPkg = pkg
         if (onApps) {
             val idx = gridIndex(pkg)
             if (gridState.layoutInfo.visibleItemsInfo.none { it.index == idx }) gridState.scrollToItem(idx)
         }
-        // O banner só tem o FocusRequester depois de recompor (e de a troca de separador acabar): tenta uns frames.
-        repeat(30) {
-            withFrameNanos { }
-            // O pedido do código fica com o foco, e devolve-o quando fechar.
-            if (vm.pinPrompt.value != null) return@LaunchedEffect
-            if (target.requestFocusSafely()) {
-                // A troca de separador (fade) pode tirar-lhe o foco quando acaba: volta a pedi-lo depois dela.
-                delay(TAB_FADE_MS)
-                if (vm.pinPrompt.value == null) target.requestFocusSafely()
-                return@LaunchedEffect
-            }
+        // O banner só tem o FocusRequester depois de recompor (e de a troca de separador acabar). O código, se abrir,
+        // fica com o foco, e devolve-o quando fechar (HomeState.close).
+        if (target.focusSoon(stop = { state.holdsFocus })) {
+            // A troca de separador (fade) pode tirar-lhe o foco quando acaba: volta a pedi-lo depois dela.
+            delay(TAB_FADE_MS)
+            if (!state.holdsFocus) target.requestFocusSafely()
         }
     }
 
-    fun focusApp(pkg: String?) {
-        targetPkg = pkg
-        focusRequest++
-    }
+    fun focusApp(pkg: String?) = state.focusApp(pkg)
 
     // O que as teclas fazem no "Continuar a ver" (abrir, ‹ ›, o cartão com foco, ↓ dos cartões da Apple TV).
     val sectionActions = SectionActions(
@@ -222,28 +206,16 @@ fun HomeScreen(vm: LauncherViewModel) {
     )
 
     // Ao fechar o menu de uma app, o foco volta ao banner dela (o menu está por cima, no mesmo ecrã).
-    fun closeMenu() {
-        menuFor?.let { focusApp(it.packageName) }
-        menuFor = null
-    }
+    fun closeMenu() = state.closeMenu()
 
-    // Pedido do código (controlo parental). Ao fechar (certo ou cancelado), o foco volta à app onde estava,
-    // a menos que o código tenha aberto o menu ou as Definições (esses tratam do seu foco).
+    // Pedido do código (controlo parental): está por cima de tudo enquanto aberto (ver o LaunchedEffect lá em baixo).
     val pinPrompt by vm.pinPrompt.collectAsStateWithLifecycle()
-    var hadPin by remember { mutableStateOf(false) }
 
-    fun lastFavorite() = favorites.firstOrNull { it.packageName == focusedPkg }?.packageName ?: favorites.firstOrNull()?.packageName
+    fun lastFavorite() = favorites.firstOrNull { it.packageName == state.focusedPkg }?.packageName ?: favorites.firstOrNull()?.packageName
 
-    // Quando acabou o último "mover": o OK que confirma a posição não pode também abrir a app (o comando pode
-    // mandar o clique por outra tecla, ou depois de o "mover" já ter acabado).
-    var moveEndedAt by remember { mutableLongStateOf(0L) }
-
+    // O OK que confirma a posição não pode também abrir a app (ver HomeState.clickOpensApp).
     fun endMove() {
-        if (moving != null) {
-            moving = null
-            moveEndedAt = SystemClock.uptimeMillis()
-            vm.finishMove()
-        }
+        if (state.endMove(SystemClock.uptimeMillis())) vm.finishMove()
     }
 
     // Ao voltar ao Início vindo das Apps ou das Definições (por Voltar ou pelos separadores), o foco vai para o
@@ -263,8 +235,7 @@ fun HomeScreen(vm: LauncherViewModel) {
     LaunchedEffect(Unit) {
         vm.homeEvents.collect {
             endMove()
-            menuFor = null
-            iconFor = null
+            state.dismissForHome()
             focusApp(currentList.firstOrNull()?.packageName)
         }
     }
@@ -286,18 +257,18 @@ fun HomeScreen(vm: LauncherViewModel) {
             hasContinue = home && account.showContinueWatching && !watchNext[app.packageName].isNullOrEmpty(),
             moving = moving == app.packageName,
             onFocused = {
-                focusedPkg = app.packageName
+                state.focusedPkg = app.packageName
                 vm.focusedPackage = app.packageName
             },
             onClick = {
                 when {
-                    moving != null -> endMove()
-                    SystemClock.uptimeMillis() - moveEndedAt > MOVE_CLICK_GUARD_MS -> vm.launchApp(context, app.packageName)
+                    state.moving != null -> endMove()
+                    state.clickOpensApp(SystemClock.uptimeMillis()) -> vm.launchApp(context, app.packageName)
                 }
             },
             // Com as definições protegidas, o menu (mover, esconder, mudar nome…) pede o código.
-            onLongClick = { vm.withSettingsUnlocked { menuFor = app } },
-            bannerModifier = modifier.then(if (app.packageName == targetPkg) Modifier.focusRequester(target) else Modifier),
+            onLongClick = { vm.withSettingsUnlocked { state.open(Overlay.Menu(app)) } },
+            bannerModifier = modifier.then(if (app.packageName == state.targetPkg) Modifier.focusRequester(target) else Modifier),
         )
     }
 
@@ -351,7 +322,7 @@ fun HomeScreen(vm: LauncherViewModel) {
     // Mudar o nome e mudar o ícone são janelas à parte (Dialog): as teclas delas não passam pelo onPreviewKeyEvent de
     // baixo. Enquanto uma está aberta não se conta o tempo, senão o ecrã inicial apagava-se por trás dela; ao fechar,
     // a contagem recomeça.
-    val dialogOpen = renameFor != null || iconFor != null
+    val dialogOpen = state.dialogOpen
     LaunchedEffect(account.idleMinutes, dialogOpen) {
         idle = false
         if (account.idleMinutes <= 0 || dialogOpen) return@LaunchedEffect
@@ -401,55 +372,39 @@ fun HomeScreen(vm: LauncherViewModel) {
                             if (idle) idle = false
                         }
                         if (idle || uiAlpha < 1f) return@onPreviewKeyEvent true
-                        val pkg = moving
-                        val up = e.type == KeyEventType.KeyUp
-                        when {
-                            // A mover: no Início só ‹ › (a app fica nos favoritos); nas Apps também ↑ ↓ (uma linha inteira).
-                            pkg != null -> when (e.key) {
-                                Key.DirectionLeft, Key.DirectionRight, Key.DirectionUp, Key.DirectionDown -> {
-                                    if (e.type == KeyEventType.KeyDown) {
-                                        val delta = when (e.key) {
-                                            Key.DirectionLeft -> -1
-                                            Key.DirectionRight -> 1
-                                            Key.DirectionUp -> -AppsColumns
-                                            else -> AppsColumns
-                                        }
-                                        val idx = list.indexOfFirst { it.packageName == pkg }
-                                        // Na Apple TV a doca e a grelha de baixo são uma só lista: anda-se por todas.
-                                        val allowed = onApps || appleTv || (abs(delta) == 1 && idx + delta in 0 until minOf(FavoriteCount, list.size))
-                                        if (allowed) vm.moveApp(pkg, delta, FavoriteCount)
-                                        focusApp(pkg)
-                                    }
-                                    true
-                                }
-                                Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.ButtonA, Key.ButtonSelect, Key.Back -> {
-                                    if (up) endMove()
-                                    true
-                                }
-                                else -> false
+                        val pkg = state.moving
+                        val action = homeKey(
+                            homeKeyOf(e.key, moving = pkg != null),
+                            down = e.type == KeyEventType.KeyDown,
+                            up = e.type == KeyEventType.KeyUp,
+                            HomeKeyContext(
+                                moving = pkg != null,
+                                pinOpen = pinPrompt != null,
+                                menuOpen = state.menu != null,
+                                onApps = onApps,
+                                onSettings = onSettings,
+                                appleTv = appleTv,
+                                scrolled = homeScroll.value > 0,
+                                movingIndex = list.indexOfFirst { it.packageName == pkg },
+                                appCount = list.size,
+                            ),
+                        )
+                        when (action) {
+                            is HomeAction.Move -> {
+                                if (pkg != null && action.allowed) vm.moveApp(pkg, action.delta, FavoriteCount)
+                                focusApp(pkg)
                             }
-                            pinPrompt != null && e.key == Key.Back -> {
-                                if (up) vm.cancelPin()
-                                true
+                            HomeAction.EndMove -> endMove()
+                            HomeAction.CancelPin -> vm.cancelPin()
+                            HomeAction.CloseMenu -> closeMenu()
+                            HomeAction.BackToHome -> {
+                                vm.openHome()
+                                focusApp(lastFavorite())
                             }
-                            menuFor != null && e.key == Key.Back -> {
-                                if (up) closeMenu()
-                                true
-                            }
-                            // As Definições tratam o seu Voltar (páginas); se o foco estiver nos separadores, ver onKeyEvent.
-                            e.key == Key.Back && onSettings -> false
-                            // É o ecrã inicial: Voltar não sai daqui. Nas Apps, volta ao Início; na grelha da Apple TV, à doca.
-                            e.key == Key.Back -> {
-                                if (up && onApps) {
-                                    vm.openHome()
-                                    focusApp(lastFavorite())
-                                } else if (up && appleTv && homeScroll.value > 0) {
-                                    focusApp(lastFavorite())
-                                }
-                                true
-                            }
-                            else -> false
+                            HomeAction.BackToDock -> focusApp(lastFavorite())
+                            HomeAction.Pass, HomeAction.Swallow -> Unit
                         }
+                        action.consumed
                     }
                     // Voltar nas Definições que ninguém tratou (o foco está nos separadores): volta ao Início.
                     .onKeyEvent { e ->
@@ -501,6 +456,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                             SettingsScreen(
                                 vm,
                                 autoFocus = !tabBarFocused,
+                                refocus = state.settingsRefocus,
                                 onExit = {
                                     vm.openHome()
                                     focusApp(lastFavorite())
@@ -513,7 +469,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                                     Text(s.noApps, Modifier.padding(top = 60.dp), color = GoatColors.TextDim)
                                 } else {
                                     LazyVerticalGrid(
-                                        columns = GridCells.Fixed(AppsColumns),
+                                        columns = GridCells.Fixed(APPS_COLUMNS),
                                         state = gridState,
                                         modifier = Modifier.width(TilesRowWidth + 24.dp).fillMaxHeight(),
                                         horizontalArrangement = Arrangement.spacedBy(TileGap),
@@ -570,7 +526,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                                             horizontalAlignment = Alignment.CenterHorizontally,
                                             verticalArrangement = Arrangement.spacedBy(20.dp),
                                         ) {
-                                            moreApps.chunked(AppsColumns).forEach { row ->
+                                            moreApps.chunked(APPS_COLUMNS).forEach { row ->
                                                 Row(Modifier.width(TilesRowWidth), horizontalArrangement = Arrangement.spacedBy(TileGap)) {
                                                     row.forEach { app -> key(app.packageName) { Tile(app, home = false) } }
                                                 }
@@ -586,8 +542,8 @@ fun HomeScreen(vm: LauncherViewModel) {
                 // O menu desenha-se por cima do ecrã, não numa janela à parte (Dialog): abre sem criar janela nova.
                 // Guarda a última app para o fade de saída não ficar vazio.
                 var menuShown by remember { mutableStateOf<LauncherApp?>(null) }
-                if (menuFor != null) menuShown = menuFor
-                AnimatedVisibility(visible = menuFor != null, enter = fadeIn(tween(MENU_MS)), exit = fadeOut(tween(MENU_MS))) {
+                state.menu?.let { menuShown = it }
+                AnimatedVisibility(visible = state.menu != null, enter = fadeIn(tween(MENU_MS)), exit = fadeOut(tween(MENU_MS))) {
                     val app = menuShown ?: return@AnimatedVisibility
                     val isFavorite = favorites.any { it.packageName == app.packageName }
                     // As apps do sistema não se desinstalam (o Android só ofereceria desinstalar as atualizações).
@@ -600,7 +556,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                         app = app,
                         onMove = {
                             closeMenu()
-                            moving = app.packageName
+                            state.startMove(app.packageName)
                         },
                         // Tirar só se houver quem entre no lugar (a primeira app de baixo).
                         favorite = if (isFavorite && gridApps.size <= FavoriteCount) null else isFavorite,
@@ -610,25 +566,23 @@ fun HomeScreen(vm: LauncherViewModel) {
                             if (isFavorite) {
                                 // Desce para o início da lista de baixo e a primeira de lá sobe para o lugar vago.
                                 // No Início Android a app sai da fila: o foco passa para a vizinha.
-                                if (!onApps && !appleTv) {
-                                    focusApp((favorites.getOrNull(from + 1) ?: favorites.getOrNull(from - 1))?.packageName)
-                                }
+                                if (!onApps && !appleTv) focusApp(HomeState.neighbour(favorites.map { it.packageName }, app.packageName))
                                 vm.moveApp(app.packageName, FavoriteCount - from, FavoriteCount)
                                 vm.finishMove()
                             } else {
                                 // Entra no último lugar (a que lá estava desce para o início da lista de baixo) e fica
                                 // logo a mover, para se pôr no sítio certo com ‹ ›.
                                 vm.moveApp(app.packageName, minOf(favorites.size, FavoriteCount - 1) - from, FavoriteCount)
-                                moving = app.packageName
+                                state.startMove(app.packageName)
                             }
                         },
                         onChangeIcon = {
                             closeMenu()
-                            iconFor = app
+                            state.open(Overlay.Icon(app))
                         },
                         onRename = {
                             closeMenu()
-                            renameFor = app
+                            state.open(Overlay.Rename(app))
                         },
                         hidden = app.packageName in device.hidden,
                         continueOff = app.packageName in device.noContinue,
@@ -643,10 +597,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                             } else {
                                 // No Início a app sai da fila: o foco passa para a vizinha. Nas Apps (e na grelha da
                                 // Apple TV) continua lá, com o foco.
-                                if (!onApps && !appleTv) {
-                                    val i = favorites.indexOfFirst { it.packageName == app.packageName }
-                                    focusApp((favorites.getOrNull(i + 1) ?: favorites.getOrNull(i - 1))?.packageName)
-                                }
+                                if (!onApps && !appleTv) focusApp(HomeState.neighbour(favorites.map { it.packageName }, app.packageName))
                                 vm.setHidden(app.packageName, true)
                             }
                         },
@@ -676,31 +627,32 @@ fun HomeScreen(vm: LauncherViewModel) {
                     val prompt = pinShown ?: return@AnimatedVisibility
                     PinOverlay(prompt.title, waitMs = vm::pinWaitMs, onPin = vm::submitPin)
                 }
+                // O código abre e fecha no ViewModel: aqui entra e sai do que está por cima. Ao fechar (certo ou
+                // cancelado), o foco volta para onde estava, a menos que o código certo tenha aberto o menu (HomeState.close).
                 LaunchedEffect(pinPrompt) {
                     if (pinPrompt != null) {
-                        hadPin = true
+                        state.open(Overlay.Pin)
                         return@LaunchedEffect
                     }
-                    if (!hadPin) return@LaunchedEffect
-                    hadPin = false
+                    if (state.overlay == null) return@LaunchedEffect
                     withFrameNanos { }
-                    if (menuFor == null && !onSettings) focusApp(focusedPkg ?: lastFavorite())
+                    state.close(Overlay.Pin, onSettings, ::lastFavorite)
                 }
 
-                renameFor?.let { app ->
+                state.renaming?.let { app ->
                     RenameDialog(
                         app = app,
                         custom = device.names[app.packageName] != null,
                         onSave = {
-                            renameFor = null
+                            state.close(Overlay.Rename(app))
                             vm.setCustomName(app.packageName, it)
                         },
-                        onDismiss = { renameFor = null },
+                        onDismiss = { state.close(Overlay.Rename(app)) },
                     )
                 }
 
-                iconFor?.let { app ->
-                    IconPicker(app, current = device.icons[app.packageName], vm = vm, onDone = { iconFor = null })
+                state.choosingIcon?.let { app ->
+                    IconPicker(app, current = device.icons[app.packageName], vm = vm, onDone = { state.close(Overlay.Icon(app)) })
                 }
             }
             AnimatedVisibility(visible = idle, enter = fadeIn(tween(AMBIENT_FADE_MS)), exit = fadeOut(tween(250))) {
@@ -717,12 +669,21 @@ fun HomeScreen(vm: LauncherViewModel) {
     }
 }
 
-/** Depois de acabar de mover, um clique na app durante este tempo não a abre (é o OK que confirmou a posição). */
-private const val MOVE_CLICK_GUARD_MS = 600L
-
 /** O vidro da doca (Apple TV): escuro no modo noite, claro no modo dia, como o resto do ecrã. */
 fun dockColor(night: Boolean): Color = if (night) Color.Black.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.26f)
 
 private const val MENU_MS = 120
 
 private const val AMBIENT_FADE_MS = 1500
+
+/** A tecla [key] para a tabela do Início. OK inclui o A e o Select do comando de jogos só a mover (como sempre). */
+private fun homeKeyOf(key: Key, moving: Boolean): HomeKey = when (key) {
+    Key.DirectionLeft -> HomeKey.Left
+    Key.DirectionRight -> HomeKey.Right
+    Key.DirectionUp -> HomeKey.Up
+    Key.DirectionDown -> HomeKey.Down
+    Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> HomeKey.Ok
+    Key.ButtonA, Key.ButtonSelect -> if (moving) HomeKey.Ok else HomeKey.Other
+    Key.Back -> HomeKey.Back
+    else -> HomeKey.Other
+}

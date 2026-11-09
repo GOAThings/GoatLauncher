@@ -80,12 +80,12 @@ fun ImageBrowser(dir: File?, onDir: (File?) -> Unit, onPick: (File) -> Unit, fir
             Spacer(Modifier.height(12.dp))
             GlassButton(s.allow, onClick = { request.launch(permission) }, modifier = Modifier.focusRequester(first))
         }
-        LaunchedEffect(Unit) { focusSoon(first) }
+        LaunchedEffect(Unit) { first.focusSoon() }
         return
     }
 
     val entries by produceState<List<File>?>(null, dir) { value = if (dir == null) ImageImport.roots() else ImageImport.list(dir) }
-    LaunchedEffect(dir, entries != null) { if (entries != null) focusSoon(first) }
+    LaunchedEffect(dir, entries != null) { if (entries != null) first.focusSoon() }
 
     Column {
         Text(
