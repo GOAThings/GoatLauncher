@@ -25,7 +25,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.data.AccountSettings
-import cc.slokker.goatlauncher.data.after
 import cc.slokker.goatlauncher.ui.LauncherViewModel
 import cc.slokker.goatlauncher.ui.state.ReportState
 import cc.slokker.goatlauncher.ui.LocalStrings
@@ -70,64 +69,30 @@ internal fun AccountPage(vm: LauncherViewModel, first: FocusRequester, onPage: (
     val s = LocalStrings.current
     val account by vm.account.collectAsStateWithLifecycle()
     val session by vm.session.collectAsStateWithLifecycle()
-    var confirmUnlink by remember { mutableStateOf(false) }
     LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
         item { SectionLabel(s.account) }
         val current = session
         if (current == null) {
             item {
-                GlassRow(
-                    title = s.linkAccount,
-                    subtitle = s.linkAccountHint,
-                    onClick = vm::openActivation,
-                    trailing = { Chevron() },
-                    modifier = Modifier.focusRequester(first),
-                )
+                NavRow(s.linkAccount, onClick = vm::openActivation, subtitle = s.linkAccountHint, modifier = Modifier.focusRequester(first))
             }
         } else {
             item {
                 GlassRow(title = s.linkedAs(current.email), subtitle = current.deviceName, onClick = vm::syncNow, modifier = Modifier.focusRequester(first))
             }
             item { GlassRow(title = s.syncNow, onClick = vm::syncNow) }
-            item {
-                GlassRow(
-                    title = s.unlink,
-                    subtitle = if (confirmUnlink) s.pressAgainToConfirm else s.unlinkHint,
-                    onClick = {
-                        if (confirmUnlink) {
-                            confirmUnlink = false
-                            vm.unlink()
-                        } else {
-                            confirmUnlink = true
-                        }
-                    },
-                )
-            }
+            item { ConfirmRow(s.unlink, s.unlinkHint, onConfirm = vm::unlink) }
         }
 
         item { SectionLabel(s.youtube) }
         item {
             val linked by vm.youtubeLinked.collectAsStateWithLifecycle()
-            var confirm by remember { mutableStateOf(false) }
             if (linked) {
                 // OK passa à seguinte: os dois → só a meio → só recomendações → os dois.
-                val label = when (account.youtubeFeed) {
-                    AccountSettings.YT_CONTINUE -> s.ytContinue
-                    AccountSettings.YT_RECOMMENDED -> s.ytRecommended
-                    else -> s.ytBoth
-                }
-                val next = AccountSettings.YOUTUBE_FEEDS.after(account.youtubeFeed)
-                GlassRow(title = s.youtubeFeed, subtitle = label, onClick = { vm.setYoutubeFeed(next) }, trailing = { Chevron() })
-                GlassRow(
-                    title = s.youtubeUnlink,
-                    subtitle = if (confirm) s.pressAgainToConfirm else s.youtubeOnHint,
-                    onClick = {
-                        if (confirm) vm.unlinkYouTube()
-                        confirm = !confirm
-                    },
-                )
+                CycleRow(s.youtubeFeed, AccountSettings.YOUTUBE_FEEDS, account.youtubeFeed, label = { youtubeFeedName(it, s) }, onPick = vm::setYoutubeFeed)
+                ConfirmRow(s.youtubeUnlink, s.youtubeOnHint, onConfirm = vm::unlinkYouTube)
             } else {
-                GlassRow(title = s.youtubeLink, subtitle = s.youtubeLinkHint, onClick = { onPage(Page.YouTube) }, trailing = { Chevron() })
+                NavRow(s.youtubeLink, onClick = { onPage(Page.YouTube) }, subtitle = s.youtubeLinkHint)
             }
         }
 
@@ -167,4 +132,11 @@ internal fun YouTubePage(vm: LauncherViewModel, first: FocusRequester, onDone: (
         Spacer(Modifier.height(18.dp))
         GlassButton(s.cancel, onClick = onDone, modifier = Modifier.focusRequester(first))
     }
+}
+
+/** O que o YouTube mostra no "Continuar a ver": os dois, só os vídeos a meio, ou só as recomendações. */
+private fun youtubeFeedName(feed: String, s: Strings): String = when (feed) {
+    AccountSettings.YT_CONTINUE -> s.ytContinue
+    AccountSettings.YT_RECOMMENDED -> s.ytRecommended
+    else -> s.ytBoth
 }

@@ -44,7 +44,7 @@ import cc.slokker.goatlauncher.ui.theme.GoatColors
  * Para limpar e pedir de novo (ex.: PIN errado), quem chama recria o PinPad (key). Com [waiting], fica com o foco mas não muda nada.
  */
 @Composable
-fun PinPad(title: String, message: String?, onDone: (String) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, waiting: Boolean = false) {
+fun PinPad(title: String, message: String?, onDone: (String) -> Unit, modifier: Modifier = Modifier, waiting: Boolean = false) {
     val digits = remember { mutableStateListOf(0, 0, 0, 0) }
     var index by remember { mutableIntStateOf(0) }
     var error by remember(message) { mutableStateOf(message) }
@@ -75,7 +75,7 @@ fun PinPad(title: String, message: String?, onDone: (String) -> Unit, modifier: 
     Column(
         modifier
             .focusRequester(focus)
-            .focusable(enabled)
+            .focusable()
             .onKeyEvent { e ->
                 if (e.type != KeyEventType.KeyDown) return@onKeyEvent false
                 val code = e.key.nativeKeyCode

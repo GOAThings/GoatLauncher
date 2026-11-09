@@ -266,8 +266,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         settings.updateAccount { it.copy(nightMode = on, nightAuto = false) }
     }
 
-    fun setNightAuto(on: Boolean) = settings.updateAccount { it.copy(nightAuto = on) }
-
     /** Só em debug (`am start … --ez demo_watch_next true`): "Continuar a ver" de exemplo nos 2 primeiros favoritos. */
     fun enableDemoWatchNext() = continueWatching.enableDemo()
 
@@ -372,10 +370,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         it.copy(locked = if (on) it.locked + pkg else it.locked - pkg)
     }
 
-    fun setLockSettings(on: Boolean) = settings.updateDevice { it.copy(lockSettings = on) }
-
-    fun setLockHours(from: Int?, to: Int?) = settings.updateDevice { it.copy(lockFrom = from, lockTo = to) }
-
     // ---- Arranque automático e modo ambiente ----
 
     fun setAutostart(pkg: String?) = settings.updateDevice { it.copy(autostart = pkg) }
@@ -393,27 +387,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         d.copy(buttons = buttons)
     }
 
-    fun setAutostartWake(on: Boolean) = settings.updateDevice { it.copy(autostartWake = on) }
-
-    fun setAutostartDelay(seconds: Int) = settings.updateDevice { it.copy(autostartDelay = seconds) }
-
-    fun setIdleMinutes(minutes: Int) = settings.updateAccount { it.copy(idleMinutes = minutes) }
-
-    fun setIdleKeepAwake(on: Boolean) = settings.updateAccount { it.copy(idleKeepAwake = on) }
-
     fun setLocation(place: Place?) = settings.updateDevice { it.copy(location = place) }
 
     suspend fun searchPlaces(query: String): List<Place> = c.weather.searchPlaces(query, Strings.normalize(account.value.language).let { if (it == "auto") java.util.Locale.getDefault().language else it.substringBefore('-') })
 
     /** A cidade que o IP diz (para mostrar em "Automática"). */
     fun ipCity(): String? = c.weather.ipCity()
-
-    fun setAmbientStyle(style: String) = settings.updateAccount { it.copy(ambientStyle = style) }
-
-    fun setNavSounds(on: Boolean) = settings.updateAccount { it.copy(navSounds = on) }
-
-    fun setPhotoMinWidth(px: Int) = settings.updateAccount { it.copy(photoMinWidth = px) }
-    fun setWallpaperMinutes(minutes: Int) = settings.updateAccount { it.copy(wallpaperMinutes = minutes) }
 
     // ---- Navegação ----
 
@@ -428,10 +407,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun openSettings() {
         _screen.value = Screen.Settings
-    }
-
-    fun closeSettings() {
-        _screen.value = Screen.Home
     }
 
     /** Ligar a outra conta mexe no controlo parental: pede o código, se houver. */
@@ -486,37 +461,20 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun setWallpaper(wallpaper: Wallpaper) = settings.updateAccount { it.copy(wallpaper = wallpaper) }
 
-    fun setClock24h(on: Boolean) = settings.updateAccount { it.copy(clock24h = on) }
+    /**
+     * Muda as definições da conta (iguais em todas as TVs, sincronizadas). As linhas das Definições escrevem por aqui
+     * (ver SettingsCatalog): uma definição nova não precisa de um setter seu.
+     */
+    fun updateAccount(change: (AccountSettings) -> AccountSettings) = settings.updateAccount(change)
 
-    fun setShowGreeting(on: Boolean) = settings.updateAccount { it.copy(showGreeting = on) }
-
-    fun setShowContinueWatching(on: Boolean) = settings.updateAccount { it.copy(showContinueWatching = on) }
-
-    fun setShowAppName(on: Boolean) = settings.updateAccount { it.copy(showAppName = on) }
-
-    fun setShowWeather(on: Boolean) = settings.updateAccount { it.copy(showWeather = on) }
+    /** Muda as definições só desta TV (ver [updateAccount]). */
+    fun updateDevice(change: (DeviceSettings) -> DeviceSettings) = settings.updateDevice(transform = change)
 
     /** Nome da app [pkg] no launcher; null (ou vazio) repõe o nome da app. */
     fun setCustomName(pkg: String, name: String?) = settings.updateDevice {
         val clean = name?.trim().orEmpty()
         it.copy(names = if (clean.isEmpty()) it.names - pkg else it.names + (pkg to clean))
     }
-
-    /** Escolher um estilo também volta a ligar o "Continuar a ver" (se estava desligado). */
-    fun setContinueStyle(style: String) = settings.updateAccount { it.copy(continueStyle = style, showContinueWatching = true) }
-
-    fun setFocusEffect(effect: String) = settings.updateAccount { it.copy(focusEffect = effect) }
-
-    fun setFocusAnimation(animation: String) = settings.updateAccount { it.copy(focusAnimation = animation) }
-
-    /** AccountSettings.COLOR_AUTO ou "#RRGGBB". */
-    fun setFocusColor(color: String) = settings.updateAccount { it.copy(focusColor = color) }
-
-    /** AccountSettings.BG_GRAPHITE, BG_NONE ou "#RRGGBB". */
-    fun setIconBackground(spec: String) = settings.updateAccount { it.copy(iconBackground = spec) }
-
-    /** Disposição do ecrã inicial (AccountSettings.LAYOUT_*). A Apple TV não tem separador Apps. */
-    fun setLayout(layout: String) = settings.updateAccount { it.copy(layout = layout) }
 
     val icons = c.icons
 

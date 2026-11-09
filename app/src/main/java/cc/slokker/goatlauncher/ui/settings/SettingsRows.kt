@@ -58,6 +58,16 @@ import cc.slokker.goatlauncher.ui.common.GlassRow
 import cc.slokker.goatlauncher.ui.common.GoatIcons
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import cc.slokker.goatlauncher.HomeGuardService
+import cc.slokker.goatlauncher.data.after
+import cc.slokker.goatlauncher.ui.common.Toggle
 /** Desvanece [EdgeFade] em cima e em baixo do conteúdo (as listas que passam por baixo do título e do rodapé). */
 internal fun Modifier.fadeEdges(): Modifier =
     graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
@@ -219,4 +229,83 @@ internal fun AppThumb(app: cc.slokker.goatlauncher.data.LauncherApp) {
             app.icon != null -> Image(app.icon, null, modifier = Modifier.size(24.dp))
         }
     }
+}
+
+// ---- As linhas de sempre (todas são GlassRow com o mesmo aspeto) ----
+
+/** O visto das opções escolhidas. */
+@Composable
+internal fun CheckMark() {
+    Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp))
+}
+
+/** Liga/desliga: OK troca. */
+@Composable
+internal fun ToggleRow(title: String, checked: Boolean, onToggle: (Boolean) -> Unit, subtitle: String? = null, modifier: Modifier = Modifier) {
+    GlassRow(title = title, subtitle = subtitle, onClick = { onToggle(!checked) }, trailing = { Toggle(checked) }, modifier = modifier)
+}
+
+/** Leva a outra página (ou ao Android): a seta à direita e, se houver, o ícone à esquerda. */
+@Composable
+internal fun NavRow(
+    title: String,
+    onClick: () -> Unit,
+    subtitle: String? = null,
+    leading: (@Composable RowScope.() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+) {
+    GlassRow(title = title, subtitle = subtitle, leading = leading, onClick = onClick, trailing = { Chevron() }, modifier = modifier)
+}
+
+/** Uma opção de uma lista: o visto na escolhida. */
+@Composable
+internal fun ChoiceRow(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    subtitle: String? = null,
+    leading: (@Composable RowScope.() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+) {
+    GlassRow(title = title, subtitle = subtitle, leading = leading, onClick = onClick, trailing = { if (selected) CheckMark() }, modifier = modifier)
+}
+
+/** Um valor de uma lista curta: mostra o atual e OK passa ao seguinte (do último volta ao primeiro). */
+@Composable
+internal fun <T> CycleRow(title: String, options: List<T>, current: T, label: (T) -> String, onPick: (T) -> Unit, modifier: Modifier = Modifier) {
+    GlassRow(title = title, subtitle = label(current), onClick = { onPick(options.after(current)) }, trailing = { Chevron() }, modifier = modifier)
+}
+
+/**
+ * Uma ação que não se desfaz (desligar, desassociar): a primeira pressão arma (o subtítulo pede outra), a segunda faz
+ * [onConfirm] e desarma.
+ */
+@Composable
+internal fun ConfirmRow(title: String, hint: String, onConfirm: () -> Unit, modifier: Modifier = Modifier) {
+    val s = LocalStrings.current
+    var armed by remember { mutableStateOf(false) }
+    GlassRow(
+        title = title,
+        subtitle = if (armed) s.pressAgainToConfirm else hint,
+        onClick = {
+            if (armed) onConfirm()
+            armed = !armed
+        },
+        modifier = modifier,
+    )
+}
+
+/**
+ * Se o serviço de acessibilidade (HomeGuardService) está ligado. Liga-se nas definições do Android, por isso
+ * volta-se a ver ao regressar de lá (ao retomar o ecrã).
+ */
+@Composable
+internal fun rememberGuardEnabled(): Boolean {
+    val context = LocalContext.current
+    var guard by remember { mutableStateOf(HomeGuardService.isEnabled(context)) }
+    LifecycleResumeEffect(Unit) {
+        guard = HomeGuardService.isEnabled(context)
+        onPauseOrDispose { }
+    }
+    return guard
 }

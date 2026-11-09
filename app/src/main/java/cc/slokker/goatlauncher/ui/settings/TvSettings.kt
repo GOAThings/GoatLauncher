@@ -30,60 +30,17 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import cc.slokker.goatlauncher.data.DeviceSettings
-import cc.slokker.goatlauncher.data.after
 import cc.slokker.goatlauncher.HomeGuardService
 import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.ui.LauncherViewModel
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.common.GlassButton
 import cc.slokker.goatlauncher.ui.common.GlassRow
-import cc.slokker.goatlauncher.ui.common.GoatIcons
 import cc.slokker.goatlauncher.ui.common.Toggle
 import cc.slokker.goatlauncher.ui.theme.GoatColors
-/** Ao ligar: a app que abre quando a TV liga (e acorda) e quanto tempo depois. */
-@Composable
-internal fun StartupPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
-    val s = LocalStrings.current
-    val device by vm.device.collectAsStateWithLifecycle()
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
-        item {
-            val apps by vm.allApps.collectAsStateWithLifecycle()
-            GlassRow(
-                modifier = Modifier.focusRequester(first),
-                title = s.autostart,
-                subtitle = device.autostart?.let { pkg -> apps?.firstOrNull { it.packageName == pkg }?.label ?: pkg } ?: s.autostartNone,
-                onClick = { onPage(Page.Autostart) },
-                trailing = { Chevron() },
-            )
-        }
-        if (device.autostart != null) {
-            item {
-                GlassRow(
-                    title = s.autostartWake,
-                    subtitle = s.autostartWakeHint,
-                    onClick = { vm.setAutostartWake(!device.autostartWake) },
-                    trailing = { Toggle(device.autostartWake) },
-                )
-            }
-            item {
-                val next = DeviceSettings.AUTOSTART_DELAYS.after(device.autostartDelay)
-                GlassRow(
-                    title = s.autostartDelay,
-                    subtitle = s.seconds(device.autostartDelay),
-                    onClick = { vm.setAutostartDelay(next) },
-                    trailing = { Chevron() },
-                )
-            }
-        }
-
-    }
-}
 
 /** Com as definições protegidas pelo controlo parental: só o botão que pede o código. */
 @Composable
@@ -103,75 +60,10 @@ internal fun AppPickerPage(vm: LauncherViewModel, first: FocusRequester, current
     val apps by vm.allApps.collectAsStateWithLifecycle()
     LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
         item {
-            GlassRow(
-                title = none,
-                onClick = { onPick(null) },
-                trailing = { if (current == null) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                modifier = Modifier.focusRequester(first),
-            )
+            ChoiceRow(title = none, selected = current == null, onClick = { onPick(null) }, modifier = Modifier.focusRequester(first))
         }
         items(apps.orEmpty(), key = { it.packageName }) { app ->
-            GlassRow(
-                title = app.label,
-                onClick = { onPick(app.packageName) },
-                leading = { AppThumb(app) },
-                trailing = { if (current == app.packageName) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
-            )
-        }
-    }
-}
-
-/** Controlo parental ligado: código, apps bloqueadas, proteção das definições e horário. */
-@Composable
-internal fun ParentalPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
-    val s = LocalStrings.current
-    val device by vm.device.collectAsStateWithLifecycle()
-    var confirmOff by remember { mutableStateOf(false) }
-    val from = device.lockFrom
-    val to = device.lockTo
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
-        item {
-            GlassRow(
-                title = s.lockedApps,
-                subtitle = s.lockedCount(device.locked.size),
-                onClick = { onPage(Page.LockedApps) },
-                trailing = { Chevron() },
-                modifier = Modifier.focusRequester(first),
-            )
-        }
-        item {
-            GlassRow(
-                title = s.lockSettings,
-                subtitle = s.lockSettingsHint,
-                onClick = { vm.setLockSettings(!device.lockSettings) },
-                trailing = { Toggle(device.lockSettings) },
-            )
-        }
-        item {
-            GlassRow(
-                title = s.lockHours,
-                subtitle = if (from != null && to != null) s.lockBetween(from, to) else s.lockAlways,
-                onClick = { if (from != null) vm.setLockHours(null, null) else vm.setLockHours(20, 8) },
-                trailing = { Toggle(from != null) },
-            )
-        }
-        if (from != null && to != null) {
-            item { HourRow(s.lockFrom, from) { vm.setLockHours(it, to) } }
-            item { HourRow(s.lockTo, to) { vm.setLockHours(from, it) } }
-        }
-        item { GlassRow(title = s.changePin, onClick = { onPage(Page.PinSetup) }, trailing = { Chevron() }) }
-        item {
-            GlassRow(
-                title = s.parentalDisable,
-                subtitle = if (confirmOff) s.pressAgainToConfirm else s.parentalDisableHint,
-                onClick = {
-                    if (confirmOff) {
-                        vm.setPin(null)
-                        onPage(Page.Main)
-                    }
-                    confirmOff = !confirmOff
-                },
-            )
+            ChoiceRow(title = app.label, selected = current == app.packageName, onClick = { onPick(app.packageName) }, leading = { AppThumb(app) })
         }
     }
 }
@@ -253,18 +145,13 @@ internal fun ButtonsPage(vm: LauncherViewModel, first: FocusRequester, onEdit: (
     val context = LocalContext.current
     val device by vm.device.collectAsStateWithLifecycle()
     val apps by vm.allApps.collectAsStateWithLifecycle()
-    var guard by remember { mutableStateOf(HomeGuardService.isEnabled(context)) }
-    LifecycleResumeEffect(Unit) {
-        guard = HomeGuardService.isEnabled(context)
-        onPauseOrDispose { }
-    }
+    val guard = rememberGuardEnabled()
     LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
         items(device.buttons, key = { "${it.keyCode}:${it.scanCode}" }) { b ->
-            GlassRow(
+            NavRow(
                 title = buttonName(b.keyCode, b.scanCode, s),
                 subtitle = apps?.firstOrNull { it.packageName == b.app }?.label ?: b.app,
                 onClick = { onEdit(b.keyCode to b.scanCode) },
-                trailing = { Chevron() },
                 modifier = if (b == device.buttons.first()) Modifier.focusRequester(first) else Modifier,
             )
         }

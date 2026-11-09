@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -21,7 +20,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import kotlinx.coroutines.launch
@@ -31,61 +29,13 @@ import cc.slokker.goatlauncher.ui.LauncherViewModel
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.common.GlassButton
 import cc.slokker.goatlauncher.ui.common.GlassRow
-import cc.slokker.goatlauncher.ui.common.GoatIcons
-import cc.slokker.goatlauncher.ui.common.Toggle
 import cc.slokker.goatlauncher.ui.common.TvTextField
 import cc.slokker.goatlauncher.ui.home.clockText
 import java.util.Calendar
 import cc.slokker.goatlauncher.ui.theme.GoatColors
-/** Geral: a língua, onde fica a TV (o tempo e o dia/noite), a noite automática e os sons. */
-@Composable
-internal fun GeneralPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
-    val sun by vm.sunTimes.collectAsStateWithLifecycle()
-    val s = LocalStrings.current
-    val account by vm.account.collectAsStateWithLifecycle()
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
-        item {
-            val code = Strings.normalize(account.language)
-            GlassRow(
-                title = s.language,
-                subtitle = Strings.LANGUAGES.firstOrNull { it.first == code }?.second ?: s.languageAuto,
-                onClick = { onPage(Page.Language) },
-                trailing = { Chevron() },
-                modifier = Modifier.focusRequester(first),
-            )
-        }
-        item {
-            val device by vm.device.collectAsStateWithLifecycle()
-            GlassRow(
-                title = s.location,
-                subtitle = device.location?.name ?: vm.ipCity()?.let(s::locationAutoCity) ?: s.locationAuto,
-                onClick = { onPage(Page.Location) },
-                trailing = { Chevron() },
-            )
-        }
-        item {
-            GlassRow(
-                title = s.nightAuto,
-                // Com a localização, do pôr ao nascer do sol de hoje; sem ela, a hora fixa.
-                subtitle = sun?.let { (rise, set) -> s.nightAutoSun(sunClock(set, s, account.clock24h), sunClock(rise, s, account.clock24h)) }
-                    ?: s.nightAutoHint,
-                onClick = { vm.setNightAuto(!account.nightAuto) },
-                trailing = { Toggle(account.nightAuto) },
-            )
-        }
-        item {
-            GlassRow(
-                title = s.navSounds,
-                subtitle = s.navSoundsHint,
-                onClick = { vm.setNavSounds(!account.navSounds) },
-                trailing = { Toggle(account.navSounds) },
-            )
-        }
-    }
-}
 
 /** [minutes] desde a meia-noite (de hoje) no formato do relógio de cima: "07:42", ou "7:42 PM", "午前7:42" sem 24 horas. */
-private fun sunClock(minutes: Int, s: Strings, clock24h: Boolean): String {
+internal fun sunClock(minutes: Int, s: Strings, clock24h: Boolean): String {
     val time = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, minutes / 60)
         set(Calendar.MINUTE, minutes % 60)
@@ -120,16 +70,16 @@ internal fun LocationPage(vm: LauncherViewModel, first: FocusRequester) {
             Text(s.locationHint, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 6.dp))
         }
         item {
-            GlassRow(
+            ChoiceRow(
                 title = vm.ipCity()?.let(s::locationAutoCity) ?: s.locationAuto,
+                selected = device.location == null,
                 onClick = { vm.setLocation(null) },
-                trailing = { if (device.location == null) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
                 modifier = Modifier.focusRequester(first),
             )
         }
         device.location?.let { place ->
             item {
-                GlassRow(title = place.name, onClick = {}, trailing = { Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) })
+                ChoiceRow(title = place.name, selected = true, onClick = {})
             }
         }
         item {
@@ -161,10 +111,10 @@ internal fun LanguagePage(vm: LauncherViewModel, first: FocusRequester) {
     val options = listOf("auto" to s.languageAuto) + Strings.LANGUAGES
     LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
         items(options, key = { it.first }) { (code, name) ->
-            GlassRow(
+            ChoiceRow(
                 title = name,
+                selected = code == current,
                 onClick = { vm.setLanguage(code) },
-                trailing = { if (code == current) Icon(GoatIcons.Check, contentDescription = null, modifier = Modifier.size(20.dp)) },
                 modifier = if (code == current) Modifier.focusRequester(first) else Modifier,
             )
         }

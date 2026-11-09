@@ -1,14 +1,9 @@
 package cc.slokker.goatlauncher.ui.settings
 
 import cc.slokker.goatlauncher.ButtonCapture
-import cc.slokker.goatlauncher.ui.Strings
 import java.io.File
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -44,44 +38,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.BuildConfig
-import cc.slokker.goatlauncher.HomeGuardService
-import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.ui.LauncherViewModel
-import cc.slokker.goatlauncher.ui.state.UpdateState
 import cc.slokker.goatlauncher.ui.LocalStrings
-import cc.slokker.goatlauncher.ui.home.HomeStyle
-import cc.slokker.goatlauncher.ui.common.GlassRow
 import cc.slokker.goatlauncher.ui.common.GoatIcons
-import cc.slokker.goatlauncher.ui.common.SectionLabel
 import cc.slokker.goatlauncher.ui.common.ImageBrowser
 import cc.slokker.goatlauncher.ui.common.focusSoon
 import cc.slokker.goatlauncher.ui.common.onBackKey
 import cc.slokker.goatlauncher.ui.home.rememberWallpaperBlur
 import cc.slokker.goatlauncher.ui.common.frostedGlass
 import cc.slokker.goatlauncher.ui.theme.GoatColors
-import cc.slokker.goatlauncher.ui.theme.TvSafePadding
-internal enum class Page {
-    Main, Appearance, Wallpaper, WallpaperFiles, Apps, HiddenApps, Ambient, Startup, Autostart, Buttons, ButtonCapture, ButtonApp,
-    Parental, PinSetup, LockedApps, General, Language, Location, Account, YouTube, Report,
-}
-
-/** Definições do launcher: um painel de vidro à direita, por cima do fundo. Voltar sobe um nível. */
+/**
+ * Definições do launcher, no seu separador do ecrã inicial: um painel de vidro à direita, por cima do fundo. Voltar sobe
+ * um nível; na página principal faz [onExit]. As páginas estão em Page; as linhas da maioria, em SettingsCatalog.
+ */
 @Composable
 fun SettingsScreen(
     vm: LauncherViewModel,
-    embedded: Boolean = false,
     autoFocus: Boolean = true,
-    onExit: () -> Unit = vm::closeSettings,
+    onExit: () -> Unit,
 ) {
     val s = LocalStrings.current
     var page by remember { mutableStateOf(Page.Main) }
@@ -89,6 +70,12 @@ fun SettingsScreen(
     var dir by remember { mutableStateOf<File?>(null) }
     // Botão do comando a configurar (keyCode, scanCode), entre "carrega no botão" e escolher a app.
     var buttonKey by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    val args = PageArgs(buttonKey)
+    // Ir para uma página; as imagens da box abrem sempre na lista de discos.
+    val open: (Page) -> Unit = {
+        if (it == Page.WallpaperFiles) dir = null
+        page = it
+    }
     val first = remember { FocusRequester() }
 
     // O navegador de imagens trata do seu foco (muda a cada pasta). A primeira página só leva o foco se
@@ -119,15 +106,14 @@ fun SettingsScreen(
     val blur = rememberWallpaperBlur(account.wallpaper, wallpaperImage)
 
     // Na Aparência, o ecrã divide-se: à esquerda a pré-visualização do ecrã inicial, à direita as definições.
-    val split = embedded && page == Page.Appearance && !locked
+    val split = page == Page.Appearance && !locked
     val panelWidth by animateDpAsState(if (split) SplitPanelWidth else PanelWidth, tween(300, easing = FastOutSlowInEasing), label = "panel")
     Box(
         Modifier
             .fillMaxSize()
-            .then(if (embedded) Modifier else Modifier.background(Color.Black.copy(alpha = 0.35f)).padding(TvSafePadding))
             // Voltar sobe um nível (ex.: da Aparência para as Definições); na página principal volta ao Início.
             .onBackKey {
-                val up = parentPage(page, hasPin = device.pin != null)
+                val up = page.parent(hasPin = device.pin != null)
                 if (up == null || locked) onExit() else page = up
                 true
             },
@@ -148,8 +134,8 @@ fun SettingsScreen(
         Column(
             Modifier
                 // À direita, como nas Definições da GoatTV: o ecrã inicial fica à vista à esquerda.
-                .align(if (embedded) Alignment.TopEnd else Alignment.CenterEnd)
-                .then(if (embedded) Modifier.padding(top = 16.dp) else Modifier)
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp)
                 .width(panelWidth)
                 .fillMaxHeight()
                 .frostedGlass(blur, SettingsShape)
@@ -160,7 +146,7 @@ fun SettingsScreen(
                 targetState = page,
                 modifier = Modifier.weight(1f),
                 transitionSpec = {
-                    val forward = depth(targetState) >= depth(initialState)
+                    val forward = targetState.depth >= initialState.depth
                     (slideInHorizontally(tween(260)) { if (forward) it / 4 else -it / 4 } + fadeIn(tween(220))) togetherWith
                         (slideOutHorizontally(tween(260)) { if (forward) -it / 4 else it / 4 } + fadeOut(tween(160)))
                 },
@@ -179,11 +165,11 @@ fun SettingsScreen(
                 if (shown != Page.Main && !locked) {
                     Row(Modifier.padding(start = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(GoatIcons.ChevronLeft, contentDescription = null, tint = GoatColors.TextFaint, modifier = Modifier.size(16.dp))
-                        Text(pageTitle(parentPage(shown, hasPin = device.pin != null) ?: Page.Main, s, buttonKey), style = MaterialTheme.typography.labelLarge, color = GoatColors.TextFaint)
+                        Text((shown.parent(hasPin = device.pin != null) ?: Page.Main).title(s, args), style = MaterialTheme.typography.labelLarge, color = GoatColors.TextFaint)
                     }
                 }
                 Text(
-                    pageTitle(shown, s, buttonKey),
+                    shown.title(s, args),
                     style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
                 )
@@ -195,12 +181,9 @@ fun SettingsScreen(
                 if (locked) {
                     ProtectedPage(vm, first)
                 } else when (shown) {
-                    Page.Main -> MainPage(vm, first, onPage = { page = it })
-                    Page.Appearance -> AppearancePage(vm, first, onPage = { page = it })
-                    Page.Wallpaper -> WallpaperPage(vm, first, onBoxImages = {
-                        dir = null
-                        page = Page.WallpaperFiles
-                    })
+                    Page.Main -> SettingsList(vm, shown, first, open, spacing = 4.dp)
+                    Page.Appearance, Page.Wallpaper, Page.Apps, Page.Ambient, Page.Startup, Page.General, Page.Parental ->
+                        SettingsList(vm, shown, first, open)
                     Page.WallpaperFiles -> ImageBrowser(
                         dir = dir,
                         onDir = { dir = it },
@@ -214,12 +197,8 @@ fun SettingsScreen(
                         },
                         first = first,
                     )
-                    Page.Apps -> AppsPage(vm, first, onPage = { page = it })
                     Page.HiddenApps -> HiddenAppsPage(vm, first)
-                    Page.Ambient -> AmbientPage(vm, first)
-                    Page.Startup -> StartupPage(vm, first, onPage = { page = it })
-                    Page.General -> GeneralPage(vm, first, onPage = { page = it })
-                    Page.Account -> AccountPage(vm, first, onPage = { page = it })
+                    Page.Account -> AccountPage(vm, first, onPage = open)
                     Page.YouTube -> YouTubePage(vm, first, onDone = { page = Page.Account })
                     Page.Autostart -> {
                         val device by vm.device.collectAsStateWithLifecycle()
@@ -255,7 +234,6 @@ fun SettingsScreen(
                             page = Page.Buttons
                         }
                     }
-                    Page.Parental -> ParentalPage(vm, first, onPage = { page = it })
                     Page.PinSetup -> PinSetupPage(vm, onDone = { page = Page.Parental })
                     Page.LockedApps -> LockedAppsPage(vm, first)
                     Page.Report -> ReportPage(vm, first)
@@ -274,191 +252,9 @@ fun SettingsScreen(
     }
 }
 
-/** Quantos níveis abaixo da página principal está [page] (para a transição saber se vai ou volta). */
-private fun depth(page: Page): Int = generateSequence(page) { parentPage(it, hasPin = true) }.count() - 1
-
-/** O título de [page]. */
-private fun pageTitle(page: Page, s: Strings, buttonKey: Pair<Int, Int>?): String = when (page) {
-    Page.Main -> s.settings
-    Page.Appearance -> s.appearance
-    Page.Wallpaper -> s.wallpaper
-    Page.WallpaperFiles -> s.boxImages
-    Page.Apps -> s.apps
-    Page.HiddenApps -> s.hiddenApps
-    Page.Ambient -> s.idleMode
-    Page.Startup -> s.startup
-    Page.General -> s.general
-    Page.Account -> s.account
-    Page.YouTube -> s.youtube
-    Page.Autostart -> s.autostart
-    Page.Buttons -> s.buttons
-    Page.Language -> s.language
-    Page.Location -> s.location
-    Page.ButtonCapture -> s.addButton
-    Page.ButtonApp -> buttonKey?.let { (k, sc) -> s.buttonOpens(buttonName(k, sc, s)) } ?: s.buttons
-    Page.Parental, Page.PinSetup -> s.parental
-    Page.LockedApps -> s.lockedApps
-    Page.Report -> s.sendReport
-}
-
 private val SettingsShape = RoundedCornerShape(26.dp)
 
 private val PanelWidth = 520.dp
-
-/** A página de onde se chega a [page] (para onde Voltar leva); null na página principal. */
-private fun parentPage(page: Page, hasPin: Boolean): Page? = when (page) {
-    Page.Main -> null
-    Page.Appearance, Page.Wallpaper, Page.Apps, Page.Ambient, Page.Startup, Page.Buttons, Page.Parental, Page.General, Page.Account,
-    Page.Report -> Page.Main
-    Page.HiddenApps -> Page.Apps
-    Page.Autostart -> Page.Startup
-    Page.Language, Page.Location -> Page.General
-    Page.YouTube -> Page.Account
-    Page.WallpaperFiles -> Page.Wallpaper
-    Page.ButtonCapture, Page.ButtonApp -> Page.Buttons
-    Page.LockedApps -> Page.Parental
-    // O primeiro código liga o controlo parental a partir da página principal; mudá-lo, a partir do Controlo parental.
-    Page.PinSetup -> if (hasPin) Page.Parental else Page.Main
-}
-
-@Composable
-private fun MainPage(vm: LauncherViewModel, first: FocusRequester, onPage: (Page) -> Unit) {
-    val s = LocalStrings.current
-    val context = LocalContext.current
-    val account by vm.account.collectAsStateWithLifecycle()
-    val device by vm.device.collectAsStateWithLifecycle()
-    val session by vm.session.collectAsStateWithLifecycle()
-    val apps by vm.allApps.collectAsStateWithLifecycle()
-
-    // Cada secção numa página sua: aqui só a lista delas, cada uma com o que está escolhido.
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        item {
-            Group {
-                GlassRow(
-                    title = s.appearance,
-                    subtitle = HomeStyle.of(account).label(s),
-                    leading = { IconTile(GoatIcons.Palette, accent = true) },
-                    onClick = { onPage(Page.Appearance) },
-                    trailing = { Chevron() },
-                    modifier = Modifier.focusRequester(first),
-                )
-            }
-        }
-        item { SectionLabel(s.homeScreen) }
-        item {
-            Group {
-                GlassRow(
-                    title = s.wallpaper,
-                    subtitle = wallpaperName(account.wallpaper, s),
-                    leading = { IconTile(GoatIcons.Image) },
-                    onClick = { onPage(Page.Wallpaper) },
-                    trailing = { Chevron() },
-                )
-                GlassRow(
-                    title = s.apps,
-                    subtitle = s.hiddenCount(device.hidden.size),
-                    leading = { IconTile(GoatIcons.Apps) },
-                    onClick = { onPage(Page.Apps) },
-                    trailing = { Chevron() },
-                )
-                GlassRow(
-                    title = s.idleMode,
-                    subtitle = if (account.idleMinutes > 0) s.idleAfter(account.idleMinutes) else s.idleOff,
-                    leading = { IconTile(GoatIcons.Moon) },
-                    onClick = { onPage(Page.Ambient) },
-                    trailing = { Chevron() },
-                )
-            }
-        }
-        item { SectionLabel("TV") }
-        item {
-            Group {
-                GlassRow(
-                    title = s.startup,
-                    subtitle = device.autostart?.let { pkg -> apps?.firstOrNull { it.packageName == pkg }?.label ?: pkg } ?: s.autostartNone,
-                    leading = { IconTile(GoatIcons.Power) },
-                    onClick = { onPage(Page.Startup) },
-                    trailing = { Chevron() },
-                )
-                val n = device.buttons.size
-                GlassRow(
-                    title = s.buttons,
-                    // Sem o serviço de acessibilidade os botões não chegam ao launcher: diz-se logo.
-                    subtitle = when {
-                        n == 0 -> s.buttonsNone
-                        !HomeGuardService.isEnabled(context) -> "${s.buttonsCount(n)} · ${s.needsGuard}"
-                        else -> s.buttonsCount(n)
-                    },
-                    leading = { IconTile(GoatIcons.Remote) },
-                    onClick = { onPage(Page.Buttons) },
-                    trailing = { Chevron() },
-                )
-                GlassRow(
-                    title = s.parental,
-                    subtitle = if (device.pin == null) s.parentalOff else s.parentalOn(device.locked.size),
-                    leading = { IconTile(GoatIcons.Lock) },
-                    onClick = { if (device.pin == null) onPage(Page.PinSetup) else vm.withParentalUnlocked { onPage(Page.Parental) } },
-                    trailing = { Chevron() },
-                )
-            }
-        }
-        item { SectionLabel(s.general) }
-        item {
-            Group {
-                val code = Strings.normalize(account.language)
-                GlassRow(
-                    title = s.general,
-                    subtitle = Strings.LANGUAGES.firstOrNull { it.first == code }?.second ?: s.languageAuto,
-                    leading = { IconTile(GoatIcons.Tune) },
-                    onClick = { onPage(Page.General) },
-                    trailing = { Chevron() },
-                )
-                GlassRow(
-                    title = s.account,
-                    subtitle = session?.let { s.linkedAs(it.email) } ?: s.linkAccountHint,
-                    leading = { IconTile(GoatIcons.Person) },
-                    onClick = { onPage(Page.Account) },
-                    trailing = { Chevron() },
-                )
-            }
-        }
-        item { SectionLabel(s.updates) }
-        item {
-            Group {
-                val update by vm.update.collectAsStateWithLifecycle()
-                val (title, subtitle) = when (val u = update) {
-                    is UpdateState.Available -> s.updateReady(u.release.version) to u.release.notes.takeIf { it.isNotBlank() }
-                    is UpdateState.Downloading -> s.downloading((u.progress * 100).toInt()) to null
-                    is UpdateState.Installing -> s.installing to null
-                    UpdateState.Checking -> s.checking to null
-                    UpdateState.UpToDate -> s.checkUpdates to s.upToDate(vm.appVersion)
-                    is UpdateState.Failed -> s.checkUpdates to s.updateFailed(u.message)
-                    UpdateState.Idle -> s.checkUpdates to s.version(vm.appVersion)
-                }
-                GlassRow(
-                    title = title,
-                    subtitle = subtitle,
-                    leading = { IconTile(GoatIcons.Download) },
-                    onClick = { if (update is UpdateState.Available) vm.installUpdate() else vm.checkForUpdate(manual = true) },
-                )
-                val report by vm.report.collectAsStateWithLifecycle()
-                GlassRow(
-                    title = s.sendReport,
-                    subtitle = reportStatus(report, s),
-                    leading = { IconTile(GoatIcons.ArrowUp) },
-                    onClick = { onPage(Page.Report) },
-                    trailing = { Chevron() },
-                )
-                GlassRow(
-                    title = s.androidSettings,
-                    leading = { IconTile(GoatIcons.Settings) },
-                    onClick = { if (!SystemIntents.start(context, SystemIntents.androidSettings())) vm.toast(s.cantOpen) },
-                    trailing = { Chevron() },
-                )
-            }
-        }
-    }
-}
 
 /** Largura das definições quando o ecrã se divide com a pré-visualização. */
 private val SplitPanelWidth = 400.dp

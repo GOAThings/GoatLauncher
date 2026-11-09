@@ -592,7 +592,6 @@ fun HomeScreen(vm: LauncherViewModel) {
                             // Definições no próprio separador. Escolhidas pelo foco nos separadores, não tiram de lá o foco.
                             SettingsScreen(
                                 vm,
-                                embedded = true,
                                 autoFocus = !tabBarFocused,
                                 onExit = {
                                     vm.openHome()
