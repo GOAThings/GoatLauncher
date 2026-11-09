@@ -68,16 +68,16 @@ class PhotoPool(private val context: Context, prefsName: String, private val fee
             val sub = id.lowercase()
             val list = images(sub).filterNot { it.url in skip }
             if (list.isEmpty()) return@withContext null
-            val shownUrl = prefs.getString(key(sub, "shown_url"), null)
-            val shownAt = prefs.getLong(key(sub, "shown_at"), 0)
+            val shownUrl = prefs.getString(key(sub, KEY_SHOWN_URL), null)
+            val shownAt = prefs.getLong(key(sub, KEY_SHOWN_AT), 0)
             val shown = list.firstOrNull { it.url == shownUrl }
             val due = next || shown == null || System.currentTimeMillis() - shownAt > rotateMs
             // Sem rede não se troca: a imagem nova não estaria na cache e o fundo ficava vazio.
             if (!due || (shown != null && !online())) return@withContext shown
             val pick = (list - setOfNotNull(shown)).randomOrNull() ?: shown
             prefs.edit {
-                putString(key(sub, "shown_url"), pick?.url)
-                putLong(key(sub, "shown_at"), System.currentTimeMillis())
+                putString(key(sub, KEY_SHOWN_URL), pick?.url)
+                putLong(key(sub, KEY_SHOWN_AT), System.currentTimeMillis())
             }
             pick
         }
@@ -85,21 +85,21 @@ class PhotoPool(private val context: Context, prefsName: String, private val fee
     /** A última foto mostrada de [id] (ao abrir o launcher aparece logo, já está na cache). */
     suspend fun lastShown(id: String): OnlinePhoto? = withContext(Dispatchers.IO) {
         val sub = id.lowercase()
-        val url = prefs.getString(key(sub, "shown_url"), null) ?: return@withContext null
+        val url = prefs.getString(key(sub, KEY_SHOWN_URL), null) ?: return@withContext null
         images(sub, allowFetch = false).firstOrNull { it.url == url } ?: OnlinePhoto(url, "")
     }
 
     /** Milissegundos até a foto atual de [id] dever mudar. */
     fun msUntilRotation(id: String, rotateMs: Long): Long {
-        val shownAt = prefs.getLong(key(id.lowercase(), "shown_at"), 0)
+        val shownAt = prefs.getLong(key(id.lowercase(), KEY_SHOWN_AT), 0)
         return (shownAt + rotateMs - System.currentTimeMillis()).coerceIn(MIN_WAIT_MS, rotateMs)
     }
 
     private fun images(sub: String, allowFetch: Boolean = true): List<OnlinePhoto> {
-        val cached = readList(prefs.getString(key(sub, "list"), null))
+        val cached = readList(prefs.getString(key(sub, KEY_LIST), null))
         // Depois de uma falha, fetched_at fica a RETRY_MS do pedido seguinte, também sem lista: antes, uma fonte
         // que falhava sem lista guardada era pedida de novo a cada tentativa de escolher uma foto (até 10 seguidas).
-        val fetchedAt = prefs.getLong(key(sub, "fetched_at"), 0)
+        val fetchedAt = prefs.getLong(key(sub, KEY_FETCHED_AT), 0)
         if (System.currentTimeMillis() - fetchedAt < feed.refreshMs) return cached
         if (!allowFetch || !online()) return cached
         val fresh = runCatching { feed.fetch(sub) }
@@ -107,12 +107,12 @@ class PhotoPool(private val context: Context, prefsName: String, private val fee
             .getOrNull()
         if (fresh.isNullOrEmpty()) {
             // Falhou (ou a fonte limitou): tenta de novo mais tarde, sem martelar.
-            prefs.edit { putLong(key(sub, "fetched_at"), System.currentTimeMillis() - feed.refreshMs + RETRY_MS) }
+            prefs.edit { putLong(key(sub, KEY_FETCHED_AT), System.currentTimeMillis() - feed.refreshMs + RETRY_MS) }
             return cached
         }
         prefs.edit {
-            putString(key(sub, "list"), writeList(fresh))
-            putLong(key(sub, "fetched_at"), System.currentTimeMillis())
+            putString(key(sub, KEY_LIST), writeList(fresh))
+            putLong(key(sub, KEY_FETCHED_AT), System.currentTimeMillis())
         }
         return fresh
     }
@@ -127,6 +127,12 @@ class PhotoPool(private val context: Context, prefsName: String, private val fee
 
     companion object {
         private const val TAG = "PhotoPool"
+
+        /** As chaves de cada id ("<id>.<chave>"; nunca mudam de nome: ver PersistedNamesTest). */
+        internal const val KEY_SHOWN_URL = "shown_url"
+        internal const val KEY_SHOWN_AT = "shown_at"
+        internal const val KEY_LIST = "list"
+        internal const val KEY_FETCHED_AT = "fetched_at"
         private const val RETRY_MS = 15 * 60_000L
         private const val MIN_WAIT_MS = 60_000L
 

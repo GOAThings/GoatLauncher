@@ -22,7 +22,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import retrofit2.HttpException
 
-private val Context.settingsStore by preferencesDataStore("settings")
+private val Context.settingsStore by preferencesDataStore(SettingsRepository.Keys.STORE)
 
 /** Token atual em memória; o interceptor do AppContainer junta-o a cada pedido ao backend. */
 class AuthToken {
@@ -50,7 +50,9 @@ class SettingsRepository(
     private val token: AuthToken,
     private val scope: CoroutineScope,
 ) {
-    private object Keys {
+    /** O ficheiro e as chaves no disco: as instalações antigas leem-nos, por isso nunca mudam (ver PersistedNamesTest). */
+    internal object Keys {
+        const val STORE = "settings"
         val ACCOUNT = stringPreferencesKey("account")
         val DEVICE = stringPreferencesKey("device")
         val ACCOUNT_DIRTY = booleanPreferencesKey("account_dirty")

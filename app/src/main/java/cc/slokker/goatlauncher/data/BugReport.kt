@@ -12,7 +12,7 @@ import java.util.Date
  * escreveu. Antes de sair da TV, os tokens (conta e YouTube) e o email passam a `***`. Igual ao da GoatTV.
  */
 object BugReport {
-    private const val CRASH_FILE = "last_crash.txt"
+    internal const val CRASH_FILE = "last_crash.txt"
     /** O servidor aceita até 64 KB de registo. */
     private const val MAX_BYTES = 60_000
 

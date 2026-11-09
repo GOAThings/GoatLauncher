@@ -568,9 +568,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private suspend fun autostartAfterBoot() {
         settings.ready.first { it }
         val boot = AndroidSettings.Global.getInt(context.contentResolver, AndroidSettings.Global.BOOT_COUNT, -1)
-        val prefs = context.getSharedPreferences("autostart", Context.MODE_PRIVATE)
-        if (boot < 0 || prefs.getInt("boot", -1) == boot) return
-        prefs.edit { putInt("boot", boot) }
+        val prefs = context.getSharedPreferences(AutoStart.BOOT_PREFS, Context.MODE_PRIVATE)
+        if (boot < 0 || prefs.getInt(AutoStart.BOOT_KEY, -1) == boot) return
+        prefs.edit { putInt(AutoStart.BOOT_KEY, boot) }
         if (SystemClock.elapsedRealtime() > BOOT_WINDOW_MS) return
         val device = settings.device.value
         val pkg = device.autostart ?: return

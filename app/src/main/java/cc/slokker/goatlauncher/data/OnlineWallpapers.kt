@@ -9,8 +9,8 @@ import java.io.File
  * contacto, como pedem o Wikimedia e a NASA.
  */
 class OnlineWallpapers(context: Context, http: OkHttpClient, userAgent: String) {
-    val wikimedia = PhotoPool(context, "wikimedia_wallpapers", WikimediaFeed(http, userAgent))
-    val nasa = PhotoPool(context, "nasa_wallpapers", ApodFeed(http, userAgent))
+    val wikimedia = PhotoPool(context, WIKIMEDIA_PREFS, WikimediaFeed(http, userAgent))
+    val nasa = PhotoPool(context, NASA_PREFS, ApodFeed(http, userAgent))
 
     init {
         // O Reddit deixou de ser fonte: apaga a lista e a foto atual que ele guardava (até à 0.9.11). Já ninguém abre
@@ -33,7 +33,10 @@ class OnlineWallpapers(context: Context, http: OkHttpClient, userAgent: String) 
     /** A última foto mostrada de [wallpaper] (para o protetor de ecrã e ao abrir o launcher). */
     suspend fun lastShown(wallpaper: Wallpaper): OnlinePhoto? = source(wallpaper)?.let { it.pool.lastShown(it.id) }
 
-    private companion object {
+    /** Os ficheiros das preferências de cada fonte (nunca mudam de nome: ver PersistedNamesTest). */
+    internal companion object {
+        const val WIKIMEDIA_PREFS = "wikimedia_wallpapers"
+        const val NASA_PREFS = "nasa_wallpapers"
         const val OLD_REDDIT_PREFS = "reddit_wallpapers"
     }
 }

@@ -28,18 +28,18 @@ data class YouTubeLogin(val userCode: String, val verificationUrl: String, val d
  * As credenciais da app de TV do YouTube não vêm na app: lêem-se de youtube.com/tv, como faz o próprio site.
  */
 class YouTubeSource(context: Context, private val http: OkHttpClient) {
-    private val prefs = context.getSharedPreferences("youtube", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences(Prefs.FILE, Context.MODE_PRIVATE)
     private val json = "application/json".toMediaType()
 
-    val linked: Boolean get() = prefs.contains("refresh")
+    val linked: Boolean get() = prefs.contains(Prefs.REFRESH)
 
     /** Os tokens e o segredo guardados, para os tirar dos relatórios (BugReport). */
-    fun secrets(): List<String> = listOfNotNull(prefs.getString("refresh", null), prefs.getString("access", null), prefs.getString("client_secret", null))
+    fun secrets(): List<String> = listOfNotNull(prefs.getString(Prefs.REFRESH, null), prefs.getString(Prefs.ACCESS, null), prefs.getString(Prefs.CLIENT_SECRET, null))
 
     fun unlink() = prefs.edit {
-        remove("refresh")
-        remove("access")
-        remove("access_until")
+        remove(Prefs.REFRESH)
+        remove(Prefs.ACCESS)
+        remove(Prefs.ACCESS_UNTIL)
     }
 
     suspend fun startLogin(): YouTubeLogin = withContext(Dispatchers.IO) {
@@ -121,7 +121,7 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
             add("context", JsonObject().apply {
                 add("client", JsonObject().apply {
                     addProperty("clientName", "TVHTML5")
-                    addProperty("clientVersion", prefs.getString("client_version", null) ?: FALLBACK_VERSION)
+                    addProperty("clientVersion", prefs.getString(Prefs.CLIENT_VERSION, null) ?: FALLBACK_VERSION)
                     addProperty("hl", "pt")
                     addProperty("gl", "PT")
                 })
@@ -181,9 +181,9 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
     // ---- Tokens e credenciais ----
 
     private suspend fun accessToken(): String? {
-        val refresh = prefs.getString("refresh", null) ?: return null
-        val access = prefs.getString("access", null)
-        if (access != null && System.currentTimeMillis() < prefs.getLong("access_until", 0)) return access
+        val refresh = prefs.getString(Prefs.REFRESH, null) ?: return null
+        val access = prefs.getString(Prefs.ACCESS, null)
+        if (access != null && System.currentTimeMillis() < prefs.getLong(Prefs.ACCESS_UNTIL, 0)) return access
         val (clientId, secret) = client()
         val body = JsonObject().apply {
             addProperty("client_id", clientId)
@@ -203,30 +203,30 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
     }
 
     private fun saveTokens(res: JsonObject) = prefs.edit {
-        res.get("refresh_token")?.asString?.let { putString("refresh", it) }
-        putString("access", res.get("access_token").asString)
-        putLong("access_until", System.currentTimeMillis() + ((res.get("expires_in")?.asLong ?: 3600) - 120) * 1000)
+        res.get("refresh_token")?.asString?.let { putString(Prefs.REFRESH, it) }
+        putString(Prefs.ACCESS, res.get("access_token").asString)
+        putLong(Prefs.ACCESS_UNTIL, System.currentTimeMillis() + ((res.get("expires_in")?.asLong ?: 3600) - 120) * 1000)
     }
 
     /** As credenciais da app de TV do YouTube (lidas de youtube.com/tv, guardadas uma semana). */
     private fun client(): Pair<String, String> {
-        val id = prefs.getString("client_id", null)
-        val secret = prefs.getString("client_secret", null)
-        if (id != null && secret != null && System.currentTimeMillis() - prefs.getLong("client_at", 0) < CLIENT_MS) return id to secret
+        val id = prefs.getString(Prefs.CLIENT_ID, null)
+        val secret = prefs.getString(Prefs.CLIENT_SECRET, null)
+        if (id != null && secret != null && System.currentTimeMillis() - prefs.getLong(Prefs.CLIENT_AT, 0) < CLIENT_MS) return id to secret
         val html = http.newCall(Request.Builder().url("$BASE/tv").header("User-Agent", TV_UA).build()).execute().use { it.body.string() }
         val m = CLIENT.find(html) ?: error("Não encontrei as credenciais da app de TV do YouTube")
         val version = Regex("\"clientVersion\":\"([^\"]+)\"").find(html)?.groupValues?.get(1)
         prefs.edit {
-            putString("client_id", m.groupValues[1])
-            putString("client_secret", m.groupValues[2])
-            putLong("client_at", System.currentTimeMillis())
-            if (version != null) putString("client_version", version)
+            putString(Prefs.CLIENT_ID, m.groupValues[1])
+            putString(Prefs.CLIENT_SECRET, m.groupValues[2])
+            putLong(Prefs.CLIENT_AT, System.currentTimeMillis())
+            if (version != null) putString(Prefs.CLIENT_VERSION, version)
         }
         return m.groupValues[1] to m.groupValues[2]
     }
 
-    private fun deviceId(): String = prefs.getString("device_id", null) ?: UUID.randomUUID().toString().also {
-        prefs.edit { putString("device_id", it) }
+    private fun deviceId(): String = prefs.getString(Prefs.DEVICE_ID, null) ?: UUID.randomUUID().toString().also {
+        prefs.edit { putString(Prefs.DEVICE_ID, it) }
     }
 
     private fun post(url: String, body: JsonObject, bearer: String? = null, allowError: Boolean = false): JsonObject {
@@ -238,6 +238,19 @@ class YouTubeSource(context: Context, private val http: OkHttpClient) {
             if (!res.isSuccessful && !allowError) error("HTTP ${res.code}")
             JsonParser.parseString(text).asJsonObject
         }
+    }
+
+    /** As preferências guardadas (nunca mudam de nome: ver PersistedNamesTest). */
+    internal object Prefs {
+        const val FILE = "youtube"
+        const val REFRESH = "refresh"
+        const val ACCESS = "access"
+        const val ACCESS_UNTIL = "access_until"
+        const val CLIENT_ID = "client_id"
+        const val CLIENT_SECRET = "client_secret"
+        const val CLIENT_AT = "client_at"
+        const val CLIENT_VERSION = "client_version"
+        const val DEVICE_ID = "device_id"
     }
 
     private companion object {

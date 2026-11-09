@@ -22,6 +22,10 @@ object AutoStart {
     /** Extra do MainActivity: pede o código e, se acertar, abre esta app. */
     const val EXTRA_UNLOCK = "cc.slokker.goatlauncher.UNLOCK"
 
+    /** Onde fica o arranque da TV em que a app escolhida já abriu (ver LauncherViewModel.autostartAfterBoot). */
+    const val BOOT_PREFS = "autostart"
+    const val BOOT_KEY = "boot"
+
     private var wakeJob: Job? = null
 
     /** Ao acordar do standby (ecrã ligado), abre a app escolhida, se a opção estiver ligada. */

@@ -7,14 +7,16 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
 
-private val Context.dataStore by preferencesDataStore("session")
+private val Context.dataStore by preferencesDataStore(SessionStore.Keys.STORE)
 
 /** Guarda localmente só o login do dispositivo na conta Slokker (nunca uma password). */
 class SessionStore(private val context: Context) {
 
     data class Session(val token: String, val email: String?, val deviceName: String?)
 
-    private object Keys {
+    /** O ficheiro e as chaves no disco: nunca mudam (ver PersistedNamesTest). */
+    internal object Keys {
+        const val STORE = "session"
         val TOKEN = stringPreferencesKey("token")
         val EMAIL = stringPreferencesKey("email")
         val DEVICE_NAME = stringPreferencesKey("device_name")

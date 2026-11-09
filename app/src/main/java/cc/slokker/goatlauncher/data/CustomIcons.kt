@@ -33,7 +33,7 @@ data class PackIcons(val suggested: List<String>, val all: List<String>)
  */
 class CustomIcons(private val context: Context) {
     private val pm = context.packageManager
-    private val dir = File(context.filesDir, "icons")
+    private val dir = File(context.filesDir, ICONS_DIR)
 
     /** Ícones já desenhados, por spec (os da grelha do pack também passam por aqui). */
     private val cache = object : LruCache<String, ImageBitmap>(48 * 1024 * 1024) {
@@ -137,6 +137,9 @@ class CustomIcons(private val context: Context) {
         private const val TAG = "CustomIcons"
         const val PACK = "pack:"
         const val FILE = "file:"
+
+        /** A pasta em `files` das imagens "file:" (o nome fica nas definições desta TV: nunca muda). */
+        const val ICONS_DIR = "icons"
 
         /** Ação para abrir o seletor do próprio pack (devolve um Bitmap em "icon" ou um ShortcutIconResource). */
         const val ACTION_PICK_ICON = "org.adw.launcher.icons.ACTION_PICK_ICON"

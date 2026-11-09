@@ -33,14 +33,14 @@ data class WeatherNow(val temperature: Int, val code: Int, val isDay: Boolean) {
  * um dia) e o tempo do Open-Meteo. Sem rede devolve o último valor guardado.
  */
 class WeatherSource(context: Context, private val http: OkHttpClient) {
-    private val prefs = context.getSharedPreferences("weather", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences(Prefs.FILE, Context.MODE_PRIVATE)
 
     /** O sítio escolhido nas definições (ver DeviceSettings.location); com ele, o IP não conta. */
     @Volatile
     var fixed: Pair<Double, Double>? = null
 
     /** A cidade que o IP diz (para "Automática (Lisboa)"); null antes de se saber. */
-    fun ipCity(): String? = prefs.getString("city", null)
+    fun ipCity(): String? = prefs.getString(Prefs.CITY, null)
 
     /**
      * Sítios com este nome (Open-Meteo, sem chave): "Lisboa, Lisboa, Portugal". [language] é o código da língua
@@ -60,8 +60,8 @@ class WeatherSource(context: Context, private val http: OkHttpClient) {
     }
 
     fun cached(): WeatherNow? {
-        if (!prefs.contains("temp")) return null
-        return WeatherNow(prefs.getInt("temp", 0), prefs.getInt("code", 3), prefs.getBoolean("day", true))
+        if (!prefs.contains(Prefs.TEMP)) return null
+        return WeatherNow(prefs.getInt(Prefs.TEMP, 0), prefs.getInt(Prefs.CODE, 3), prefs.getBoolean(Prefs.DAY, true))
     }
 
     suspend fun current(): WeatherNow? = withContext(Dispatchers.IO) {
@@ -75,9 +75,9 @@ class WeatherSource(context: Context, private val http: OkHttpClient) {
                 isDay = cur.get("is_day").asInt == 1,
             ).also {
                 prefs.edit {
-                    putInt("temp", it.temperature)
-                    putInt("code", it.code)
-                    putBoolean("day", it.isDay)
+                    putInt(Prefs.TEMP, it.temperature)
+                    putInt(Prefs.CODE, it.code)
+                    putBoolean(Prefs.DAY, it.isDay)
                 }
             }
         }.onFailure { Log.w("Weather", "Tempo: ${it.message}") }.getOrElse { cached() }
@@ -85,28 +85,28 @@ class WeatherSource(context: Context, private val http: OkHttpClient) {
 
     /** A localização em uso (a escolhida, ou a última pelo IP), sem ir à rede. */
     fun cachedLocation(): Pair<Double, Double>? =
-        fixed ?: if (prefs.contains("lat")) prefs.getFloat("lat", 0f).toDouble() to prefs.getFloat("lon", 0f).toDouble() else null
+        fixed ?: if (prefs.contains(Prefs.LAT)) prefs.getFloat(Prefs.LAT, 0f).toDouble() to prefs.getFloat(Prefs.LON, 0f).toDouble() else null
 
     /** A localização da box pelo IP (guardada um dia); também serve para o nascer e o pôr do sol. */
     suspend fun location(): Pair<Double, Double>? = withContext(Dispatchers.IO) { runCatching { locate() }.getOrElse { cachedLocation() } }
 
     private fun locate(): Pair<Double, Double>? {
         fixed?.let { return it }
-        val at = prefs.getLong("loc_at", 0)
-        if (prefs.contains("lat") && System.currentTimeMillis() - at < LOCATION_MS) {
-            return prefs.getFloat("lat", 0f).toDouble() to prefs.getFloat("lon", 0f).toDouble()
+        val at = prefs.getLong(Prefs.LOC_AT, 0)
+        if (prefs.contains(Prefs.LAT) && System.currentTimeMillis() - at < LOCATION_MS) {
+            return prefs.getFloat(Prefs.LAT, 0f).toDouble() to prefs.getFloat(Prefs.LON, 0f).toDouble()
         }
         val json = runCatching { getJson("https://ipwho.is/?fields=success,latitude,longitude,city") }.getOrNull()
         if (json == null || json.get("success")?.asBoolean != true) {
-            return if (prefs.contains("lat")) prefs.getFloat("lat", 0f).toDouble() to prefs.getFloat("lon", 0f).toDouble() else null
+            return if (prefs.contains(Prefs.LAT)) prefs.getFloat(Prefs.LAT, 0f).toDouble() to prefs.getFloat(Prefs.LON, 0f).toDouble() else null
         }
         val lat = json.get("latitude").asDouble
         val lon = json.get("longitude").asDouble
         prefs.edit {
-            putFloat("lat", lat.toFloat())
-            putFloat("lon", lon.toFloat())
-            putString("city", json.get("city")?.takeIf { it.isJsonPrimitive }?.asString)
-            putLong("loc_at", System.currentTimeMillis())
+            putFloat(Prefs.LAT, lat.toFloat())
+            putFloat(Prefs.LON, lon.toFloat())
+            putString(Prefs.CITY, json.get("city")?.takeIf { it.isJsonPrimitive }?.asString)
+            putLong(Prefs.LOC_AT, System.currentTimeMillis())
         }
         return lat to lon
     }
@@ -114,6 +114,18 @@ class WeatherSource(context: Context, private val http: OkHttpClient) {
     private fun getJson(url: String) = http.newCall(Request.Builder().url(url).build()).execute().use { res ->
         if (!res.isSuccessful) error("HTTP ${res.code}")
         JsonParser.parseString(res.body.string()).asJsonObject
+    }
+
+    /** As preferências guardadas (nunca mudam de nome: ver PersistedNamesTest). */
+    internal object Prefs {
+        const val FILE = "weather"
+        const val TEMP = "temp"
+        const val CODE = "code"
+        const val DAY = "day"
+        const val LAT = "lat"
+        const val LON = "lon"
+        const val CITY = "city"
+        const val LOC_AT = "loc_at"
     }
 
     private companion object {

@@ -67,7 +67,7 @@ object ImageImport {
     suspend fun saveWallpaper(context: Context, source: Any): String? {
         val bitmap = decode(context, source, 1920, 1080) ?: return null
         return withContext(Dispatchers.IO) {
-            val dir = File(context.filesDir, "wallpapers").apply { mkdirs() }
+            val dir = File(context.filesDir, WALLPAPERS_DIR).apply { mkdirs() }
             val name = "wall-${System.currentTimeMillis()}.jpg"
             File(dir, name).outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it) }
             // Só fica o fundo atual.
@@ -76,5 +76,8 @@ object ImageImport {
         }
     }
 
-    fun wallpaperFile(context: Context, name: String) = File(File(context.filesDir, "wallpapers"), name)
+    fun wallpaperFile(context: Context, name: String) = File(File(context.filesDir, WALLPAPERS_DIR), name)
+
+    /** A pasta em `files` dos fundos "file" (o nome fica nas definições da conta: nunca muda). */
+    const val WALLPAPERS_DIR = "wallpapers"
 }

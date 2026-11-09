@@ -25,7 +25,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
  * parte, só as que o servidor ainda não tem (a resposta diz quais faltam).
  */
 class AppIndex(context: Context, private val api: BackendApi, private val settings: SettingsRepository) {
-    private val prefs = context.getSharedPreferences("app_index", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences(Prefs.FILE, Context.MODE_PRIVATE)
     private val mutex = Mutex()
 
     /** Envia o índice de [apps] se mudou desde o último envio desta conta. */
@@ -56,7 +56,7 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
         val hash = sha1(list.toString().toByteArray())
         // O hash vale para esta conta: noutra (ou ao voltar a ligar a TV), envia-se outra vez.
         val key = sha1(account.toByteArray())
-        if (prefs.getString("hash", null) == hash && prefs.getString("account", null) == key) return
+        if (prefs.getString(Prefs.HASH, null) == hash && prefs.getString(Prefs.ACCOUNT, null) == key) return
         val res = withContext(Dispatchers.IO) {
             api.putApps(JsonObject().apply {
                 addProperty("hash", hash)
@@ -84,7 +84,7 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
             }
         }
         // Com um ícone em falta (sem ser recusado), tenta-se de novo na próxima vez (o servidor volta a dizer quais faltam).
-        if (allSent) prefs.edit().putString("hash", hash).putString("account", key).apply()
+        if (allSent) prefs.edit().putString(Prefs.HASH, hash).putString(Prefs.ACCOUNT, key).apply()
         Log.i(TAG, "Índice das apps enviado: ${list.size()} apps, ${missing.size} ícones")
     }
 
@@ -106,6 +106,13 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
 
     private fun sha1(bytes: ByteArray): String =
         MessageDigest.getInstance("SHA-1").digest(bytes).joinToString("") { "%02x".format(it) }
+
+    /** O que já foi enviado (nunca muda de nome: ver PersistedNamesTest). */
+    internal object Prefs {
+        const val FILE = "app_index"
+        const val HASH = "hash"
+        const val ACCOUNT = "account"
+    }
 
     private companion object {
         const val TAG = "AppIndex"

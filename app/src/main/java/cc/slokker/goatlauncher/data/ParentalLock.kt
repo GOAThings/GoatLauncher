@@ -87,7 +87,7 @@ internal data class PinAttempts(val failures: Int = 0, val failedAt: Long = 0L) 
  * relógio é o elapsedRealtime: mudar a hora do sistema não encurta a espera, e limpar os dados também apaga o código.
  */
 class PinAttemptStore(context: Context) {
-    private val prefs = context.getSharedPreferences("pin_attempts", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
     private var attempts = PinAttempts(prefs.getInt(KEY_FAILURES, 0), prefs.getLong(KEY_FAILED_AT, 0L))
 
     /** Quanto falta para se poder tentar outra vez (0 = já). */
@@ -114,7 +114,9 @@ class PinAttemptStore(context: Context) {
         }
     }
 
-    private companion object {
+    /** Nomes no disco: nunca mudam (ver PersistedNamesTest). */
+    internal companion object {
+        const val PREFS = "pin_attempts"
         const val KEY_FAILURES = "failures"
         const val KEY_FAILED_AT = "failed_at"
     }
