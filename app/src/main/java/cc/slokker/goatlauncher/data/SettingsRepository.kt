@@ -201,14 +201,21 @@ class SettingsRepository(
 
     /** Esquece a conta nesta TV. As definições ficam como estão, só deixam de sincronizar. */
     suspend fun unlink() {
-        sessions.clear()
-        token.value = null
+        // Já: o ecrã deixa de mostrar a conta e nenhum envio novo começa.
         _session.value = null
-        accountDirty = false
-        deviceDirty = false
-        keepParental = false
-        forgetRemote()
-        persist()
+        token.value = null
+        // Um sync a meio (à espera da rede) ainda podia gravar o token renovado (e a TV arrancava ligada a uma conta
+        // que já não a tem) ou a base, a revisão e o ETag da conta antiga. Espera-se que acabe, e só depois se apaga.
+        syncMutex.withLock {
+            sessions.clear()
+            token.value = null
+            _session.value = null
+            accountDirty = false
+            deviceDirty = false
+            keepParental = false
+            forgetRemote()
+            persist()
+        }
     }
 
     /**
