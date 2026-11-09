@@ -20,6 +20,7 @@ import cc.slokker.goatlauncher.data.DeviceSettings
 import cc.slokker.goatlauncher.ui.state.ReportSender
 import cc.slokker.goatlauncher.ui.state.ReportState
 import cc.slokker.goatlauncher.ui.state.UpdateState
+import cc.slokker.goatlauncher.ui.state.UpdatesController
 import cc.slokker.goatlauncher.data.ImageImport
 import cc.slokker.goatlauncher.data.NetworkKind
 import cc.slokker.goatlauncher.data.networkKind
@@ -28,7 +29,6 @@ import cc.slokker.goatlauncher.data.OnlineWallpapers
 import cc.slokker.goatlauncher.data.LauncherApp as App
 import cc.slokker.goatlauncher.data.SessionStore
 import cc.slokker.goatlauncher.data.SystemIntents
-import cc.slokker.goatlauncher.data.Updater
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.data.WatchNextItem
 import cc.slokker.goatlauncher.data.SunTimes
@@ -174,14 +174,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _unlocks = MutableStateFlow(0)
     val unlocks: StateFlow<Int> = _unlocks.asStateFlow()
 
-    private val _guardStuck = MutableStateFlow(false)
-
-    /**
-     * O serviço do comando ("Manter como ecrã inicial") está ligado nas definições mas o Android não o ligou:
-     * no Android 11 fica assim depois de o sistema da Shield reiniciar, e só uma atualização da app o desprende.
-     */
-    val guardStuck: StateFlow<Boolean> = _guardStuck.asStateFlow()
-
     /** O launcher está à frente (para o arranque automático não abrir uma app por cima de outra). */
     private var resumed = false
 
@@ -194,9 +186,29 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** O tempo agora (null sem dados ou com a meteorologia desligada). */
     val weather: StateFlow<WeatherNow?> = _weather.asStateFlow()
 
-    private val _update = MutableStateFlow<UpdateState>(UpdateState.Idle)
-    val update: StateFlow<UpdateState> = _update.asStateFlow()
-    val appVersion: String get() = c.updater.currentVersion
+    private val _toast = MutableStateFlow<String?>(null)
+    val toast: StateFlow<String?> = _toast.asStateFlow()
+
+    private val updates = UpdatesController(
+        scope = viewModelScope,
+        updater = c.updater,
+        strings = { strings },
+        toast = ::toast,
+        isGuardStuck = { HomeGuardService.isEnabled(context) && HomeGuardService.instance == null },
+        sinceProcessStart = {
+            if (android.os.Build.VERSION.SDK_INT >= 24) {
+                SystemClock.elapsedRealtime() - android.os.Process.getStartElapsedRealtime()
+            } else {
+                UpdatesController.GUARD_GRACE_MS
+            }
+        },
+        ownApk = { File(context.applicationInfo.sourceDir) },
+    )
+    val update: StateFlow<UpdateState> = updates.state
+    val appVersion: String get() = updates.currentVersion
+
+    /** Ver [UpdatesController.guardStuck]. */
+    val guardStuck: StateFlow<Boolean> = updates.guardStuck
 
     private val reports = ReportSender(
         scope = viewModelScope,
@@ -210,9 +222,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         collectLog = { header, secrets -> withContext(Dispatchers.IO) { BugReport.collect(context, header, secrets) } },
     )
     val report: StateFlow<ReportState> = reports.state
-
-    private val _toast = MutableStateFlow<String?>(null)
-    val toast: StateFlow<String?> = _toast.asStateFlow()
 
     private val watchNextRequests = Channel<Unit>(Channel.CONFLATED)
     private val stopObservingWatchNext: () -> Unit
@@ -337,20 +346,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 }
             }
         }
-        viewModelScope.launch {
-            c.updater.installFailures.collect { _update.value = UpdateState.Failed(it) }
-        }
-        viewModelScope.launch {
-            c.updater.installCancels.collect { _update.value = _update.value.cancelled() }
-        }
-        viewModelScope.launch {
-            // Procura versões novas pouco depois de abrir e de 12 em 12 horas (o launcher fica aberto dias a fio).
-            delay(20_000)
-            while (true) {
-                checkForUpdate(manual = false)
-                delay(UPDATE_CHECK_MS)
-            }
-        }
+        updates.start()
         reloadApps()
         reloadWatchNext()
         stopObservingWatchNext = c.watchNext.observe(::reloadWatchNext)
@@ -362,53 +358,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun onResume() {
         resumed = true
-        checkGuard()
+        updates.checkGuard()
         reloadApps()
         reloadWatchNext()
         if (SystemClock.elapsedRealtime() - youtubeLoadedAt > YOUTUBE_STALE_MS) viewModelScope.launch { refreshYouTube() }
         viewModelScope.launch { settings.syncIfStale() }
     }
 
-    /** Ver [guardStuck]. Só passado um bocado do arranque: ligar o serviço demora uns segundos. */
-    private fun checkGuard() {
-        viewModelScope.launch {
-            val sinceStart = if (android.os.Build.VERSION.SDK_INT >= 24) {
-                SystemClock.elapsedRealtime() - android.os.Process.getStartElapsedRealtime()
-            } else {
-                GUARD_GRACE_MS
-            }
-            if (sinceStart < GUARD_GRACE_MS) delay(GUARD_GRACE_MS - sinceStart)
-            val stuck = HomeGuardService.isEnabled(context) && HomeGuardService.instance == null
-            _guardStuck.value = stuck
-            if (!stuck) return@launch
-            // Repara-se sozinho: aparece logo a confirmação da reinstalação (um OK; o Android 11 não deixa uma app
-            // atualizar-se sem perguntar). Se a pessoa cancelar, só volta a pedir passada uma hora; sem permissão
-            // para instalar, fica o aviso (e o OK nas Definições).
-            val now = SystemClock.elapsedRealtime()
-            if (c.updater.canInstall() && now - lastRepairPrompt > REPAIR_PROMPT_GAP_MS) {
-                lastRepairPrompt = now
-                toast(strings.guardRepairing)
-                repairGuard()
-            } else if (now - lastRepairPrompt > REPAIR_PROMPT_GAP_MS) {
-                lastRepairPrompt = now
-                toast(strings.guardStuckToast)
-            }
-        }
-    }
-
-    private var lastRepairPrompt = -REPAIR_PROMPT_GAP_MS
-
-    /** Reinstala a própria app (a mesma versão): o Android trata-a como atualizada e volta a ligar o serviço. */
-    fun repairGuard() {
-        if (!c.updater.canInstall()) {
-            c.updater.openInstallPermission()
-            return
-        }
-        viewModelScope.launch {
-            runCatching { c.updater.install(java.io.File(context.applicationInfo.sourceDir)) }
-                .onFailure { toast(strings.updateFailed(it.message ?: it.javaClass.simpleName)) }
-        }
-    }
+    /** Reinstala a própria app (ver [UpdatesController.repairGuard]). */
+    fun repairGuard() = updates.repairGuard()
 
     /** "auto" ou um código de Strings.LANGUAGES; fica na conta e chega às outras TVs. */
     fun setLanguage(code: String) {
@@ -677,52 +635,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     // ---- Atualizações ----
 
-    fun checkForUpdate(manual: Boolean) {
-        if (!c.updater.enabled) {
-            if (manual) toast(strings.updatesOnlyRelease)
-            return
-        }
-        val state = _update.value
-        if (state is UpdateState.Checking || state is UpdateState.Downloading || state is UpdateState.Installing) return
-        if (manual) _update.value = UpdateState.Checking
-        viewModelScope.launch {
-            _update.value = try {
-                val latest = c.updater.latest()
-                if (latest != null && Updater.isNewer(latest.version, c.updater.currentVersion)) {
-                    if (!manual && state !is UpdateState.Available) toast(strings.updateAvailable(latest.version))
-                    UpdateState.Available(latest)
-                } else {
-                    UpdateState.UpToDate
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                if (manual) UpdateState.Failed(e.message ?: e.javaClass.simpleName) else state
-            }
-        }
-    }
+    fun checkForUpdate(manual: Boolean) = updates.check(manual)
 
-    /** Descarrega e entrega ao instalador do Android a versão encontrada (ou procura, se ainda não houver). */
-    fun installUpdate() {
-        val release = (_update.value as? UpdateState.Available)?.release ?: return checkForUpdate(manual = true)
-        if (!c.updater.canInstall()) {
-            toast(strings.allowInstall)
-            c.updater.openInstallPermission()
-            return
-        }
-        viewModelScope.launch {
-            try {
-                _update.value = UpdateState.Downloading(release, 0f)
-                val apk = c.updater.download(release) { p -> _update.value = UpdateState.Downloading(release, p) }
-                _update.value = UpdateState.Installing(release)
-                c.updater.install(apk)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                _update.value = UpdateState.Failed(e.message ?: e.javaClass.simpleName)
-            }
-        }
-    }
+    /** Descarrega e instala a versão encontrada (ou procura, se ainda não houver). */
+    fun installUpdate() = updates.install()
 
     // ---- Abrir ----
 
@@ -1018,8 +934,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     private companion object {
-        /** De quanto em quanto tempo procurar versões novas. */
-        const val UPDATE_CHECK_MS = 12 * 60 * 60_000L
         const val FOLDER_TONE_TRIES = 8
         const val WEATHER_MS = 30 * 60_000L
         const val YOUTUBE_MS = 30 * 60_000L
@@ -1030,13 +944,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         /** O arranque automático só conta nos primeiros minutos depois de ligar (não depois de atualizar a app). */
         const val BOOT_WINDOW_MS = 10 * 60_000L
 
-        const val GUARD_GRACE_MS = 20_000L
-
         const val LIGHT_LUMA = 0.35
 
         const val LANGUAGE_DELAY_MS = 400L
-
-        const val REPAIR_PROMPT_GAP_MS = 60 * 60_000L
 
         /** Apps que abrem links do YouTube, por ordem de preferência. */
         val YOUTUBE_APPS = listOf(

@@ -24,6 +24,34 @@ import java.io.IOException
 /** Uma versão publicada da app. */
 class AppRelease(val version: String, val notes: String, val apkUrl: String, val size: Long)
 
+/** O que o ecrã precisa das atualizações: o [Updater] (outro nos testes, ver UpdatesController). */
+interface AppUpdates {
+    /** Só a versão release se atualiza (ver [Updater.enabled]). */
+    val enabled: Boolean
+    val currentVersion: String
+
+    /** Motivos de instalações falhadas, por extenso. */
+    val installFailures: SharedFlow<String>
+
+    /** A pessoa cancelou a confirmação do instalador do Android. */
+    val installCancels: SharedFlow<Unit>
+
+    /** A versão mais recente publicada (null se não houver nenhuma com APK); lança sem rede. */
+    suspend fun latest(): AppRelease?
+
+    /** Descarrega o APK; [onProgress] recebe 0..1. */
+    suspend fun download(release: AppRelease, onProgress: (Float) -> Unit): File
+
+    /** O Android deixa esta app instalar APKs? */
+    fun canInstall(): Boolean
+
+    /** Abre o ecrã do Android onde se autoriza a app a instalar APKs. */
+    fun openInstallPermission()
+
+    /** Entrega o APK ao instalador do Android. */
+    suspend fun install(apk: File)
+}
+
 /**
  * Atualizações da app: as versões são publicadas como releases do próprio repositório, [RELEASES_REPO]. O APK
  * descarregado vai para o instalador do Android, que só o aceita se estiver assinado com a mesma chave da app
@@ -35,12 +63,12 @@ class Updater(
     private val http: OkHttpClient,
     private val gson: Gson,
     private val resultReceiver: Class<out BroadcastReceiver>,
-) {
+) : AppUpdates {
 
     private val _installFailures = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
     /** Motivos de instalações falhadas (do instalador do Android), para a app os mostrar por extenso. */
-    val installFailures: SharedFlow<String> = _installFailures
+    override val installFailures: SharedFlow<String> = _installFailures
 
     fun reportInstallFailure(message: String) {
         _installFailures.tryEmit(message)
@@ -49,19 +77,19 @@ class Updater(
     private val _installCancels = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     /** A pessoa cancelou a confirmação do instalador do Android (não é um erro: a versão continua disponível). */
-    val installCancels: SharedFlow<Unit> = _installCancels
+    override val installCancels: SharedFlow<Unit> = _installCancels
 
     fun reportInstallCancelled() {
         _installCancels.tryEmit(Unit)
     }
 
     /** Só a versão release se atualiza: o debug tem o mesmo id mas outra chave, e o Android recusaria o APK. */
-    val enabled: Boolean = !BuildConfig.DEBUG
+    override val enabled: Boolean = !BuildConfig.DEBUG
 
-    val currentVersion: String = BuildConfig.VERSION_NAME
+    override val currentVersion: String = BuildConfig.VERSION_NAME
 
     /** A versão mais recente publicada, ou null se não houver nenhuma com APK. */
-    suspend fun latest(): AppRelease? = withContext(Dispatchers.IO) {
+    override suspend fun latest(): AppRelease? = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url("https://api.github.com/repos/$RELEASES_REPO/releases/latest")
             .header("Accept", "application/vnd.github+json")
@@ -77,7 +105,7 @@ class Updater(
     }
 
     /** Descarrega o APK para a cache da app; [onProgress] recebe 0..1. */
-    suspend fun download(release: AppRelease, onProgress: (Float) -> Unit): File = withContext(Dispatchers.IO) {
+    override suspend fun download(release: AppRelease, onProgress: (Float) -> Unit): File = withContext(Dispatchers.IO) {
         val dir = File(context.cacheDir, "updates").apply { mkdirs() }
         dir.listFiles()?.forEach { it.delete() } // só fica a versão a instalar
         val file = File(dir, "goatlauncher-${release.version}.apk")
@@ -103,11 +131,11 @@ class Updater(
     }
 
     /** O Android deixa esta app instalar APKs? (Android 8+: "Instalar apps desconhecidas" para o GoatLauncher.) */
-    fun canInstall(): Boolean =
+    override fun canInstall(): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.O || context.packageManager.canRequestPackageInstalls()
 
     /** Abre o ecrã do Android onde se autoriza o GoatLauncher a instalar apps. */
-    fun openInstallPermission() {
+    override fun openInstallPermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}"))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -116,7 +144,7 @@ class Updater(
     }
 
     /** Entrega o APK ao instalador do Android (que mostra a confirmação; o resultado chega ao [resultReceiver]). */
-    suspend fun install(apk: File) = withContext(Dispatchers.IO) {
+    override suspend fun install(apk: File): Unit = withContext(Dispatchers.IO) {
         val installer = context.packageManager.packageInstaller
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
             setAppPackageName(context.packageName)

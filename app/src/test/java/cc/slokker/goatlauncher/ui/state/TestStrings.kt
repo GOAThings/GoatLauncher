@@ -25,19 +25,3 @@ object TestStrings {
         return Strings(context)
     }
 }
-
-/** O que os holders lançam corre já (como no Main.immediate), até esperar por alguma coisa; [settle] espera o resto. */
-internal class HolderScope {
-    val job = kotlinx.coroutines.SupervisorJob()
-    val scope = kotlinx.coroutines.CoroutineScope(job + kotlinx.coroutines.Dispatchers.Unconfined)
-
-    suspend fun settle() {
-        while (true) {
-            val running = job.children.filter { it.isActive }.toList()
-            if (running.isEmpty()) return
-            running.forEach { it.join() }
-        }
-    }
-
-    fun cancel() = job.cancel()
-}
