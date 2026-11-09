@@ -57,7 +57,7 @@ object AutoStart {
             val intent = if (container.parental.appLocked(pkg)) {
                 unlockIntent(context, pkg)
             } else {
-                container.apps.launchIntent(pkg) ?: return@launch
+                container.catalog.launchIntent(pkg) ?: return@launch
             }
             start(context, intent)
         }

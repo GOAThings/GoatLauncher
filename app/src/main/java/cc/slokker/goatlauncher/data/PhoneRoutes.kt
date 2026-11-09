@@ -24,18 +24,18 @@ internal class LanReply(val status: String, val type: String, val body: ByteArra
  *
  * [apps]: as apps instaladas, pelo nome. [png]: a imagem de uma app em PNG. [volume]: uma das AudioManager.ADJUST_*.
  * [canOpen]: a app tem com que abrir. [canStartFromBackground]: o serviço de acessibilidade está ligado. [open]: abre-a
- * (com o controlo parental).
+ * (com o controlo parental). [pngs]: os PNG já feitos, um por app instalada (na app, os do AppCatalog, partilhados com
+ * o índice do site; antes ficava um a mais por cada atualização, e os das desinstaladas).
  */
 internal class PhoneRoutes(
     private val apps: suspend () -> List<LauncherApp>,
-    private val png: (ImageBitmap) -> ByteArray,
+    png: (ImageBitmap) -> ByteArray,
     private val volume: (direction: Int) -> Unit,
     private val canOpen: (pkg: String) -> Boolean,
     private val canStartFromBackground: () -> Boolean,
     private val open: (pkg: String) -> Unit,
+    internal val pngs: PerAppCache<ImageBitmap, ByteArray> = PerAppCache(png),
 ) {
-    /** Os PNG já feitos, um por app instalada (antes ficava um a mais por cada atualização, e os das desinstaladas). */
-    internal val pngs = PerAppCache(png)
 
     suspend fun reply(request: LanRequest): LanReply {
         if (!request.allowed) return LanReply.text("403 Forbidden", "recusado")

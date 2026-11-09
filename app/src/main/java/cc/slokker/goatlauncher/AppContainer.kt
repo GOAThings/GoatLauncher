@@ -2,10 +2,10 @@ package cc.slokker.goatlauncher
 
 import android.content.Context
 import android.os.Build
+import cc.slokker.goatlauncher.data.AppCatalog
 import cc.slokker.goatlauncher.data.AppIndex
 import cc.slokker.goatlauncher.data.CustomIcons
 import cc.slokker.goatlauncher.data.DataStoreSettingsDisk
-import cc.slokker.goatlauncher.data.InstalledApps
 import cc.slokker.goatlauncher.data.ParentalGate
 import cc.slokker.goatlauncher.data.PhoneApps
 import cc.slokker.goatlauncher.data.PinAttemptStore
@@ -69,11 +69,12 @@ class AppContainer(context: Context) {
     /** Se uma app, as Definições ou o controlo parental pedem o código (sempre com as definições lidas). */
     val parental = ParentalGate(settings)
     val pinAttempts = PinAttemptStore(context)
-    val apps = InstalledApps(context)
+    /** As apps instaladas, para o ecrã, o GoatRemote e o site (ver [start]). */
+    val catalog = AppCatalog(context.applicationContext, scope)
     /** As apps desta TV para o site da conta. */
-    val appIndex = AppIndex(context, backend, settings)
+    val appIndex = AppIndex(context, backend, settings.session, catalog)
     /** A lista de apps para o GoatRemote (o comando no telemóvel), na rede de casa. */
-    val phoneApps = PhoneApps(context.applicationContext, apps, scope)
+    val phoneApps = PhoneApps(context.applicationContext, catalog, scope)
     val watchNext = WatchNextSource(context)
     val icons = CustomIcons(context)
 
@@ -99,6 +100,16 @@ class AppContainer(context: Context) {
     }
 
     val wallpapers = OnlineWallpapers(context, plainHttp, publicUserAgent())
+
+    /**
+     * O que vive com o processo, com ou sem ecrã (chamado pelo LauncherApp): as mudanças nas apps instaladas, o índice
+     * para o site (cada leitura das apps; só envia o que mudou) e a porta 6470.
+     */
+    fun start() {
+        catalog.start()
+        scope.launch { catalog.loads.collect { appIndex.upload(it) } }
+        phoneApps.start()
+    }
 
     /**
      * O cliente das imagens (Coil, ver LauncherApp). As imagens do Wikimedia recusam (403) a identificação genérica

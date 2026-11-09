@@ -1,10 +1,8 @@
 package cc.slokker.goatlauncher.data
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.media.AudioManager
 import android.util.Log
-import androidx.compose.ui.graphics.asAndroidBitmap
 import cc.slokker.goatlauncher.AutoStart
 import cc.slokker.goatlauncher.HomeGuardService
 import kotlinx.coroutines.CancellationException
@@ -13,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
-import java.io.ByteArrayOutputStream
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
@@ -38,14 +35,15 @@ import java.net.Socket
  *
  * Aqui fica a rede (ligações, limites, quem pode falar); o que cada pedido responde está no [PhoneRoutes].
  */
-class PhoneApps(private val context: Context, private val apps: InstalledApps, private val scope: CoroutineScope) {
+class PhoneApps(private val context: Context, private val apps: AppCatalog, private val scope: CoroutineScope) {
     private val audio = context.getSystemService(AudioManager::class.java)
 
     private val routes = PhoneRoutes(
-        apps = { apps.load() },
-        png = { image ->
-            ByteArrayOutputStream().also { image.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
-        },
+        // A lista do catálogo (já lida), e não uma consulta ao PackageManager por pedido: o telemóvel pede os ícones
+        // todos de uma vez, até 16 ao mesmo tempo.
+        apps = { apps.current() },
+        png = AppCatalog::encodePng,
+        pngs = apps.pngs,
         volume = { direction ->
             runCatching { audio.adjustSuggestedStreamVolume(direction, AudioManager.USE_DEFAULT_STREAM_TYPE, AudioManager.FLAG_SHOW_UI) }
                 .onFailure { Log.w(TAG, "Volume", it) }

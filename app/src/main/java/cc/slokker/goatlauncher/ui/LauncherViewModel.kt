@@ -6,12 +6,8 @@ import kotlinx.coroutines.flow.Flow
 import coil3.toBitmap
 import coil3.request.allowHardware
 import android.app.Application
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Bitmap
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cc.slokker.goatlauncher.BuildConfig
@@ -125,9 +121,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val session: StateFlow<SessionStore.Session?> = settings.session
     val ready: StateFlow<Boolean> = settings.ready
 
-    /** Todas as apps instaladas, por nome; null enquanto a primeira leitura não acaba. */
-    private val installed = MutableStateFlow<List<App>?>(null)
-    val allApps: StateFlow<List<App>?> = installed.asStateFlow()
+    /** Todas as apps instaladas, por nome; null enquanto a primeira leitura não acaba (ver AppCatalog). */
+    private val installed: StateFlow<List<App>?> = c.catalog.apps
+    val allApps: StateFlow<List<App>?> = installed
 
     /** A fila do ecrã inicial: pela ordem guardada, sem as escondidas. */
     val apps: StateFlow<List<App>?> = combine(installed, settings.device) { all, d ->
@@ -232,13 +228,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val toast: StateFlow<String?> = _toast.asStateFlow()
 
     private val watchNextRequests = Channel<Unit>(Channel.CONFLATED)
-    private val appRequests = Channel<Unit>(Channel.CONFLATED)
-
-    private val packageReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            appRequests.trySend(Unit)
-        }
-    }
     private val stopObservingWatchNext: () -> Unit
 
     /** O minuto do dia (desde a meia-noite), de minuto a minuto (para o dia/noite automático). */
@@ -270,15 +259,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             settings.awaitReady()
             settings.sync(refreshToken = true)
-            c.appIndex.upload(c.apps.load())
-        }
-        viewModelScope.launch {
-            appRequests.receiveAsFlow().collectLatest {
-                val apps = c.apps.load()
-                installed.value = apps
-                // Para o site da conta (só envia quando a lista mudou); não atrasa o ecrã.
-                c.scope.launch { c.appIndex.upload(apps) }
-            }
+            // Para o site da conta, já com o token renovado (só envia quando a lista mudou). Cada leitura das apps
+            // também envia (ver AppContainer.start).
+            c.appIndex.upload(c.catalog.current())
         }
         viewModelScope.launch {
             // As apps escrevem no Watch Next várias vezes seguidas: junta as mudanças antes de ler.
@@ -384,20 +367,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         reloadApps()
         reloadWatchNext()
         stopObservingWatchNext = c.watchNext.observe(::reloadWatchNext)
-
-        val filter = IntentFilter().apply {
-            addAction(Intent.ACTION_PACKAGE_ADDED)
-            addAction(Intent.ACTION_PACKAGE_REMOVED)
-            addAction(Intent.ACTION_PACKAGE_CHANGED)
-            addAction(Intent.ACTION_PACKAGE_REPLACED)
-            addDataScheme("package")
-        }
-        // Exportado: são difusões protegidas do sistema (só o sistema as pode enviar).
-        ContextCompat.registerReceiver(application, packageReceiver, filter, ContextCompat.RECEIVER_EXPORTED)
     }
 
     override fun onCleared() {
-        context.unregisterReceiver(packageReceiver)
         stopObservingWatchNext()
     }
 
@@ -475,8 +447,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         _homeEvents.tryEmit(Unit)
     }
 
+    /** As apps instaladas mudam sozinhas (o AppCatalog está à escuta); isto apanha o que tenha escapado. */
     fun reloadApps() {
-        appRequests.trySend(Unit)
+        c.catalog.refresh()
     }
 
     fun reloadWatchNext() {
@@ -801,13 +774,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     // ---- Abrir ----
 
     fun launchApp(activity: Context, pkg: String) = unlocked(pkg) {
-        if (!SystemIntents.start(activity, c.apps.launchIntent(pkg))) toast(strings.cantOpen)
+        if (!SystemIntents.start(activity, c.catalog.launchIntent(pkg))) toast(strings.cantOpen)
     }
 
     /** Abre o conteúdo; se o `intent_uri` falhar, abre pelo menos a app. */
     fun openWatchNext(activity: Context, item: WatchNextItem) = unlocked(item.packageName) {
         if (SystemIntents.start(activity, item.intent())) return@unlocked
-        if (!SystemIntents.start(activity, c.apps.launchIntent(item.packageName))) toast(strings.cantOpen)
+        if (!SystemIntents.start(activity, c.catalog.launchIntent(item.packageName))) toast(strings.cantOpen)
     }
 
     // ---- Controlo parental ----
@@ -963,7 +936,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         _screen.value = Screen.Settings
         viewModelScope.launch {
             settings.link(token, user?.email, device?.name)
-            c.scope.launch { c.appIndex.upload(c.apps.load(), afterLink = true) }
+            c.scope.launch { c.appIndex.upload(c.catalog.current(), afterLink = true) }
             toast(strings.linked)
         }
     }
