@@ -224,7 +224,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         continueWatching.start()
         localWeather.start()
         wallpaper.start()
-        viewModelScope.launch { autostartAfterBoot() }
+        viewModelScope.launch { AutoStart.afterBoot(context) { resumed && _screen.value == Screen.Home } }
         viewModelScope.launch {
             // A língua guardada na conta (ou só nesta TV): aplica-se quando as definições já foram lidas, para
             // um "auto" provisório do arranque não desfazer a escolha. Vinda de outra TV, aplica-se aqui também.
@@ -288,23 +288,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setNightAuto(on: Boolean) = settings.updateAccount { it.copy(nightAuto = on) }
-
-    /**
-     * Arranque automático: logo depois de a TV ligar, abre a app escolhida (uma vez por arranque, e só se a
-     * pessoa ainda estiver no ecrã inicial quando o tempo de espera acabar).
-     */
-    private suspend fun autostartAfterBoot() {
-        settings.awaitReady()
-        val boot = AndroidSettings.Global.getInt(context.contentResolver, AndroidSettings.Global.BOOT_COUNT, -1)
-        val prefs = context.getSharedPreferences(AutoStart.BOOT_PREFS, Context.MODE_PRIVATE)
-        if (boot < 0 || prefs.getInt(AutoStart.BOOT_KEY, -1) == boot) return
-        prefs.edit { putInt(AutoStart.BOOT_KEY, boot) }
-        if (SystemClock.elapsedRealtime() > BOOT_WINDOW_MS) return
-        val device = settings.device.value
-        val pkg = device.autostart ?: return
-        delay(device.autostartDelay * 1000L)
-        if (resumed && _screen.value == Screen.Home) AutoStart.open(context, pkg)
-    }
 
     /** Só em debug (`am start … --ez demo_watch_next true`): "Continuar a ver" de exemplo nos 2 primeiros favoritos. */
     fun enableDemoWatchNext() = continueWatching.enableDemo()
@@ -624,9 +607,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     private companion object {
-
-        /** O arranque automático só conta nos primeiros minutos depois de ligar (não depois de atualizar a app). */
-        const val BOOT_WINDOW_MS = 10 * 60_000L
 
         const val LANGUAGE_DELAY_MS = 400L
 

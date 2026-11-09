@@ -5,9 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.SystemClock
+import android.provider.Settings
 import android.util.Log
+import androidx.core.content.edit
 import cc.slokker.goatlauncher.data.AppCatalog
 import cc.slokker.goatlauncher.data.AppOpener
+import cc.slokker.goatlauncher.data.DeviceSettings
 import cc.slokker.goatlauncher.data.OpenResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -24,11 +27,53 @@ object AutoStart {
     /** Extra do MainActivity: pede o código e, se acertar, abre esta app. */
     const val EXTRA_UNLOCK = "cc.slokker.goatlauncher.UNLOCK"
 
-    /** Onde fica o arranque da TV em que a app escolhida já abriu (ver LauncherViewModel.autostartAfterBoot). */
+    /** Onde fica o arranque da TV em que a app escolhida já abriu (ver [afterBoot]). */
     const val BOOT_PREFS = "autostart"
     const val BOOT_KEY = "boot"
 
+    /** O arranque automático só conta nos primeiros minutos depois de ligar (não depois de atualizar a app). */
+    private const val BOOT_WINDOW_MS = 10 * 60_000L
+
     private var wakeJob: Job? = null
+
+    /** A app a abrir sozinha e quanto esperar antes (DeviceSettings.autostartDelay). */
+    internal data class Pending(val pkg: String, val delayMs: Long)
+
+    /**
+     * A regra do arranque automático, igual ao ligar e ao acordar: a app escolhida, [DeviceSettings.autostartDelay]
+     * segundos depois; ao acordar ([wake]) só com a opção "ao acordar" ligada. null se não houver nada a abrir.
+     */
+    internal fun pending(device: DeviceSettings, wake: Boolean): Pending? {
+        val pkg = device.autostart ?: return null
+        if (wake && !device.autostartWake) return null
+        return Pending(pkg, device.autostartDelay * 1000L)
+    }
+
+    /**
+     * Este arranque da TV ([boot], o BOOT_COUNT do Android; -1 sem ele) ainda não abriu a app ([done]: o arranque em
+     * que abriu) e ainda é logo a seguir a ligar ([sinceBoot], ms)?
+     */
+    internal fun isFirstOpenAfterBoot(boot: Int, done: Int, sinceBoot: Long): Boolean =
+        boot >= 0 && done != boot && sinceBoot <= BOOT_WINDOW_MS
+
+    /**
+     * Ao ligar a TV: abre a app escolhida, uma vez por arranque e só se a pessoa ainda estiver no ecrã inicial quando o
+     * tempo de espera acabar ([onHome]). Chamado quando o ecrã inicial arranca; decide com as definições lidas.
+     */
+    suspend fun afterBoot(context: Context, onHome: () -> Boolean) {
+        val settings = (context.applicationContext as LauncherApp).container.settings
+        settings.awaitReady()
+        val boot = Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1)
+        val prefs = context.getSharedPreferences(BOOT_PREFS, Context.MODE_PRIVATE)
+        val done = prefs.getInt(BOOT_KEY, -1)
+        if (boot < 0 || done == boot) return
+        // Fica marcado mesmo fora da janela: este arranque já não abre nada.
+        prefs.edit { putInt(BOOT_KEY, boot) }
+        if (!isFirstOpenAfterBoot(boot, done, SystemClock.elapsedRealtime())) return
+        val next = pending(settings.device.value, wake = false) ?: return
+        delay(next.delayMs)
+        if (onHome()) open(context, next.pkg)
+    }
 
     /**
      * Ao acordar do standby (ecrã ligado), abre a app escolhida, se a opção estiver ligada. Decide com as definições
@@ -41,10 +86,9 @@ object AutoStart {
                 wakeJob?.cancel()
                 wakeJob = app.container.scope.launch {
                     settings.awaitReady()
-                    val device = settings.device.value
-                    val pkg = device.autostart?.takeIf { device.autostartWake } ?: return@launch
-                    delay(device.autostartDelay * 1000L)
-                    open(app, pkg)
+                    val next = pending(settings.device.value, wake = true) ?: return@launch
+                    delay(next.delayMs)
+                    open(app, next.pkg)
                 }
             }
         }, IntentFilter(Intent.ACTION_SCREEN_ON))
