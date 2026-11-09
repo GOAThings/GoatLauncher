@@ -5,25 +5,10 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 
 /*
- * Formato das definições guardadas na conta (o backend guarda o JSON tal como o recebe):
- *
- *   "account": { "wallpaper": {"type": "builtin" | "file" | "url" | "folder" | "wikimedia" | "nasa",
- *                              "value": "lake" | "wall-123.jpg" | "https://…" | "/storage/…" | "potd" | "apod"},
- *                "clock_24h": true, "show_greeting": true, "show_continue_watching": true, "show_app_name": true,
- *                "layout": "android" | "appletv",
- *                "continue_style": "row" | "shelf" | "spotlight" | "column" | "carousel", "show_weather": true,
- *                "reddit_min_width": 1920, "wallpaper_minutes": 30, "idle_minutes": 0, "idle_keep_awake": false,
- *                "youtube_feed": "both" | "continue" | "recommended", "language": "auto" | "pt-PT" | …,
- *                "night_mode": false, "night_auto": false,
- *                "focus_effect": "border" | "glow" | "shadow", "focus_animation": "none" | "pulse" | "breath" | "shine",
- *                "focus_color": "auto" | "#38BDF8",
- *                "icon_background": "graphite" | "none" | "#38BDF8" }
- *   "device":  { "apps": ["com.netflix.ninja", …], "hidden": ["com.android.vending"],
- *                "icons": {"com.netflix.ninja": "pack:dev.pack/netflix" | "file:com.netflix.ninja-123.png"},
- *                "names": {"io.gh.reisxd.tizentube.cobalt": "YouTube"}, "no_continue": ["com.netflix.ninja"],
- *                "autostart": "cc.slokker.itv", "autostart_wake": false, "autostart_delay": 5,
- *                "buttons": [{"key": 199, "scan": 393, "app": "com.nuvio.tv"}],
- *                "pin": "<sal>:<sha-256>", "locked": ["com.netflix.ninja"], "lock_settings": true, "lock_hours": [20, 8] }
+ * Formato das definições guardadas no disco e na conta (o backend guarda o JSON tal como o recebe, e o site edita-o):
+ * "account" (igual em todas as TVs da conta) e "device" (só desta TV). Todas as chaves, cada uma com um valor de
+ * exemplo, estão em app/src/test/resources/formats/ (account.json e device.json), e o SettingsFormatTest garante que
+ * cada uma se lê e se escreve igual. Os valores possíveis de cada campo estão no fromJson, abaixo.
  *
  * Um fundo "file" só existe na TV onde foi escolhido; as outras mostram o fundo por defeito.
  * Um fundo "reddit" (o antigo defeito, r/EarthPorn, ou outro subreddit) lê-se como o [Wallpaper.DEFAULT]: o Reddit
