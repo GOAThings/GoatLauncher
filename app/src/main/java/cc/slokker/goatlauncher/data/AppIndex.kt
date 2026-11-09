@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.toArgb
 import cc.slokker.goatlauncher.data.api.BackendApi
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -45,13 +44,8 @@ class AppIndex(context: Context, private val api: BackendApi, private val settin
         val list = JsonArray()
         for (app in apps) {
             val png = images[app.packageName] ?: continue
-            list.add(JsonObject().apply {
-                addProperty("package", app.packageName)
-                addProperty("label", app.label)
-                addProperty("banner", app.banner != null)
-                addProperty("color", String.format("#%06X", app.color.toArgb() and 0xFFFFFF))
-                addProperty("icon_hash", sha1(png))
-            })
+            // O mesmo resumo que o GoatRemote recebe em /apps, mais o hash da imagem.
+            list.add(app.summary().apply { addProperty("icon_hash", sha1(png)) })
         }
         val hash = sha1(list.toString().toByteArray())
         // O hash vale para esta conta: noutra (ou ao voltar a ligar a TV), envia-se outra vez.

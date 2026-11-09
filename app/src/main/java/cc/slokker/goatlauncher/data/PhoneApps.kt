@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.media.AudioManager
 import android.util.Log
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.toArgb
 import cc.slokker.goatlauncher.AutoStart
 import cc.slokker.goatlauncher.HomeGuardService
 import kotlinx.coroutines.CancellationException
@@ -14,8 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.net.Inet4Address
 import java.net.Inet6Address
@@ -38,11 +35,25 @@ import java.net.Socket
  *   POST /open/<pacote>  abre a app, com o controlo parental. A SHIELD recusa o market://launch?id=<pacote> do
  *                        protocolo do comando e fecha a ligação. Sem o serviço de acessibilidade o Android não deixa
  *                        abrir apps a partir do fundo: responde 409, e o comando tenta pelo protocolo.
+ *
+ * Aqui fica a rede (ligações, limites, quem pode falar); o que cada pedido responde está no [PhoneRoutes].
  */
 class PhoneApps(private val context: Context, private val apps: InstalledApps, private val scope: CoroutineScope) {
     private val audio = context.getSystemService(AudioManager::class.java)
 
-    private val pngs = HashMap<String, ByteArray>()
+    private val routes = PhoneRoutes(
+        apps = { apps.load() },
+        png = { image ->
+            ByteArrayOutputStream().also { image.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        },
+        volume = { direction ->
+            runCatching { audio.adjustSuggestedStreamVolume(direction, AudioManager.USE_DEFAULT_STREAM_TYPE, AudioManager.FLAG_SHOW_UI) }
+                .onFailure { Log.w(TAG, "Volume", it) }
+        },
+        canOpen = { pkg -> apps.launchIntent(pkg) != null },
+        canStartFromBackground = { HomeGuardService.instance != null },
+        open = { pkg -> AutoStart.open(context, pkg) },
+    )
 
     /** Só desta porta (mais um para esperar ligações): nunca ocupa os threads do Dispatchers.IO do resto da app. */
     private val listener = Dispatchers.IO.limitedParallelism(MAX_CONNECTIONS + 1)
@@ -100,95 +111,13 @@ class PhoneApps(private val context: Context, private val apps: InstalledApps, p
     private suspend fun serve(client: Socket) {
         client.soTimeout = READ_TIMEOUT_MS
         val request = LanRequest.read(client.getInputStream().buffered()) ?: return
-        if (!request.allowed) {
-            reply(client, "text/plain", "recusado".toByteArray(), status = "403 Forbidden")
-            return
-        }
-        val method = request.method
-        val path = request.path
-        if (path.startsWith("/volume/")) return volume(client, method, path.removePrefix("/volume/"))
-        if (path.startsWith("/open/")) return open(client, method, path.removePrefix("/open/"))
-        when {
-            path == "/apps" -> {
-                val json = JSONArray()
-                for (app in apps.load()) {
-                    json.put(
-                        JSONObject()
-                            .put("package", app.packageName)
-                            .put("label", app.label)
-                            .put("banner", app.banner != null)
-                            .put("color", String.format("#%06X", app.color.toArgb() and 0xFFFFFF)),
-                    )
-                }
-                reply(client, "application/json", json.toString().toByteArray())
-            }
-            path.startsWith("/icon/") -> {
-                val pkg = path.removePrefix("/icon/")
-                val app = apps.load().firstOrNull { it.packageName == pkg }
-                val image = app?.banner ?: app?.icon
-                if (image == null) {
-                    reply(client, "text/plain", "não há".toByteArray(), status = "404 Not Found")
-                    return
-                }
-                val png = synchronized(pngs) {
-                    pngs.getOrPut(pkg + ":" + System.identityHashCode(image)) {
-                        ByteArrayOutputStream().also { image.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
-                    }
-                }
-                reply(client, "image/png", png)
-            }
-            else -> reply(client, "text/plain", "GoatLauncher".toByteArray(), status = "404 Not Found")
-        }
-    }
-
-    private fun volume(client: Socket, method: String, what: String) {
-        val direction = when (what) {
-            "up" -> AudioManager.ADJUST_RAISE
-            "down" -> AudioManager.ADJUST_LOWER
-            "mute" -> AudioManager.ADJUST_TOGGLE_MUTE
-            else -> null
-        }
-        if (method != "POST" || direction == null) {
-            reply(client, "text/plain", "não há".toByteArray(), status = "404 Not Found")
-            return
-        }
-        runCatching { audio.adjustSuggestedStreamVolume(direction, AudioManager.USE_DEFAULT_STREAM_TYPE, AudioManager.FLAG_SHOW_UI) }
-            .onFailure { Log.w(TAG, "Volume", it) }
-        reply(client, "text/plain", "ok".toByteArray())
-    }
-
-    private fun open(client: Socket, method: String, pkg: String) {
-        when {
-            method != "POST" || apps.launchIntent(pkg) == null ->
-                reply(client, "text/plain", "não há".toByteArray(), status = "404 Not Found")
-            HomeGuardService.instance == null ->
-                reply(client, "text/plain", "sem acessibilidade".toByteArray(), status = "409 Conflict")
-            else -> {
-                AutoStart.open(context, pkg)
-                reply(client, "text/plain", "ok".toByteArray())
-            }
-        }
-    }
-
-    private fun reply(client: Socket, type: String, body: ByteArray, status: String = "200 OK") {
-        val head = "HTTP/1.1 $status\r\nContent-Type: $type\r\nContent-Length: ${body.size}\r\n" +
-            "Cache-Control: no-cache\r\nConnection: close\r\n\r\n"
         client.getOutputStream().apply {
-            write(head.toByteArray())
-            write(body)
+            write(routes.reply(request).bytes())
             flush()
         }
     }
 
     private fun allowedPeer(client: Socket): Boolean = isLocal(client.inetAddress) && !isThisTv(client)
-
-    /** Só a rede de casa: nunca quem venha de fora. */
-    private fun isLocal(address: InetAddress): Boolean = when (address) {
-        is Inet4Address, is Inet6Address ->
-            address.isSiteLocalAddress || address.isLinkLocalAddress ||
-                (address is Inet6Address && (address.address[0].toInt() and 0xFE) == 0xFC) // fc00::/7
-        else -> false
-    }
 
     /** A porta é para os telemóveis: uma ligação da própria TV (por qualquer dos seus endereços) não conta. */
     private fun isThisTv(client: Socket): Boolean {
@@ -200,6 +129,14 @@ class PhoneApps(private val context: Context, private val apps: InstalledApps, p
     companion object {
         const val PORT = 6470
         private const val TAG = "PhoneApps"
+
+        /** Só a rede de casa: nunca quem venha de fora. */
+        internal fun isLocal(address: InetAddress): Boolean = when (address) {
+            is Inet4Address, is Inet6Address ->
+                address.isSiteLocalAddress || address.isLinkLocalAddress ||
+                    (address is Inet6Address && (address.address[0].toInt() and 0xFE) == 0xFC) // fc00::/7
+            else -> false
+        }
 
         /** Chega para dois telemóveis a pedir os ícones todos ao mesmo tempo. */
         private const val MAX_CONNECTIONS = 16
