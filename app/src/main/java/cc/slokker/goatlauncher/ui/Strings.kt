@@ -98,6 +98,12 @@ class Strings(context: Context) {
     val wikimediaHint get() = s(R.string.wikimedia_hint)
     val nasaHint get() = s(R.string.nasa_hint)
     fun photoCredit(credit: String) = s(R.string.photo_credit, credit)
+    val rotateEvery get() = s(R.string.rotate_every)
+    fun rotateInterval(minutes: Int) = when {
+        minutes >= 24 * 60 -> s(R.string.rotate_daily)
+        minutes >= 60 -> s(R.string.rotate_hours, minutes / 60)
+        else -> s(R.string.rotate_minutes, minutes)
+    }
     val clock24h get() = s(R.string.clock24h)
     val greeting get() = s(R.string.greeting)
     val weather get() = s(R.string.weather)

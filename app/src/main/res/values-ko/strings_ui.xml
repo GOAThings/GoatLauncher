@@ -73,6 +73,10 @@
     <string name="wikimedia_hint">자연, 장소, 예술 · 작가와 라이선스 표시</string>
     <string name="nasa_hint">오늘의 천문 사진</string>
     <string name="photo_credit">출처: %1$s</string>
+    <string name="rotate_every">사진 바꾸기</string>
+    <string name="rotate_minutes">%1$d분마다</string>
+    <string name="rotate_hours">%1$d시간마다</string>
+    <string name="rotate_daily">하루에 한 번</string>
     <string name="clock24h">24시간 시계</string>
     <string name="greeting">인사말</string>
     <string name="weather">날씨</string>

@@ -73,6 +73,10 @@
     <string name="wikimedia_hint">Nature, places and art, with author and licence</string>
     <string name="nasa_hint">Astronomy Picture of the Day</string>
     <string name="photo_credit">Credit: %1$s</string>
+    <string name="rotate_every">Change photo</string>
+    <string name="rotate_minutes">Every %1$d min</string>
+    <string name="rotate_hours">Every %1$d h</string>
+    <string name="rotate_daily">Once a day</string>
     <string name="clock24h">24-hour clock</string>
     <string name="greeting">Greeting</string>
     <string name="weather">Weather</string>

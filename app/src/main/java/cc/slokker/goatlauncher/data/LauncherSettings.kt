@@ -12,7 +12,7 @@ import com.google.gson.JsonObject
  *                "clock_24h": true, "show_greeting": true, "show_continue_watching": true, "show_app_name": true,
  *                "layout": "android" | "appletv",
  *                "continue_style": "row" | "shelf" | "spotlight" | "column" | "carousel", "show_weather": true,
- *                "reddit_min_width": 1920, "idle_minutes": 0, "idle_keep_awake": false,
+ *                "reddit_min_width": 1920, "wallpaper_minutes": 30, "idle_minutes": 0, "idle_keep_awake": false,
  *                "youtube_feed": "both" | "continue" | "recommended", "language": "auto" | "pt-PT" | …,
  *                "night_mode": false, "night_auto": false,
  *                "focus_effect": "border" | "glow" | "shadow", "focus_animation": "none" | "pulse" | "breath" | "shine",
@@ -106,6 +106,8 @@ data class AccountSettings(
     val showWeather: Boolean = true,
     /** Fundos de fotos online (Wikimedia, NASA): fotos mais estreitas do que isto (px) ficam de fora; 0 = todas. */
     val photoMinWidth: Int = 1920,
+    /** De quantos em quantos minutos muda a foto dos fundos que rodam (fotos online e pasta): um dos [WALLPAPER_MINUTES]. */
+    val wallpaperMinutes: Int = 30,
     /** Modo ambiente: minutos sem tocar no comando até o ecrã inicial ficar só com o fundo e as horas; 0 = desligado. */
     val idleMinutes: Int = 0,
     /** Com o modo ambiente, o ecrã inicial não deixa a TV adormecer nem começar a proteção de ecrã do sistema. */
@@ -145,6 +147,7 @@ data class AccountSettings(
         addProperty("continue_style", continueStyle)
         addProperty("show_weather", showWeather)
         addProperty("reddit_min_width", photoMinWidth)
+        addProperty("wallpaper_minutes", wallpaperMinutes)
         addProperty("idle_minutes", idleMinutes)
         addProperty("idle_keep_awake", idleKeepAwake)
         addProperty("ambient_style", ambientStyle)
@@ -201,6 +204,9 @@ data class AccountSettings(
         const val BG_GRAPHITE = "graphite"
         const val BG_NONE = "none"
 
+        /** Os intervalos das Definições, pela ordem em que o OK os percorre: 5, 15 e 30 min, 1 h, 3 h e um dia. */
+        val WALLPAPER_MINUTES = listOf(5, 15, 30, 60, 180, 24 * 60)
+
         const val YT_BOTH = "both"
         const val YT_CONTINUE = "continue"
         const val YT_RECOMMENDED = "recommended"
@@ -224,6 +230,7 @@ data class AccountSettings(
                 },
                 showWeather = json.bool("show_weather") ?: true,
                 photoMinWidth = json.int("reddit_min_width")?.coerceAtLeast(0) ?: 1920,
+                wallpaperMinutes = json.int("wallpaper_minutes")?.takeIf { it in WALLPAPER_MINUTES } ?: 30,
                 idleMinutes = json.int("idle_minutes")?.coerceAtLeast(0) ?: 0,
                 idleKeepAwake = json.bool("idle_keep_awake") ?: false,
                 ambientStyle = json.str("ambient_style")?.takeIf { it == AMBIENT_BOUNCE } ?: AMBIENT_PHOTOS,

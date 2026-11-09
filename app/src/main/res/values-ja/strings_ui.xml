@@ -73,6 +73,10 @@
     <string name="wikimedia_hint">自然・風景・アート。作者とライセンス付き</string>
     <string name="nasa_hint">今日の天文写真</string>
     <string name="photo_credit">クレジット: %1$s</string>
+    <string name="rotate_every">写真の切り替え</string>
+    <string name="rotate_minutes">%1$d 分ごと</string>
+    <string name="rotate_hours">%1$d 時間ごと</string>
+    <string name="rotate_daily">1日1回</string>
     <string name="clock24h">24時間表示</string>
     <string name="greeting">あいさつ</string>
     <string name="weather">天気</string>

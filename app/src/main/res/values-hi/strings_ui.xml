@@ -73,6 +73,10 @@
     <string name="wikimedia_hint">प्रकृति, जगहें और कला, लेखक और लाइसेंस के साथ</string>
     <string name="nasa_hint">आज की खगोलीय तस्वीर</string>
     <string name="photo_credit">श्रेय: %1$s</string>
+    <string name="rotate_every">फ़ोटो बदलना</string>
+    <string name="rotate_minutes">हर %1$d मिनट</string>
+    <string name="rotate_hours">हर %1$d घंटे</string>
+    <string name="rotate_daily">दिन में एक बार</string>
     <string name="clock24h">24-घंटे की घड़ी</string>
     <string name="greeting">अभिवादन</string>
     <string name="weather">मौसम</string>

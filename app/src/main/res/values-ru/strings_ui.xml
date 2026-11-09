@@ -73,6 +73,10 @@
     <string name="wikimedia_hint">Природа, места и искусство, с автором и лицензией</string>
     <string name="nasa_hint">Астрономическая картинка дня</string>
     <string name="photo_credit">Автор: %1$s</string>
+    <string name="rotate_every">Смена фото</string>
+    <string name="rotate_minutes">Каждые %1$d мин</string>
+    <string name="rotate_hours">Каждые %1$d ч</string>
+    <string name="rotate_daily">Раз в день</string>
     <string name="clock24h">24-часовой формат</string>
     <string name="greeting">Приветствие</string>
     <string name="weather">Погода</string>

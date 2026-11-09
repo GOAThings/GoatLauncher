@@ -49,6 +49,36 @@ class WallpaperSettingTest {
     }
 
     @Test
+    fun rotationIntervalDefaultsTo30Minutes() {
+        assertEquals(30, AccountSettings().wallpaperMinutes)
+        // Uma conta de antes desta definição.
+        assertEquals(30, read("""{"clock_24h": true}""").wallpaperMinutes)
+        // Valores fora da lista (ou de outro tipo) voltam aos 30 minutos.
+        assertEquals(30, read("""{"wallpaper_minutes": 45}""").wallpaperMinutes)
+        assertEquals(30, read("""{"wallpaper_minutes": "60"}""").wallpaperMinutes)
+    }
+
+    @Test
+    fun rotationIntervalSurvivesARoundTrip() {
+        assertEquals(listOf(5, 15, 30, 60, 180, 1440), AccountSettings.WALLPAPER_MINUTES)
+        AccountSettings.WALLPAPER_MINUTES.forEach { minutes ->
+            val saved = AccountSettings(wallpaperMinutes = minutes).toJson()
+            assertEquals(minutes, saved.get("wallpaper_minutes").asInt)
+            assertEquals(minutes, AccountSettings.fromJson(saved).wallpaperMinutes)
+        }
+    }
+
+    @Test
+    fun anIntervalChangeIsASyncedPatch() {
+        // A sincronização manda só o que mudou (RFC 7396), como nas outras chaves da conta.
+        val before = AccountSettings().toJson()
+        val after = AccountSettings(wallpaperMinutes = 180).toJson()
+        val patch = SettingsMerge.diff(before, after)
+        assertEquals(setOf("wallpaper_minutes"), patch.keySet())
+        assertEquals(180, AccountSettings.fromJson(SettingsMerge.apply(before, patch)).wallpaperMinutes)
+    }
+
+    @Test
     fun otherChoicesAreKept() {
         assertEquals(Wallpaper(Wallpaper.TYPE_BUILTIN, "aurora"), read("""{"wallpaper": {"type": "builtin", "value": "aurora"}}""").wallpaper)
         assertEquals(Wallpaper(Wallpaper.TYPE_FOLDER, "/storage/x"), read("""{"wallpaper": {"type": "folder", "value": "/storage/x"}}""").wallpaper)

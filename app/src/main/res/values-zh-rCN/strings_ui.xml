@@ -73,6 +73,10 @@
     <string name="wikimedia_hint">自然、风景与艺术，附作者和许可协议</string>
     <string name="nasa_hint">每日天文图</string>
     <string name="photo_credit">来源：%1$s</string>
+    <string name="rotate_every">更换图片</string>
+    <string name="rotate_minutes">每 %1$d 分钟</string>
+    <string name="rotate_hours">每 %1$d 小时</string>
+    <string name="rotate_daily">每天一次</string>
     <string name="clock24h">24 小时制</string>
     <string name="greeting">问候语</string>
     <string name="weather">天气</string>

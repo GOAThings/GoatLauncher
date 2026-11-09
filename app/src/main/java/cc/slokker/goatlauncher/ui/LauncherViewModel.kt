@@ -299,9 +299,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             }
         }
         viewModelScope.launch {
-            // Fundo de fotos online (Wikimedia, NASA): mostra uma foto e troca-a a cada PHOTO_ROTATE_MS.
+            // Fundo de fotos online (Wikimedia, NASA): mostra uma foto e troca-a a cada AccountSettings.wallpaperMinutes.
             var lastNight: Boolean? = null
-            combine(settings.account, night) { a, n -> Triple(a.wallpaper, a.photoMinWidth, n) }.distinctUntilChanged().collectLatest { (wp, minWidth, night) ->
+            combine(settings.account, night) { a, n -> PhotoRotation(a.wallpaper, a.photoMinWidth, a.wallpaperMinutes * 60_000L, n) }
+                .distinctUntilChanged().collectLatest { (wp, minWidth, rotateMs, night) ->
                 val source = c.wallpapers.source(wp)
                 if (source == null) {
                     _photo.value = null
@@ -313,16 +314,18 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 var next = lastNight != null && lastNight != night
                 lastNight = night
                 while (true) {
-                    showPhoto(source, next, minWidth, night)
-                    delay(source.pool.msUntilRotation(source.id, PHOTO_ROTATE_MS))
+                    // Um intervalo mais curto do que o tempo que a foto já leva troca-a logo (ver PhotoPool.current).
+                    showPhoto(source, next, minWidth, night, rotateMs)
+                    delay(source.pool.msUntilRotation(source.id, rotateMs))
                     next = true
                 }
             }
         }
         viewModelScope.launch {
-            // Fundo de uma pasta: uma imagem ao acaso, trocada a cada FOLDER_ROTATE_MS (e ao passar de dia para noite),
-            // de preferência do tom certo (clara de dia, escura à noite), como nas fotos online.
-            combine(settings.account.map { it.wallpaper }, night) { wp, n -> wp to n }.distinctUntilChanged().collectLatest { (wp, night) ->
+            // Fundo de uma pasta: uma imagem ao acaso, trocada com o mesmo intervalo das fotos online (e ao passar de dia
+            // para noite, ou ao mudar o intervalo), de preferência do tom certo (clara de dia, escura à noite).
+            combine(settings.account, night) { a, n -> Triple(a.wallpaper, a.wallpaperMinutes * 60_000L, n) }
+                .distinctUntilChanged().collectLatest { (wp, rotateMs, night) ->
                 if (wp.type != Wallpaper.TYPE_FOLDER) {
                     _folderImage.value = null
                     return@collectLatest
@@ -330,7 +333,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 val dir = File(wp.value)
                 while (true) {
                     _folderImage.value = pickFolderImage(dir, night)
-                    delay(FOLDER_ROTATE_MS)
+                    delay(rotateMs)
                 }
             }
         }
@@ -475,13 +478,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
      * Escolhe a foto de [source] e só a mostra depois de carregada (deitada e com pelo menos [minWidth] px);
      * senão tenta outra. A atual também é verificada: a resolução mínima pode ter subido.
      */
-    private suspend fun showPhoto(source: OnlineWallpapers.Source, next: Boolean, minWidth: Int, night: Boolean) {
+    private suspend fun showPhoto(source: OnlineWallpapers.Source, next: Boolean, minWidth: Int, night: Boolean, rotateMs: Long) {
         // Uma que sirva mas seja do tom errado (dia/noite) fica de reserva, se não aparecer nenhuma do certo.
         var fallback: OnlinePhoto? = null
         repeat(10) { attempt ->
             val small = photoWidths.filterValues { it < minWidth }.keys
             val wrongTone = photoLight.filterValues { light -> light == night }.keys
-            val image = source.pool.current(source.id, PHOTO_ROTATE_MS, next = next || attempt > 0, skip = badPhotos + small + wrongTone)
+            val image = source.pool.current(source.id, rotateMs, next = next || attempt > 0, skip = badPhotos + small + wrongTone)
                 ?: return@repeat
             if (!preloadWallpaper(image.url)) {
                 badPhotos += image.url
@@ -913,6 +916,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setNavSounds(on: Boolean) = settings.updateAccount { it.copy(navSounds = on) }
 
     fun setPhotoMinWidth(px: Int) = settings.updateAccount { it.copy(photoMinWidth = px) }
+    fun setWallpaperMinutes(minutes: Int) = settings.updateAccount { it.copy(wallpaperMinutes = minutes) }
 
     // ---- Navegação ----
 
@@ -1087,10 +1091,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private companion object {
         /** De quanto em quanto tempo procurar versões novas. */
         const val UPDATE_CHECK_MS = 12 * 60 * 60_000L
-        /** De quanto em quanto tempo o fundo "pasta" muda de imagem (como as fotos online). */
-        const val FOLDER_ROTATE_MS = 30 * 60_000L
-        /** De quanto em quanto tempo um fundo de fotos online muda de foto. */
-        const val PHOTO_ROTATE_MS = 30 * 60_000L
         const val FOLDER_TONE_TRIES = 8
         const val WEATHER_MS = 30 * 60_000L
         const val YOUTUBE_MS = 30 * 60_000L
@@ -1127,3 +1127,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 }
+
+/** O que decide a rotação das fotos online: mudar qualquer um recomeça-a. */
+private data class PhotoRotation(val wallpaper: Wallpaper, val minWidth: Int, val rotateMs: Long, val night: Boolean)

@@ -1103,6 +1103,18 @@ private fun WallpaperPage(vm: LauncherViewModel, first: FocusRequester, onBoxIma
             }
         }
 
+        // De quanto em quanto tempo muda a foto (fotos do dia e pasta). OK passa ao seguinte: 5 min → … → um dia → 5 min.
+        item {
+            val minutes = AccountSettings.WALLPAPER_MINUTES
+            val next = minutes.getOrElse(minutes.indexOf(account.wallpaperMinutes) + 1) { minutes.first() }
+            GlassRow(
+                title = s.rotateEvery,
+                subtitle = s.rotateInterval(account.wallpaperMinutes),
+                onClick = { vm.setWallpaperMinutes(next) },
+                trailing = { Chevron() },
+            )
+        }
+
         // Fotos do dia, sem conta nem chave: a imagem do dia do Wikimedia Commons e a da NASA. A resolução mínima
         // vale para as duas.
         item { SectionLabel(s.photosOfTheDay) }

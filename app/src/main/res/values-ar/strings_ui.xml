@@ -73,6 +73,10 @@
     <string name="wikimedia_hint">طبيعة وأماكن وفن، مع المؤلف والترخيص</string>
     <string name="nasa_hint">صورة اليوم الفلكية</string>
     <string name="photo_credit">المصدر: %1$s</string>
+    <string name="rotate_every">تغيير الصورة</string>
+    <string name="rotate_minutes">كل %1$d دقيقة</string>
+    <string name="rotate_hours">كل %1$d ساعة</string>
+    <string name="rotate_daily">مرة في اليوم</string>
     <string name="clock24h">ساعة بنظام 24 ساعة</string>
     <string name="greeting">التحية</string>
     <string name="weather">الطقس</string>
