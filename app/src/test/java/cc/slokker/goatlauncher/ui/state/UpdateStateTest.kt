@@ -1,4 +1,4 @@
-package cc.slokker.goatlauncher.ui
+package cc.slokker.goatlauncher.ui.state
 
 import cc.slokker.goatlauncher.data.AppRelease
 import org.junit.Assert.assertEquals

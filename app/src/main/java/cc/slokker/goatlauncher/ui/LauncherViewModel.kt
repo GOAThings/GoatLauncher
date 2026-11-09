@@ -18,7 +18,8 @@ import cc.slokker.goatlauncher.LauncherApp
 import cc.slokker.goatlauncher.data.ButtonMap
 import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.DeviceSettings
-import cc.slokker.goatlauncher.data.AppRelease
+import cc.slokker.goatlauncher.ui.state.ReportState
+import cc.slokker.goatlauncher.ui.state.UpdateState
 import cc.slokker.goatlauncher.data.ImageImport
 import cc.slokker.goatlauncher.data.NetworkKind
 import cc.slokker.goatlauncher.data.networkKind
@@ -71,30 +72,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
-/** O envio de um relatório (Definições → Enviar relatório). */
-sealed interface ReportState {
-    data object Idle : ReportState
-    data object Sending : ReportState
-    data class Sent(val id: String) : ReportState
-    data class Failed(val message: String) : ReportState
-}
-
-sealed interface UpdateState {
-    data object Idle : UpdateState
-    data object Checking : UpdateState
-    data object UpToDate : UpdateState
-    data class Available(val release: AppRelease) : UpdateState
-    data class Downloading(val release: AppRelease, val progress: Float) : UpdateState
-    data class Installing(val release: AppRelease) : UpdateState
-    data class Failed(val message: String) : UpdateState
-
-    /**
-     * O estado depois de a pessoa cancelar a confirmação do Android: a versão volta a estar disponível. Ficar em
-     * [Installing] deixava as Definições em "A instalar…" e parava as verificações automáticas.
-     */
-    fun cancelled(): UpdateState = if (this is Installing) Available(release) else this
-}
 
 /** Pedido do código do controlo parental: o ecrã mostra o teclado e [onSuccess] corre quando acertar. */
 class PinPrompt(val title: String, val onSuccess: () -> Unit)

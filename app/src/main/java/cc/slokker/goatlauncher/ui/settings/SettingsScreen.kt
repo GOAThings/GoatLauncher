@@ -111,8 +111,8 @@ import cc.slokker.goatlauncher.HomeGuardService
 import cc.slokker.goatlauncher.data.SystemIntents
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.ui.LauncherViewModel
-import cc.slokker.goatlauncher.ui.UpdateState
-import cc.slokker.goatlauncher.ui.ReportState
+import cc.slokker.goatlauncher.ui.state.UpdateState
+import cc.slokker.goatlauncher.ui.state.ReportState
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.common.GlassButton
 import cc.slokker.goatlauncher.ui.common.GlassRow
