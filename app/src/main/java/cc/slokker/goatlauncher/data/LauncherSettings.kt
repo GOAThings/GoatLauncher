@@ -267,7 +267,10 @@ data class DeviceSettings(
     val location: Place? = null,
     val raw: JsonObject = JsonObject(),
 ) {
-    /** Estas definições com o controlo parental de [local]: o código, as apps bloqueadas, a proteção e as horas. */
+    /**
+     * Estas definições com o controlo parental de [local]: o código, as apps bloqueadas, a proteção e as horas (as
+     * chaves [PARENTAL_KEYS]; o SettingsRepositoryTest confirma que são só essas).
+     */
     fun withParentalOf(local: DeviceSettings) = copy(
         pin = local.pin,
         locked = local.locked,
@@ -311,6 +314,12 @@ data class DeviceSettings(
     }
 
     companion object {
+        /**
+         * O controlo parental no JSON: ao ligar a TV com um código, estas ficam as desta TV e o resto vem da conta (ver
+         * SettingsRepository.link e [withParentalOf]).
+         */
+        val PARENTAL_KEYS = setOf("pin", "locked", "lock_settings", "lock_hours")
+
         fun fromJson(json: JsonObject?): DeviceSettings {
             if (json == null) return DeviceSettings()
             return DeviceSettings(

@@ -55,6 +55,11 @@ android {
         compose = true
         buildConfig = true
     }
+    // Nos testes JVM, Log e SystemClock respondem 0/null em vez de rebentar (como na GoatTV): o SettingsRepository regista
+    // o que faz. O que depende do relógio recebe-o por parâmetro.
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {

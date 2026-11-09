@@ -3,9 +3,10 @@ package cc.slokker.goatlauncher
 import android.content.Context
 import android.os.Build
 import cc.slokker.goatlauncher.data.AppIndex
-import cc.slokker.goatlauncher.data.AuthToken
 import cc.slokker.goatlauncher.data.CustomIcons
+import cc.slokker.goatlauncher.data.DataStoreSettingsDisk
 import cc.slokker.goatlauncher.data.InstalledApps
+import cc.slokker.goatlauncher.data.ParentalGate
 import cc.slokker.goatlauncher.data.PhoneApps
 import cc.slokker.goatlauncher.data.PinAttemptStore
 import cc.slokker.goatlauncher.data.OnlineWallpapers
@@ -38,7 +39,8 @@ class AppContainer(context: Context) {
     /** Vive tanto quanto o processo: gravações e envios à conta não param ao sair de um ecrã. */
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    private val token = AuthToken()
+    /** A sessão na conta Slokker: o token que o interceptor junta a cada pedido vem daqui (ver SessionStore). */
+    private val sessions = SessionStore(context)
 
     private val client = goatClient()
 
@@ -47,7 +49,7 @@ class AppContainer(context: Context) {
         .readTimeout(30, TimeUnit.SECONDS)
         .addInterceptor { chain ->
             // Um pedido que já traz o seu token (o logout) fica com ele.
-            val current = token.value.takeIf { chain.request().header("Authorization") == null }
+            val current = sessions.token.takeIf { chain.request().header("Authorization") == null }
             // Sem "Bearer": o backend espera o token tal como está. O X-Goat-Client diz ao site a app, a versão e o
             // tipo de TV (aparece em Dispositivos).
             val request = chain.request().newBuilder().header("X-Goat-Client", client)
@@ -63,7 +65,9 @@ class AppContainer(context: Context) {
         .build()
         .create()
 
-    val settings = SettingsRepository(context, backend, SessionStore(context), token, scope)
+    val settings = SettingsRepository(DataStoreSettingsDisk(context), backend, sessions, scope)
+    /** Se uma app, as Definições ou o controlo parental pedem o código (sempre com as definições lidas). */
+    val parental = ParentalGate(settings)
     val pinAttempts = PinAttemptStore(context)
     val apps = InstalledApps(context)
     /** As apps desta TV para o site da conta. */
