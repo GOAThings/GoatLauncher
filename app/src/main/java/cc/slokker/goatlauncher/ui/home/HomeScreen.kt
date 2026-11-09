@@ -4,9 +4,6 @@ import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileWidth
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileGap
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.TilesRowWidth
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.ColumnTileWidth
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.ColumnTileGap
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.DockPadding
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.DockShape
 import cc.slokker.goatlauncher.ui.PinPrompt
 import android.content.pm.ApplicationInfo
 import android.os.SystemClock
@@ -18,18 +15,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.Crossfade
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,7 +42,6 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -70,7 +60,6 @@ import cc.slokker.goatlauncher.ui.settings.SettingsScreen
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
@@ -78,9 +67,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -95,16 +82,9 @@ import cc.slokker.goatlauncher.ui.Screen
 import cc.slokker.goatlauncher.ui.common.requestFocusSafely
 import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
-import coil3.compose.AsyncImagePainter
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.ImageRequest
-import coil3.request.crossfade
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
@@ -160,11 +140,7 @@ fun HomeScreen(vm: LauncherViewModel) {
     val gridApps = favorites + moreApps
     val style = HomeStyle.of(account)
     val appleTv = style == HomeStyle.AppleTv
-    val spotlight = style == HomeStyle.Spotlight
     val columnLayout = style == HomeStyle.SideColumn
-    val carousel = style == HomeStyle.Carousel
-    // O destaque em ecrã inteiro: o estilo "Destaque", e o "Destaque e a seguir".
-    val shelfStyle = style.shelfHero
     // Apple TV: o Início desce da doca para as outras apps (as mesmas do separador Apps, também as escondidas).
     val homeScroll = rememberScrollState()
     val scope = rememberCoroutineScope()
@@ -235,6 +211,15 @@ fun HomeScreen(vm: LauncherViewModel) {
         targetPkg = pkg
         focusRequest++
     }
+
+    // O que as teclas fazem no "Continuar a ver" (abrir, ‹ ›, o cartão com foco, ↓ dos cartões da Apple TV).
+    val sectionActions = SectionActions(
+        open = { vm.openWatchNext(context, it) },
+        prev = { if (shelfIndex > 0) shelfIndex-- },
+        next = { if (shelfIndex < sectionItems.size - 1) shelfIndex++ },
+        focusItem = { shelfIndex = it },
+        down = { focusApp(it.packageName) },
+    )
 
     // Ao fechar o menu de uma app, o foco volta ao banner dela (o menu está por cima, no mesmo ecrã).
     fun closeMenu() {
@@ -339,70 +324,22 @@ fun HomeScreen(vm: LauncherViewModel) {
             showHint = false
         }
         val hintAlpha by animateFloatAsState(if (showHint || moving != null) 1f else 0f, tween(600), label = "hint")
-        Text(
-            if (moving != null) s.moveHint else s.holdToRearrange,
-            modifier.width(TilesRowWidth).graphicsLayer { alpha = hintAlpha },
-            style = MaterialTheme.typography.labelSmall,
-            color = GoatColors.TextFaint,
-            textAlign = TextAlign.End,
-        )
+        MoveHintText(if (moving != null) s.moveHint else s.holdToRearrange, alpha = { hintAlpha }, modifier)
     }
 
+    /** Os favoritos (na fila, na coluna ou na doca): ao descer dos cartões ou dos separadores, volta ao último com foco. */
     @Composable
-    fun FavoritesBlock() {
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            // Sem título: só a ajuda "Mantém OK para reordenar".
-            MoveHint()
-            Spacer(Modifier.height(12.dp))
-            when {
-                apps == null -> Spacer(Modifier.height(TileWidth * 9 / 16 + 30.dp))
-                list.isEmpty() -> Text(s.noApps, Modifier.padding(vertical = 30.dp), color = GoatColors.TextDim)
-                // Ao descer dos cartões ou dos separadores, volta ao último favorito com foco.
-                else -> Row(
-                    Modifier.width(TilesRowWidth).focusRestorer(favFirst),
-                    horizontalArrangement = Arrangement.spacedBy(TileGap, Alignment.CenterHorizontally),
-                ) {
-                    favorites.forEachIndexed { i, app ->
-                        key(app.packageName) {
-                            Tile(app, home = true, modifier = if (i == 0) Modifier.focusRequester(favFirst) else Modifier)
-                        }
-                    }
-                }
+    fun FavoriteTiles(width: Dp = TileWidth, label: Boolean = account.showAppName) {
+        favorites.forEachIndexed { i, app ->
+            key(app.packageName) {
+                Tile(app, home = true, modifier = if (i == 0) Modifier.focusRequester(favFirst) else Modifier, width = width, label = label)
             }
         }
     }
 
-    /** Apps ao lado: os favoritos numa coluna, mais pequenos e sem nome (a app com foco diz-se à direita). */
-    @Composable
-    fun FavoritesColumn() {
-        if (list.isEmpty()) return
-        Column(
-            Modifier.fillMaxHeight().focusRestorer(favFirst),
-            verticalArrangement = Arrangement.spacedBy(ColumnTileGap, Alignment.CenterVertically),
-        ) {
-            favorites.forEachIndexed { i, app ->
-                key(app.packageName) {
-                    Tile(app, home = true, modifier = if (i == 0) Modifier.focusRequester(favFirst) else Modifier, width = ColumnTileWidth, label = false)
-                }
-            }
-        }
-    }
-
-    // Fundo do destaque: a imagem do conteúdo, se tiver a forma do ecrã. Os logos quadrados (ex.: canais da
-    // GoatTV) não enchem o ecrã: fica o fundo normal e o logo aparece pequeno no texto.
-    val shelfPainter = rememberAsyncImagePainter(ImageRequest.Builder(context).data(shelfItem?.imageUri).build())
-    val shelfState by shelfPainter.state.collectAsState()
-    val shelfSize = (shelfState as? AsyncImagePainter.State.Success)?.painter?.intrinsicSize
-    // Enquanto a imagem do conteúdo seguinte carrega, vale a decisão do anterior: o fundo não cai para o papel de
-    // parede e o logo pequeno não aparece por um instante (o texto saltava).
-    val shelfPending = shelfState is AsyncImagePainter.State.Loading || shelfState is AsyncImagePainter.State.Empty
-    var lastFullBleed by remember { mutableStateOf(false) }
-    // Os canais em direto (ex.: GoatTV) só têm o logo: nunca enchem o ecrã, mesmo que o logo seja largo.
-    val shelfFullBleed = shelfItem != null && !shelfItem.isChannel && shelfItem.imageUri != null && (
-        if (shelfPending) lastFullBleed
-        else shelfSize != null && shelfSize.height > 0f && abs(shelfSize.width / shelfSize.height - 16f / 9f) < 0.25f
-        )
-    if (!shelfPending) lastFullBleed = shelfFullBleed
+    // Fundo do destaque: a imagem do conteúdo, se tiver a forma do ecrã (ver rememberHeroBackdrop).
+    val backdrop = rememberHeroBackdrop(shelfItem)
+    val shelfFullBleed = backdrop.fullBleed
 
     // Modo ambiente: sem tocar no comando durante account.idleMinutes (com o launcher à frente), fica só o fundo
     // e as horas. Ao voltar de uma app, a contagem recomeça.
@@ -524,45 +461,13 @@ fun HomeScreen(vm: LauncherViewModel) {
                         true
                     },
             ) {
-                // O fundo mostra o último conteúdo que enche o ecrã: ao sair (fade), fica nessa imagem, em vez de mostrar
-                // por um instante, em ecrã inteiro, o logo do canal para onde se foi (o shelfPainter já mudou para ele).
-                // Só muda para a imagem nova quando ela já carregou, e passa de uma para a outra com um crossfade.
-                var backdrop by remember { mutableStateOf<Painter?>(null) }
-                val loaded = (shelfState as? AsyncImagePainter.State.Success)?.painter
-                if (shelfFullBleed && loaded != null) backdrop = loaded
-                AnimatedVisibility(visible = shelfFullBleed && !onApps, enter = fadeIn(tween(400)), exit = fadeOut(tween(300))) {
-                    Crossfade(targetState = backdrop, animationSpec = tween(450), label = "backdrop") { painter ->
-                        if (painter != null) {
-                            Image(painter, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                        }
-                    }
-                }
-                // Escurece o topo e o fundo (e a esquerda, com o destaque) para o texto se ler sobre qualquer imagem.
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                0f to Color.Black.copy(alpha = 0.45f),
-                                0.25f to Color.Transparent,
-                                0.45f to Color.Transparent,
-                                1f to Color.Black.copy(alpha = 0.78f),
-                            ),
-                        ),
-                )
+                HeroBackdropImage(backdrop, visible = shelfFullBleed && !onApps)
                 // Sempre que há destaque (com a imagem do conteúdo ou sobre o fundo normal), para o texto grande se ler.
                 val sideScrim by animateFloatAsState(if (shelfItem != null && !onApps) 1f else 0f, tween(400), label = "side")
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .graphicsLayer { alpha = sideScrim }
-                        .background(Brush.horizontalGradient(0f to Color.Black.copy(alpha = 0.7f), 0.45f to Color.Black.copy(alpha = 0.35f), 0.75f to Color.Transparent)),
-                )
                 // Apps ao lado: o texto fica por cima da imagem toda (não só à esquerda), por isso escurece-se mais.
                 val columnDim by animateFloatAsState(if (columnLayout && shelfFullBleed && !onApps) 1f else 0f, tween(400), label = "columnDim")
-                Box(Modifier.fillMaxSize().graphicsLayer { alpha = columnDim }.background(Color.Black.copy(alpha = 0.45f)))
                 val appsDim by animateFloatAsState(if (onApps || onSettings) 1f else 0f, tween(250), label = "dim")
-                Box(Modifier.fillMaxSize().graphicsLayer { alpha = appsDim }.background(Color.Black.copy(alpha = 0.6f)))
+                HomeScrims(side = { sideScrim }, columnDim = { columnDim }, appsDim = { appsDim })
 
                 Column(Modifier.fillMaxSize().padding(TvSafePadding)) {
                     TopBar(
@@ -626,64 +531,39 @@ fun HomeScreen(vm: LauncherViewModel) {
                                     }
                                 }
                             }
-                        } else if (appleTv) {
-                            // ---- Início (Apple TV): cartões grandes, a doca dos favoritos e, a descer, as outras apps ----
-                            BoxWithConstraints(Modifier.fillMaxSize()) {
-                                val viewport = maxHeight
-                                Column(Modifier.fillMaxSize().verticalScroll(homeScroll)) {
-                                    // O primeiro ecrã: os cartões em cima e a doca em baixo; a grelha começa por baixo dele.
-                                    Column(Modifier.fillMaxWidth().height(viewport), horizontalAlignment = Alignment.CenterHorizontally) {
-                                        AnimatedContent(
-                                            targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() }?.let { it to sectionItems },
-                                            contentKey = { it?.first?.packageName },
-                                            transitionSpec = { fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(120)) },
-                                            modifier = Modifier.weight(1f).fillMaxWidth(),
-                                            label = "topShelf",
-                                        ) { section ->
-                                            if (section != null) {
-                                                // ↓ volta à app dona dos cartões (não à que estiver por baixo deles), como no tvOS.
-                                                TopShelfRow(
-                                                    section.second,
-                                                    onOpen = { vm.openWatchNext(context, it) },
-                                                    modifier = Modifier.onPreviewKeyEvent { e ->
-                                                        if (e.key != Key.DirectionDown) return@onPreviewKeyEvent false
-                                                        if (e.type == KeyEventType.KeyDown) focusApp(section.first.packageName)
-                                                        true
-                                                    },
-                                                )
-                                            } else {
-                                                Spacer(Modifier.fillMaxSize())
-                                            }
-                                        }
-                                        MoveHint(Modifier.padding(bottom = 8.dp))
-                                        // A doca: só os 5 favoritos, numa barra de vidro à medida deles, com folga para o banner
-                                        // aumentado das pontas (pode passar um pouco das margens). Ao voltar a ela, o ecrã sobe todo.
-                                        Box(
-                                            Modifier
-                                                .requiredWidth(TilesRowWidth + DockPadding * 2)
-                                                .background(dockTint, DockShape)
-                                                .padding(horizontal = DockPadding, vertical = 18.dp),
-                                            contentAlignment = Alignment.Center,
-                                        ) {
+                        } else {
+                            // ---- Início, no estilo escolhido (o mesmo corpo que a pré-visualização da Aparência) ----
+                            HomeBody(
+                                style = style,
+                                section = { modifier ->
+                                    ContinueSection(style, sectionApp, sectionItems, shelfPos, showLogo = !shelfFullBleed, actions = sectionActions, modifier = modifier)
+                                },
+                                favorites = {
+                                    when {
+                                        // Apple TV: a doca. Ao voltar a ela, o ecrã sobe todo.
+                                        appleTv -> Dock(dockTint) {
                                             when {
                                                 apps == null -> Spacer(Modifier.height(TileWidth * 9 / 16))
                                                 list.isEmpty() -> Text(s.noApps, Modifier.padding(vertical = 20.dp), color = GoatColors.TextDim)
-                                                else -> Row(
+                                                else -> FavoritesRow(
                                                     Modifier
-                                                        .width(TilesRowWidth)
                                                         .focusRestorer(favFirst)
                                                         .onFocusChanged { if (it.hasFocus) scope.launch { homeScroll.animateScrollTo(0) } },
-                                                    horizontalArrangement = Arrangement.spacedBy(TileGap, Alignment.CenterHorizontally),
-                                                ) {
-                                                    favorites.forEachIndexed { i, app ->
-                                                        key(app.packageName) {
-                                                            Tile(app, home = true, modifier = if (i == 0) Modifier.focusRequester(favFirst) else Modifier)
-                                                        }
-                                                    }
-                                                }
+                                                ) { FavoriteTiles() }
                                             }
                                         }
+                                        columnLayout -> if (list.isNotEmpty()) {
+                                            FavoritesColumn(Modifier.focusRestorer(favFirst)) { FavoriteTiles(width = ColumnTileWidth, label = false) }
+                                        }
+                                        apps == null -> Spacer(Modifier.height(TileWidth * 9 / 16 + 30.dp))
+                                        list.isEmpty() -> Text(s.noApps, Modifier.padding(vertical = 30.dp), color = GoatColors.TextDim)
+                                        else -> FavoritesRow(Modifier.focusRestorer(favFirst)) { FavoriteTiles() }
                                     }
+                                },
+                                moveHint = { modifier -> MoveHint(modifier) },
+                                scroll = homeScroll,
+                                below = {
+                                    // Apple TV: a descer, as outras apps (as mesmas do separador Apps, também as escondidas).
                                     if (moreApps.isNotEmpty()) {
                                         Column(
                                             Modifier.fillMaxWidth().padding(top = 28.dp, bottom = 28.dp),
@@ -697,131 +577,8 @@ fun HomeScreen(vm: LauncherViewModel) {
                                             }
                                         }
                                     }
-                                }
-                            }
-                        } else if (columnLayout) {
-                            // ---- Início (apps ao lado): os favoritos à esquerda, o que a app com foco tem à direita ----
-                            Row(Modifier.fillMaxSize().padding(top = 12.dp)) {
-                                FavoritesColumn()
-                                Spacer(Modifier.width(48.dp))
-                                AnimatedContent(
-                                    targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() }?.let { it to sectionItems },
-                                    contentKey = { it?.first?.packageName },
-                                    transitionSpec = { fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(120)) },
-                                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                                    label = "side",
-                                ) { section ->
-                                    if (section != null) {
-                                        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
-                                            // O destaque é o cartão com foco (o primeiro, enquanto o foco está nas apps).
-                                            val hero = section.second.getOrNull(shelfPos) ?: section.second.first()
-                                            AnimatedContent(
-                                                targetState = hero,
-                                                contentKey = { it.id },
-                                                transitionSpec = {
-                                                    (fadeIn(tween(260, delayMillis = 60)) togetherWith fadeOut(tween(140)))
-                                                        .using(SizeTransform(clip = false))
-                                                },
-                                                label = "sideHero",
-                                            ) { shown -> HeroText(section.first, shown, showLogo = !shelfFullBleed) }
-                                            Spacer(Modifier.height(24.dp))
-                                            ContinueWatchingRow(
-                                                section.first,
-                                                section.second,
-                                                onOpen = { vm.openWatchNext(context, it) },
-                                                onFocusItem = { shelfIndex = it },
-                                            )
-                                        }
-                                    } else {
-                                        Spacer(Modifier.fillMaxSize())
-                                    }
-                                }
-                            }
-                        } else {
-                            // ---- Início ----
-                            Column(Modifier.fillMaxSize()) {
-                                if (carousel) {
-                                    // O carrossel ocupa o espaço por cima dos favoritos.
-                                    AnimatedContent(
-                                        targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() },
-                                        contentKey = { it?.packageName },
-                                        transitionSpec = { fadeIn(tween(260, delayMillis = 80)) togetherWith fadeOut(tween(140)) },
-                                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                                        label = "carousel",
-                                    ) { app ->
-                                        if (app != null && sectionItems.firstOrNull()?.packageName == app.packageName) {
-                                            CarouselShelf(
-                                                app = app,
-                                                items = sectionItems,
-                                                index = shelfPos,
-                                                onPrev = { if (shelfIndex > 0) shelfIndex-- },
-                                                onNext = { if (shelfIndex < sectionItems.size - 1) shelfIndex++ },
-                                                onOpen = { sectionItems.getOrNull(shelfPos)?.let { vm.openWatchNext(context, it) } },
-                                                modifier = Modifier.fillMaxSize().padding(vertical = 16.dp),
-                                            )
-                                        } else {
-                                            Spacer(Modifier.fillMaxSize())
-                                        }
-                                    }
-                                    Spacer(Modifier.height(12.dp))
-                                } else if (shelfStyle) {
-                                    Spacer(Modifier.weight(1f))
-                                    AnimatedContent(
-                                        targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() },
-                                        contentKey = { it?.packageName },
-                                        transitionSpec = { fadeIn(tween(260, delayMillis = 80)) togetherWith fadeOut(tween(140)) },
-                                        label = "shelf",
-                                    ) { app ->
-                                        val item = shelfItem
-                                        if (app != null && item != null && item.packageName == app.packageName) {
-                                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-                                                ShelfHero(
-                                                    app = app,
-                                                    item = item,
-                                                    count = sectionItems.size,
-                                                    showLogo = !shelfFullBleed,
-                                                    onPrev = { if (shelfIndex > 0) shelfIndex-- },
-                                                    onNext = { if (shelfIndex < sectionItems.size - 1) shelfIndex++ },
-                                                    onOpen = { vm.openWatchNext(context, item) },
-                                                )
-                                                if (spotlight && item.isChannel) {
-                                                    // Um canal: o que vai dar nele, não os outros canais da app.
-                                                    Spacer(Modifier.weight(1f))
-                                                    ChannelUpNextPanel(item)
-                                                } else if (spotlight) {
-                                                    // Destaque e a seguir: os que vêm depois deste (e, no fim da lista, os do princípio).
-                                                    val next = (sectionItems.drop(shelfPos + 1) + sectionItems.take(shelfPos)).take(UP_NEXT_SHOWN)
-                                                    Spacer(Modifier.weight(1f))
-                                                    UpNextPanel(next, more = sectionItems.size - 1 - next.size)
-                                                }
-                                            }
-                                        } else {
-                                            Spacer(Modifier.fillMaxWidth())
-                                        }
-                                    }
-                                    Spacer(Modifier.height(28.dp))
-                                } else {
-                                    Spacer(Modifier.weight(1f))
-                                    // Entre favoritos, a secção troca com um fade (e a altura acompanha), em vez de saltar.
-                                    AnimatedContent(
-                                        targetState = sectionApp?.takeIf { sectionItems.isNotEmpty() }?.let { it to sectionItems },
-                                        contentKey = { it?.first?.packageName },
-                                        transitionSpec = {
-                                            (fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(120)))
-                                                .using(SizeTransform(clip = false) { _, _ -> tween(220, easing = FastOutSlowInEasing) })
-                                        },
-                                        label = "continue",
-                                    ) { section ->
-                                        if (section != null) {
-                                            ContinueWatchingRow(section.first, section.second, onOpen = { vm.openWatchNext(context, it) })
-                                        } else {
-                                            Spacer(Modifier.fillMaxWidth())
-                                        }
-                                    }
-                                    Spacer(Modifier.height(12.dp))
-                                }
-                                FavoritesBlock()
-                            }
+                                },
+                            )
                         }
                     }
                 }
@@ -959,9 +716,6 @@ fun HomeScreen(vm: LauncherViewModel) {
         }
     }
 }
-
-/** Quantos conteúdos seguintes mostra o painel da "Destaque e a seguir". */
-private const val UP_NEXT_SHOWN = 3
 
 /** Depois de acabar de mover, um clique na app durante este tempo não a abre (é o OK que confirmou a posição). */
 private const val MOVE_CLICK_GUARD_MS = 600L

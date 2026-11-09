@@ -230,7 +230,7 @@ private const val TAB_OPEN_DELAY_MS = 250L
 
 /** O nome de um separador: preto sobre o destaque com foco, branco no aberto, apagado nos outros. */
 @Composable
-private fun TabLabel(label: String, onPill: Boolean, barFocused: Boolean, selected: Boolean) {
+internal fun TabLabel(label: String, onPill: Boolean, barFocused: Boolean, selected: Boolean) {
     val color by animateColorAsState(
         when {
             onPill && barFocused -> Color.Black

@@ -1,54 +1,34 @@
 package cc.slokker.goatlauncher.ui.settings
 
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileWidth
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileGap
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.TilesRowWidth
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.ColumnTileWidth
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.ColumnTileGap
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.DockPadding
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.DockShape
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.CardHeight
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselMax
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselSideScale
-import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselGap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.BoxWithConstraints
-import cc.slokker.goatlauncher.ui.home.UpNextPanel
-import cc.slokker.goatlauncher.ui.home.HeroText
-import cc.slokker.goatlauncher.ui.home.HomeStyle
-import cc.slokker.goatlauncher.ui.home.ProgressBar
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -56,51 +36,59 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.LauncherApp
-import cc.slokker.goatlauncher.data.WatchNextItem
 import cc.slokker.goatlauncher.data.WeatherNow
 import cc.slokker.goatlauncher.ui.LauncherViewModel
 import cc.slokker.goatlauncher.ui.LocalStrings
-import cc.slokker.goatlauncher.ui.common.GoatIcons
 import cc.slokker.goatlauncher.ui.home.BannerImage
+import cc.slokker.goatlauncher.ui.home.ContinueSection
+import cc.slokker.goatlauncher.ui.home.Dock
 import cc.slokker.goatlauncher.ui.home.FavoriteCount
+import cc.slokker.goatlauncher.ui.home.FavoritesColumn
+import cc.slokker.goatlauncher.ui.home.FavoritesRow
+import cc.slokker.goatlauncher.ui.home.FocusDim
 import cc.slokker.goatlauncher.ui.home.FocusScale
 import cc.slokker.goatlauncher.ui.home.FocusStyle
-import cc.slokker.goatlauncher.ui.home.FocusDim
-import cc.slokker.goatlauncher.ui.home.dockColor
+import cc.slokker.goatlauncher.ui.home.HeroBackdropImage
+import cc.slokker.goatlauncher.ui.home.HomeBody
+import cc.slokker.goatlauncher.ui.home.HomeMetrics
+import cc.slokker.goatlauncher.ui.home.HomeScrims
+import cc.slokker.goatlauncher.ui.home.HomeStyle
 import cc.slokker.goatlauncher.ui.home.LocalFocusDim
 import cc.slokker.goatlauncher.ui.home.LocalFocusStyle
 import cc.slokker.goatlauncher.ui.home.LocalIconBackground
-import cc.slokker.goatlauncher.ui.home.isSeeThrough
+import cc.slokker.goatlauncher.ui.home.MoveHintText
+import cc.slokker.goatlauncher.ui.home.SectionActions
+import cc.slokker.goatlauncher.ui.home.TabLabel
 import cc.slokker.goatlauncher.ui.home.TopClock
 import cc.slokker.goatlauncher.ui.home.TopGreeting
 import cc.slokker.goatlauncher.ui.home.WallpaperView
+import cc.slokker.goatlauncher.ui.home.dockColor
 import cc.slokker.goatlauncher.ui.home.focusEffect
-import cc.slokker.goatlauncher.ui.theme.GoatColors
+import cc.slokker.goatlauncher.ui.home.isSeeThrough
+import cc.slokker.goatlauncher.ui.home.rememberHeroBackdrop
 import cc.slokker.goatlauncher.ui.theme.BarPadding
+import cc.slokker.goatlauncher.ui.theme.GoatColors
 import cc.slokker.goatlauncher.ui.theme.GoatShapes
-import cc.slokker.goatlauncher.ui.theme.ShelfTitleStyle
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
-import cc.slokker.goatlauncher.ui.theme.tracking
-import coil3.compose.AsyncImage
 import kotlin.math.roundToInt
 
 /** O tamanho do ecrã da TV em dp: a pré-visualização desenha-se a este tamanho e é reduzida. */
 private val ScreenWidth = 960.dp
 private val ScreenHeight = 540.dp
 
-
 /**
  * A pré-visualização da página Aparência: o ecrã inicial em ponto pequeno, com o fundo, as apps e o
- * "Continuar a ver" verdadeiros, na disposição e com o efeito de foco escolhidos. O foco está no primeiro
- * favorito com "Continuar a ver" (para se ver também essa parte). Só se vê: nada aqui recebe foco.
+ * "Continuar a ver" verdadeiros, na disposição e com o efeito de foco escolhidos. O corpo é o do ecrã inicial
+ * (HomeBody, ContinueSection, o fundo do destaque e os véus): só os banners são desenhados à parte, com o primeiro
+ * favorito com "Continuar a ver" como se tivesse o foco. Só se vê: nada aqui recebe o foco.
  */
 @Composable
 fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
+    val s = LocalStrings.current
     val account by vm.account.collectAsStateWithLifecycle()
     val device by vm.device.collectAsStateWithLifecycle()
     val apps by vm.apps.collectAsStateWithLifecycle()
@@ -113,12 +101,9 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
     val focusApp = favorites.firstOrNull { !watchNext[it.packageName].isNullOrEmpty() } ?: favorites.firstOrNull()
     val items = if (account.showContinueWatching) focusApp?.let { watchNext[it.packageName] }.orEmpty() else emptyList()
     val style = HomeStyle.of(account)
-    val appleTv = style == HomeStyle.AppleTv
-    val spotlight = style == HomeStyle.Spotlight
-    val column = style == HomeStyle.SideColumn
-    val carousel = style == HomeStyle.Carousel
-    // A imagem do conteúdo enche o fundo no destaque (com ou sem "a seguir") e nas apps ao lado.
-    val shelf = style.shelfHero
+    // Como no ecrã inicial: o primeiro conteúdo enche o fundo no destaque e nas apps ao lado, se tiver a forma do ecrã.
+    val heroItem = items.firstOrNull()?.takeIf { style.heroBackdrop }
+    val backdrop = rememberHeroBackdrop(heroItem)
     val focusStyle = remember(account) { FocusStyle.of(account) }
     val shape = RoundedCornerShape(12.dp)
 
@@ -127,109 +112,48 @@ fun AppearancePreview(vm: LauncherViewModel, modifier: Modifier = Modifier) {
             .aspectRatio(16f / 9f)
             .shadow(18.dp, shape)
             .clip(shape)
-            .border(1.dp, Color.White.copy(alpha = 0.22f), shape),
+            .border(1.dp, Color.White.copy(alpha = 0.22f), shape)
+            // Os cartões do "Continuar a ver" são os do ecrã inicial (focáveis): o foco não entra aqui.
+            .focusProperties { onEnter = { cancelFocusChange() } }
+            .focusGroup(),
     ) {
         VirtualScreen {
             WallpaperView(account.wallpaper, wallpaperImage)
-            // Destaque: a imagem do conteúdo enche o fundo (os logos dos canais não).
-            val hero = items.firstOrNull()?.takeIf { (shelf || column) && !it.isChannel && it.imageUri != null }
-            if (hero != null) {
-                AsyncImage(model = hero.imageUri, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                if (column) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
-            }
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(
-                        0f to Color.Black.copy(alpha = 0.45f),
-                        0.25f to Color.Transparent,
-                        0.45f to Color.Transparent,
-                        1f to Color.Black.copy(alpha = 0.78f),
-                    ),
-                ),
+            HeroBackdropImage(backdrop, visible = backdrop.fullBleed)
+            HomeScrims(
+                side = { if (heroItem != null) 1f else 0f },
+                columnDim = { if (style == HomeStyle.SideColumn && backdrop.fullBleed) 1f else 0f },
+                appsDim = { 0f },
             )
-            if (shelf && items.isNotEmpty()) {
-                Box(
-                    Modifier.fillMaxSize().background(
-                        Brush.horizontalGradient(0f to Color.Black.copy(alpha = 0.7f), 0.45f to Color.Black.copy(alpha = 0.35f), 0.75f to Color.Transparent),
-                    ),
-                )
-            }
             CompositionLocalProvider(
-        LocalFocusStyle provides focusStyle,
-        LocalIconBackground provides account.iconBackground,
-        LocalFocusDim provides remember { FocusDim() },
-    ) {
+                LocalFocusStyle provides focusStyle,
+                LocalIconBackground provides account.iconBackground,
+                LocalFocusDim provides remember { FocusDim() },
+            ) {
                 Column(Modifier.fillMaxSize().padding(TvSafePadding)) {
                     PreviewTopBar(account, weather?.takeIf { account.showWeather }, showApps = style.hasAppsTab)
                     Box(Modifier.weight(1f).fillMaxWidth()) {
-                        val tiles: @Composable () -> Unit = {
-                            Row(Modifier.width(TilesRowWidth), horizontalArrangement = Arrangement.spacedBy(TileGap, Alignment.CenterHorizontally)) {
-                                favorites.forEach { app ->
-                                    PreviewTile(vm, app, device.icons[app.packageName], focused = app == focusApp, showLabel = account.showAppName)
-                                }
+                        @Composable
+                        fun tiles(width: Dp = HomeMetrics.TileWidth, label: Boolean = account.showAppName) {
+                            favorites.forEach { app ->
+                                PreviewTile(vm, app, device.icons[app.packageName], focused = app == focusApp, showLabel = label, width = width)
                             }
                         }
-                        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-                            when {
-                                column -> Row(Modifier.fillMaxSize().padding(top = 12.dp)) {
-                                    // Apps ao lado: os favoritos em coluna, o conteúdo da app com foco à direita.
-                                    Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(ColumnTileGap, Alignment.CenterVertically)) {
-                                        favorites.forEach { app ->
-                                            PreviewTile(vm, app, device.icons[app.packageName], focused = app == focusApp, showLabel = false, width = ColumnTileWidth)
-                                        }
-                                    }
-                                    Spacer(Modifier.width(48.dp))
-                                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.Bottom) {
-                                        if (focusApp != null && items.isNotEmpty()) {
-                                            HeroText(focusApp, items.first(), showLogo = hero == null)
-                                            Spacer(Modifier.height(24.dp))
-                                            RowPreview(focusApp, items)
-                                        }
-                                    }
+                        HomeBody(
+                            style = style,
+                            section = { m ->
+                                ContinueSection(style, focusApp, items, index = 0, showLogo = !backdrop.fullBleed, actions = SectionActions.None, modifier = m)
+                            },
+                            favorites = {
+                                when (style) {
+                                    HomeStyle.AppleTv -> Dock(dockColor(night)) { FavoritesRow { tiles() } }
+                                    HomeStyle.SideColumn -> FavoritesColumn { tiles(width = HomeMetrics.ColumnTileWidth, label = false) }
+                                    HomeStyle.CardRow, HomeStyle.Shelf, HomeStyle.Spotlight, HomeStyle.Carousel -> FavoritesRow { tiles() }
                                 }
-                                carousel -> {
-                                    Box(Modifier.weight(1f).fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
-                                        if (focusApp != null && items.isNotEmpty()) CarouselPreview(focusApp, items)
-                                    }
-                                    Spacer(Modifier.height(12.dp))
-                                    tiles()
-                                }
-                                appleTv -> {
-                                    Box(Modifier.weight(1f).fillMaxWidth()) {
-                                        if (items.isNotEmpty()) TopShelfPreview(items)
-                                    }
-                                    Spacer(Modifier.height(28.dp))
-                                    Box(
-                                        Modifier
-                                            .requiredWidth(TilesRowWidth + DockPadding * 2)
-                                            .background(dockColor(night), DockShape)
-                                            .padding(horizontal = DockPadding, vertical = 18.dp),
-                                        contentAlignment = Alignment.Center,
-                                    ) { tiles() }
-                                }
-                                shelf -> {
-                                    Spacer(Modifier.weight(1f))
-                                    if (focusApp != null && items.isNotEmpty()) {
-                                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-                                            Box(Modifier.weight(1f)) { ShelfPreview(focusApp, items.first(), items.size) }
-                                            // Destaque e a seguir: o painel com os seguintes.
-                                            if (spotlight) {
-                                                val next = items.drop(1).take(3)
-                                                UpNextPanel(next, more = items.size - 1 - next.size)
-                                            }
-                                        }
-                                    }
-                                    Spacer(Modifier.height(56.dp))
-                                    tiles()
-                                }
-                                else -> {
-                                    Spacer(Modifier.weight(1f))
-                                    if (focusApp != null && items.isNotEmpty()) RowPreview(focusApp, items)
-                                    Spacer(Modifier.height(40.dp))
-                                    tiles()
-                                }
-                            }
-                        }
+                            },
+                            // A ajuda "Mantém OK para reordenar" já se apagou no ecrã inicial: só o lugar dela.
+                            moveHint = { m -> MoveHintText(s.holdToRearrange, alpha = { 0f }, m) },
+                        )
                     }
                 }
             }
@@ -258,7 +182,7 @@ private fun VirtualScreen(content: @Composable BoxScope.() -> Unit) {
     )
 }
 
-/** A barra de cima: saudação, separadores (sem Apps na Apple TV) e as horas. */
+/** A barra de cima: saudação, separadores (sem Apps na Apple TV, o Início aberto) e as horas. */
 @Composable
 private fun PreviewTopBar(account: AccountSettings, weather: WeatherNow?, showApps: Boolean) {
     val s = LocalStrings.current
@@ -269,14 +193,9 @@ private fun PreviewTopBar(account: AccountSettings, weather: WeatherNow?, showAp
             horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             listOfNotNull(s.tabHome, s.tabApps.takeIf { showApps }, s.settings).forEachIndexed { i, label ->
-                Text(
-                    label,
-                    Modifier
-                        .background(if (i == 0) Color.White.copy(alpha = 0.2f) else Color.Transparent, GoatShapes.Control)
-                        .padding(horizontal = 22.dp, vertical = 8.dp),
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = if (i == 0) FontWeight.SemiBold else FontWeight.Medium),
-                    color = if (i == 0) Color.White else Color.White.copy(alpha = 0.78f),
-                )
+                Box(Modifier.background(if (i == 0) Color.White.copy(alpha = 0.2f) else Color.Transparent, GoatShapes.Control)) {
+                    TabLabel(label, onPill = i == 0, barFocused = false, selected = i == 0)
+                }
             }
         }
         TopClock(account.clock24h, Modifier.align(Alignment.CenterEnd))
@@ -285,8 +204,9 @@ private fun PreviewTopBar(account: AccountSettings, weather: WeatherNow?, showAp
 
 /** Um favorito, como no ecrã inicial; o que tem foco aparece aumentado e com o efeito de foco. */
 @Composable
-private fun PreviewTile(vm: LauncherViewModel, app: LauncherApp, iconSpec: String?, focused: Boolean, showLabel: Boolean, width: Dp = TileWidth) {
-    val custom = remember(iconSpec) { iconSpec?.let { vm.icons.cached(it) } }
+private fun PreviewTile(vm: LauncherViewModel, app: LauncherApp, iconSpec: String?, focused: Boolean, showLabel: Boolean, width: Dp) {
+    // O ícone escolhido carrega como no ecrã inicial (até lá, só a cor da app).
+    val custom by produceState(iconSpec?.let { vm.icons.cached(it) }, iconSpec) { value = iconSpec?.let { vm.icons.load(it) } }
     Column(Modifier.width(width), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier
@@ -312,140 +232,6 @@ private fun PreviewTile(vm: LauncherViewModel, app: LauncherApp, iconSpec: Strin
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-        }
-    }
-}
-
-/** A imagem de um conteúdo do "Continuar a ver", com a barra de progresso por dentro. */
-@Composable
-private fun PreviewCard(item: WatchNextItem, width: Dp, height: Dp, corner: Dp) {
-    Box(Modifier.size(width, height).clip(RoundedCornerShape(corner)).background(GoatColors.CardSurface)) {
-        if (item.imageUri != null) {
-            val fill = !item.isChannel
-            AsyncImage(
-                model = item.imageUri,
-                contentDescription = null,
-                contentScale = if (fill) ContentScale.Crop else ContentScale.Fit,
-                modifier = Modifier.fillMaxSize().then(if (fill) Modifier else Modifier.padding(height / 6)),
-            )
-        } else {
-            Icon(GoatIcons.Play, contentDescription = null, modifier = Modifier.align(Alignment.Center).size(28.dp))
-        }
-        item.progress?.let { p ->
-            ProgressBar(p, Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp).height(4.dp), fill = Color.White)
-        }
-    }
-}
-
-/** Disposição Android, fila de cartões. */
-@Composable
-private fun RowPreview(app: LauncherApp, items: List<WatchNextItem>) {
-    val s = LocalStrings.current
-    Column(Modifier.fillMaxWidth()) {
-        Text(s.continueIn(app.label), style = MaterialTheme.typography.titleSmall, color = GoatColors.TextDim, modifier = Modifier.padding(start = 4.dp))
-        Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            items.take(5).forEach { item ->
-                val h = CardHeight
-                PreviewCard(item, h * item.aspectRatio.coerceIn(0.6f, 2f), h, 8.dp)
-            }
-        }
-    }
-}
-
-/** Disposição Android, destaque. */
-@Composable
-private fun ShelfPreview(app: LauncherApp, item: WatchNextItem, count: Int) {
-    val s = LocalStrings.current
-    Column(Modifier.fillMaxWidth()) {
-        Column(Modifier.widthIn(max = 640.dp)) {
-            Text(
-                s.shelfLabel(app.label).uppercase(s.locale),
-                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = tracking(2f)),
-                color = GoatColors.TextDim,
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(item.title, style = ShelfTitleStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            item.progress?.let { p ->
-                Spacer(Modifier.height(12.dp))
-                ProgressBar(p, Modifier.width(320.dp).height(5.dp), trackAlpha = 0.3f, fill = Color.White, rounded = GoatShapes.Small)
-            }
-            Spacer(Modifier.height(16.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                Row(
-                    Modifier.background(Color.White.copy(alpha = 0.18f), GoatShapes.Control).padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(GoatIcons.Play, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(s.continueNow, style = MaterialTheme.typography.labelLarge)
-                }
-                if (count > 1) Text(s.shelfMore(count - 1), style = MaterialTheme.typography.labelMedium, color = GoatColors.TextFaint)
-            }
-        }
-    }
-}
-
-/** Disposição Apple TV: os cartões grandes por cima da doca. */
-@Composable
-private fun TopShelfPreview(items: List<WatchNextItem>) {
-    val s = LocalStrings.current
-    Column {
-        Text(
-            s.continueWatching,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = GoatColors.TextDim,
-            modifier = Modifier.padding(start = 4.dp, top = 4.dp),
-        )
-        Spacer(Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(28.dp)) {
-            items.take(3).forEach { PreviewCard(it, 380.dp, 214.dp, 14.dp) }
-        }
-    }
-}
-
-/** Carrossel: o primeiro conteúdo ao centro, em grande, e os vizinhos mais pequenos e escurecidos dos lados. */
-@Composable
-private fun CarouselPreview(app: LauncherApp, items: List<WatchNextItem>) {
-    val s = LocalStrings.current
-    BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        val height = maxHeight.coerceAtMost(CarouselMax)
-        val width = height * 16 / 9
-        val side = height * CarouselSideScale
-        val step = width / 2 + CarouselGap + side * 16 / 9 / 2
-        listOf(-1, 1).forEach { d ->
-            items.getOrNull(if (d < 0) items.size - 1 else 1)?.takeIf { items.size > 1 }?.let { item ->
-                Box(Modifier.offset(x = step * d)) {
-                    PreviewCard(item, side * 16 / 9, side, 14.dp)
-                    Box(Modifier.size(side * 16 / 9, side).clip(RoundedCornerShape(14.dp)).background(Color.Black.copy(alpha = 0.55f)))
-                }
-            }
-        }
-        Box(Modifier.size(width, height).clip(RoundedCornerShape(18.dp))) {
-            val item = items.first()
-            if (item.isChannel && item.imageUri != null) {
-                // O logo de um canal fica em cima, longe do texto (como no ecrã inicial).
-                Box(Modifier.fillMaxSize().background(GoatColors.CardSurface)) {
-                    AsyncImage(
-                        model = item.imageUri,
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize().padding(start = height / 2, end = height / 2, top = height / 8, bottom = height * 0.45f),
-                    )
-                }
-            } else {
-                PreviewCard(item, width, height, 18.dp)
-            }
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.45f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.85f))))
-            Column(Modifier.align(Alignment.BottomStart).padding(horizontal = 24.dp, vertical = 18.dp)) {
-                Text(s.shelfLabel(app.label).uppercase(s.locale), style = MaterialTheme.typography.labelSmall.copy(letterSpacing = tracking(1.6f)), color = GoatColors.TextDim)
-                Text(
-                    items.first().title,
-                    style = ShelfTitleStyle.copy(fontSize = ShelfTitleStyle.fontSize * 0.7f, lineHeight = ShelfTitleStyle.lineHeight * 0.7f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
         }
     }
 }
