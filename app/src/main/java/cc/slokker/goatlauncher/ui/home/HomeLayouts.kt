@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.common.OkKeys
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselMax
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselSideScale
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.CarouselGap
@@ -258,7 +259,7 @@ fun CarouselShelf(
                         if (e.type == KeyEventType.KeyDown) onNext()
                         true
                     }
-                    Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
+                    in OkKeys -> {
                         if (e.type == KeyEventType.KeyUp) onOpen()
                         true
                     }

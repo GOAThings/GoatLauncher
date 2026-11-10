@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.common.OkKeys
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.TopShelfCardMax
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -109,7 +110,7 @@ internal fun ShelfHero(
                         }
                         true
                     }
-                    Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
+                    in OkKeys -> {
                         if (e.type == KeyEventType.KeyUp) onOpen()
                         true
                     }

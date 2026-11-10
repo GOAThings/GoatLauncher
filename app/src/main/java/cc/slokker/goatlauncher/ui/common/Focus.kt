@@ -1,6 +1,7 @@
 package cc.slokker.goatlauncher.ui.common
 
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.focus.FocusRequester
 
 /** Pede o foco sem rebentar se o elemento ainda não estiver no ecrã (devolve false). */
@@ -27,3 +28,6 @@ suspend fun FocusRequester.focusSoon(frames: Int = FOCUS_FRAMES, stop: () -> Boo
     }
     return false
 }
+
+/** As teclas OK do comando: o centro do D-pad e os Enter. (O A e o Select do comando de jogos só contam a mover apps.) */
+val OkKeys = setOf(Key.DirectionCenter, Key.Enter, Key.NumPadEnter)

@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.common.OkKeys
 import cc.slokker.goatlauncher.ui.common.focusSoon
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileWidth
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileGap
@@ -681,7 +682,7 @@ private fun homeKeyOf(key: Key, moving: Boolean): HomeKey = when (key) {
     Key.DirectionRight -> HomeKey.Right
     Key.DirectionUp -> HomeKey.Up
     Key.DirectionDown -> HomeKey.Down
-    Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> HomeKey.Ok
+    in OkKeys -> HomeKey.Ok
     Key.ButtonA, Key.ButtonSelect -> if (moving) HomeKey.Ok else HomeKey.Other
     Key.Back -> HomeKey.Back
     else -> HomeKey.Other

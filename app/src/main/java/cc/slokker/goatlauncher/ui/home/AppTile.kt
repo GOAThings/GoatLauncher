@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.home
 
+import cc.slokker.goatlauncher.ui.common.OkKeys
 import android.view.ViewConfiguration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -161,7 +162,7 @@ fun AppBanner(
                     if (e.type == KeyEventType.KeyUp) onLongClick()
                     return@onPreviewKeyEvent true
                 }
-                if (e.key != Key.DirectionCenter && e.key != Key.Enter && e.key != Key.NumPadEnter) return@onPreviewKeyEvent false
+                if (e.key !in OkKeys) return@onPreviewKeyEvent false
                 val native = e.nativeKeyEvent
                 when (e.type) {
                     KeyEventType.KeyDown -> when {
