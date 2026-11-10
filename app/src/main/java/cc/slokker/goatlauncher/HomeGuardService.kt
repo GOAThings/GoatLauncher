@@ -6,10 +6,13 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
+import cc.slokker.goatlauncher.data.ButtonAction
+import cc.slokker.goatlauncher.data.SystemIntents
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -23,7 +26,8 @@ import kotlinx.coroutines.launch
  * (As teclas enviadas por `adb shell input` não passam por aqui: só as do comando.)
  *
  * Também reforça o controlo parental: uma app bloqueada que abra por outro caminho (Assistente, Recentes…)
- * dá lugar ao launcher a pedir o código. E é por aqui que o AutoStart abre apps a partir do fundo.
+ * dá lugar ao launcher a pedir o código. E é por aqui que o AutoStart abre apps a partir do fundo, e que os botões do
+ * comando abrem apps ou fazem as suas ações ([ButtonAction]).
  */
 class HomeGuardService : AccessibilityService() {
 
@@ -82,12 +86,15 @@ class HomeGuardService : AccessibilityService() {
                 swallowUp = null
                 return true
             }
-            // Um botão com app escolhida: abre-a ao largar. O sistema só trata estes botões depois daqui (ex.: o
-            // Netflix da Shield), por isso consumi-los chega para não abrirem também o que abriam antes.
+            // Um botão com app ou ação escolhida: abre-a (ou faz a ação) ao largar. O sistema só trata estes botões
+            // depois daqui (ex.: o Netflix da Shield), por isso consumi-los chega para não abrirem também o que abriam.
             val button = (application as LauncherApp).container.settings.device.value.buttons
                 .firstOrNull { it.matches(event.keyCode, event.scanCode) }
             if (button != null) {
-                if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) AutoStart.open(this, button.app)
+                if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) {
+                    val action = button.action
+                    if (action != null) run(action) else AutoStart.open(this, button.app)
+                }
                 return true
             }
         }
@@ -99,6 +106,7 @@ class HomeGuardService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
         val pkg = event.packageName?.toString() ?: return
+        noteForeground(pkg)
         if (pkg == packageName) return
         // O ecrã inicial do sistema pode ter mudado (outro launcher instalado): volta a ver se as teclas fazem falta.
         updateKeyFilter()
@@ -115,6 +123,43 @@ class HomeGuardService : AccessibilityService() {
             if (activity != null && activity in homeActivities() && !isDefaultHome(this@HomeGuardService)) openLauncher()
         }
     }
+
+    /** O que um botão do comando faz quando não abre uma app. */
+    private fun run(action: ButtonAction) {
+        Log.i(TAG, "Botão: ${action.id}")
+        when (action) {
+            ButtonAction.HOME -> openLauncher()
+            // Abre como as apps dos botões (com o controlo parental).
+            ButtonAction.PREVIOUS_APP -> previousApp()?.let { AutoStart.open(this, it) }
+            ButtonAction.SEARCH -> SystemIntents.start(this, SystemIntents.search(this))
+            ButtonAction.ANDROID_SETTINGS -> SystemIntents.start(this, SystemIntents.androidSettings())
+            // Só no Android 9 ou mais novo (nos outros a ação não aparece nas Definições).
+            ButtonAction.SLEEP -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
+        }
+    }
+
+    /**
+     * As apps que estiveram à frente, da mais recente para a mais antiga (sem o launcher), para a "app anterior". Só
+     * contam as que se abrem do ecrã inicial: as janelas do sistema (volume, teclado) não mudam a app da frente.
+     */
+    private val recentApps = ArrayDeque<String>()
+    private var foreground: String? = null
+
+    private fun noteForeground(pkg: String) {
+        if (pkg == foreground) return
+        if (pkg == packageName) {
+            foreground = pkg
+            return
+        }
+        if ((application as LauncherApp).container.catalog.launchIntent(pkg) == null) return
+        foreground = pkg
+        recentApps.remove(pkg)
+        recentApps.addFirst(pkg)
+        while (recentApps.size > RECENT_APPS) recentApps.removeLast()
+    }
+
+    /** A app anterior: a última que esteve à frente sem ser a de agora (no launcher, a última que esteve aberta). */
+    private fun previousApp(): String? = recentApps.firstOrNull { it != foreground }
 
     /** O ecrã inicial dos outros launchers (o de origem, o Projectivy…): só esse é substituído, não a app toda. */
     private fun homeActivities(): Set<ComponentName> {
@@ -150,6 +195,9 @@ class HomeGuardService : AccessibilityService() {
         private const val TAG = "HomeGuard"
 
         private const val HOMES_TTL_MS = 60_000L
+
+        /** Quantas apps recentes se guardam para a "app anterior" (a de agora e a de antes). */
+        private const val RECENT_APPS = 2
 
         /** O serviço ligado agora (null se a pessoa não o ligou nas definições de Acessibilidade). */
         @Volatile

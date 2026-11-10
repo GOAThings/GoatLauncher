@@ -186,6 +186,8 @@
     <string name="buttons_full">Sudah ada 5 tombol: hapus satu untuk menambah yang lain</string>
     <string name="button_opens">%1$s membuka</string>
     <string name="remove_button">Tidak ada (hapus tombol)</string>
+    <string name="previous_app">Aplikasi sebelumnya</string>
+    <string name="sleep">Mode tidur</string>
     <string name="button_netflix">Tombol Netflix</string>
     <string name="accessibility_open">Buka Aksesibilitas</string>
     <string name="needs_guard">Perlu \"Pertahankan sebagai layar utama\" aktif</string>

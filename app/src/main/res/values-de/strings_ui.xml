@@ -186,6 +186,8 @@
     <string name="buttons_full">Du hast schon 5 Tasten: Entferne eine, um eine andere hinzuzufügen</string>
     <string name="button_opens">%1$s öffnet</string>
     <string name="remove_button">Nichts (Taste entfernen)</string>
+    <string name="previous_app">Vorherige App</string>
+    <string name="sleep">Standby</string>
     <string name="button_netflix">Netflix-Taste</string>
     <string name="accessibility_open">Bedienungshilfen öffnen</string>
     <string name="needs_guard">Erfordert „Als Startbildschirm behalten“</string>

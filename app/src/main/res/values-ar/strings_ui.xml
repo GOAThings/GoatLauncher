@@ -186,6 +186,8 @@
     <string name="buttons_full">لديك 5 أزرار بالفعل: أزل واحدًا لإضافة آخر</string>
     <string name="button_opens">ما يفتحه %1$s</string>
     <string name="remove_button">لا شيء (إزالة الزر)</string>
+    <string name="previous_app">التطبيق السابق</string>
+    <string name="sleep">السكون</string>
     <string name="button_netflix">زر Netflix</string>
     <string name="accessibility_open">فتح إمكانية الوصول</string>
     <string name="needs_guard">يتطلب تفعيل «الإبقاء كشاشة رئيسية»</string>

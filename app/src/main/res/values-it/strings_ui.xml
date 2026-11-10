@@ -186,6 +186,8 @@
     <string name="buttons_full">Hai già 5 tasti: rimuovine uno per aggiungerne un altro</string>
     <string name="button_opens">%1$s apre</string>
     <string name="remove_button">Niente (rimuovi il tasto)</string>
+    <string name="previous_app">App precedente</string>
+    <string name="sleep">Standby</string>
     <string name="button_netflix">Tasto Netflix</string>
     <string name="accessibility_open">Apri Accessibilità</string>
     <string name="needs_guard">Richiede \"Mantieni come schermata Home\" attivo</string>

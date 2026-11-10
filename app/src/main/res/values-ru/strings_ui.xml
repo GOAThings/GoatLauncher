@@ -186,6 +186,8 @@
     <string name="buttons_full">У вас уже 5 кнопок: удалите одну, чтобы добавить другую</string>
     <string name="button_opens">%1$s открывает</string>
     <string name="remove_button">Ничего (удалить кнопку)</string>
+    <string name="previous_app">Предыдущее приложение</string>
+    <string name="sleep">Спящий режим</string>
     <string name="button_netflix">Кнопка Netflix</string>
     <string name="accessibility_open">Открыть «Специальные возможности»</string>
     <string name="needs_guard">Нужно включить «Оставлять главным экраном»</string>

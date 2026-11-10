@@ -186,6 +186,8 @@
     <string name="buttons_full">Zaten 5 tuşunuz var: başka bir tane eklemek için birini kaldırın</string>
     <string name="button_opens">%1$s şunu açar</string>
     <string name="remove_button">Hiçbir şey (tuşu kaldır)</string>
+    <string name="previous_app">Önceki uygulama</string>
+    <string name="sleep">Uyku modu</string>
     <string name="button_netflix">Netflix tuşu</string>
     <string name="accessibility_open">Erişilebilirlik\'i aç</string>
     <string name="needs_guard">\"Ana ekran olarak kalsın\" açık olmalı</string>

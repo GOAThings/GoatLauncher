@@ -186,6 +186,8 @@
     <string name="buttons_full">Ya tienes 5 botones: quita uno para añadir otro</string>
     <string name="button_opens">%1$s abre</string>
     <string name="remove_button">Nada (quitar el botón)</string>
+    <string name="previous_app">App anterior</string>
+    <string name="sleep">Suspender</string>
     <string name="button_netflix">Botón de Netflix</string>
     <string name="accessibility_open">Abrir Accesibilidad</string>
     <string name="needs_guard">Requiere \"Mantener como pantalla de inicio\" activado</string>

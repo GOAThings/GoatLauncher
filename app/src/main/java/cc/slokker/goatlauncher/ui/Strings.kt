@@ -211,6 +211,8 @@ class Strings(context: Context) {
     val buttonsFull get() = s(R.string.buttons_full)
     fun buttonOpens(button: String) = s(R.string.button_opens, button)
     val removeButton get() = s(R.string.remove_button)
+    val previousApp get() = s(R.string.previous_app)
+    val sleep get() = s(R.string.sleep)
     val buttonNetflix get() = s(R.string.button_netflix)
     val accessibilityOpen get() = s(R.string.accessibility_open)
     val needsGuard get() = s(R.string.needs_guard)

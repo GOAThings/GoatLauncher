@@ -186,6 +186,8 @@
     <string name="buttons_full">ボタンはすでに5つあります。追加するには1つ削除してください</string>
     <string name="button_opens">%1$s で開くアプリ</string>
     <string name="remove_button">なし（ボタンを削除）</string>
+    <string name="previous_app">前のアプリ</string>
+    <string name="sleep">スリープ</string>
     <string name="button_netflix">Netflix ボタン</string>
     <string name="accessibility_open">ユーザー補助を開く</string>
     <string name="needs_guard">「ホーム画面として維持」をオンにする必要があります</string>

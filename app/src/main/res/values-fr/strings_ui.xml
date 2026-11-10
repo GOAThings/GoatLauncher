@@ -186,6 +186,8 @@
     <string name="buttons_full">Vous avez déjà 5 boutons : retirez-en un pour en ajouter un autre</string>
     <string name="button_opens">%1$s ouvre</string>
     <string name="remove_button">Rien (retirer le bouton)</string>
+    <string name="previous_app">Appli précédente</string>
+    <string name="sleep">Veille</string>
     <string name="button_netflix">Bouton Netflix</string>
     <string name="accessibility_open">Ouvrir Accessibilité</string>
     <string name="needs_guard">Nécessite \"Garder comme écran d\'accueil\" activé</string>

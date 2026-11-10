@@ -2,6 +2,9 @@ package cc.slokker.goatlauncher.ui.settings
 
 import androidx.compose.runtime.rememberUpdatedState
 import cc.slokker.goatlauncher.data.ButtonMap
+import cc.slokker.goatlauncher.data.ButtonAction
+import android.os.Build
+import cc.slokker.goatlauncher.ui.common.SectionLabel
 import cc.slokker.goatlauncher.ButtonCapture
 import cc.slokker.goatlauncher.ui.Strings
 import androidx.compose.ui.input.key.key
@@ -66,6 +69,48 @@ internal fun AppPickerPage(vm: LauncherViewModel, first: FocusRequester, current
             ChoiceRow(title = app.label, selected = current == app.packageName, onClick = { onPick(app.packageName) }, leading = { AppThumb(app) })
         }
     }
+}
+
+/**
+ * O que um botão do comando faz: nada (tira-o), uma das ações ([ButtonAction]) ou abrir uma app. [current] é o botão
+ * como está agora (null se ainda não existe).
+ */
+@Composable
+internal fun ButtonTargetPage(
+    vm: LauncherViewModel,
+    first: FocusRequester,
+    current: ButtonMap?,
+    onAction: (ButtonAction) -> Unit,
+    onApp: (String?) -> Unit,
+) {
+    val s = LocalStrings.current
+    val apps by vm.allApps.collectAsStateWithLifecycle()
+    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        item {
+            ChoiceRow(title = s.removeButton, selected = current == null, onClick = { onApp(null) }, modifier = Modifier.focusRequester(first))
+        }
+        items(ButtonAction.available(Build.VERSION.SDK_INT), key = { "action:${it.id}" }) { action ->
+            ChoiceRow(title = buttonActionName(action, s), selected = current?.action == action, onClick = { onAction(action) })
+        }
+        item { SectionLabel(s.apps) }
+        items(apps.orEmpty(), key = { it.packageName }) { app ->
+            ChoiceRow(
+                title = app.label,
+                selected = current?.action == null && current?.app == app.packageName,
+                onClick = { onApp(app.packageName) },
+                leading = { AppThumb(app) },
+            )
+        }
+    }
+}
+
+/** O nome de uma ação dos botões, como aparece nas Definições. */
+internal fun buttonActionName(action: ButtonAction, s: Strings): String = when (action) {
+    ButtonAction.HOME -> s.homeScreen
+    ButtonAction.PREVIOUS_APP -> s.previousApp
+    ButtonAction.SEARCH -> s.search
+    ButtonAction.ANDROID_SETTINGS -> s.androidSettings
+    ButtonAction.SLEEP -> s.sleep
 }
 
 /** Novo código: escreve-se duas vezes. O primeiro liga o controlo parental. */
@@ -150,7 +195,7 @@ internal fun ButtonsPage(vm: LauncherViewModel, first: FocusRequester, onEdit: (
         items(device.buttons, key = { "${it.keyCode}:${it.scanCode}" }) { b ->
             NavRow(
                 title = buttonName(b.keyCode, b.scanCode, s),
-                subtitle = apps?.firstOrNull { it.packageName == b.app }?.label ?: b.app,
+                subtitle = b.action?.let { buttonActionName(it, s) } ?: apps?.firstOrNull { it.packageName == b.app }?.label ?: b.app,
                 onClick = { onEdit(b.keyCode to b.scanCode) },
                 modifier = if (b == device.buttons.first()) Modifier.focusRequester(first) else Modifier,
             )

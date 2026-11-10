@@ -55,17 +55,41 @@ data class Wallpaper(val type: String, val value: String) {
 }
 
 /**
- * Um botão do comando que abre [app]. Identifica-se pelo código Android ([keyCode]) e pelo da tecla física
- * ([scanCode]; 0 = qualquer): o botão Netflix da Shield, por exemplo, é o BUTTON_12 com o scan 393, e assim o
- * botão 12 de um comando de jogos fica de fora.
+ * Um botão do comando que abre [app], ou que faz uma [action] (aí [app] fica vazio). Identifica-se pelo código
+ * Android ([keyCode]) e pelo da tecla física ([scanCode]; 0 = qualquer): o botão Netflix da Shield, por exemplo, é o
+ * BUTTON_12 com o scan 393, e assim o botão 12 de um comando de jogos fica de fora.
  */
-data class ButtonMap(val keyCode: Int, val scanCode: Int, val app: String) {
+data class ButtonMap(val keyCode: Int, val scanCode: Int, val app: String, val action: ButtonAction? = null) {
     fun matches(keyCode: Int, scanCode: Int) = this.keyCode == keyCode && (this.scanCode == 0 || this.scanCode == scanCode)
 
     companion object {
         const val MAX = 5
         const val SHIELD_NETFLIX_KEY = 188 + 11 // KEYCODE_BUTTON_12
         const val SHIELD_NETFLIX_SCAN = 393 // KEY_VIDEO
+    }
+}
+
+/**
+ * O que um botão do comando pode fazer além de abrir uma app. O [id] é o que se grava (`"action"` no botão): nunca
+ * muda. Uma versão antiga que não conheça a ação ignora o botão.
+ */
+enum class ButtonAction(val id: String) {
+    /** O ecrã inicial (o GoatLauncher), mesmo que outro launcher esteja como ecrã inicial do sistema. */
+    HOME("home"),
+    /** A app que estava à frente antes da atual (carregar outra vez volta à atual). */
+    PREVIOUS_APP("previous_app"),
+    /** A pesquisa do sistema (Google TV, Assistente). */
+    SEARCH("search"),
+    ANDROID_SETTINGS("android_settings"),
+    /** Desligar o ecrã (standby), como o botão de energia. */
+    SLEEP("sleep"),
+    ;
+
+    companion object {
+        fun of(id: String?): ButtonAction? = entries.firstOrNull { it.id == id }
+
+        /** As que esta TV sabe fazer: desligar o ecrã pela acessibilidade só existe no Android 9 (API 28) ou mais novo. */
+        fun available(sdk: Int): List<ButtonAction> = entries.filter { it != SLEEP || sdk >= 28 }
     }
 }
 
@@ -288,7 +312,7 @@ data class DeviceSettings(
     val autostart: String? = null,
     val autostartWake: Boolean = false,
     val autostartDelay: Int = 5,
-    /** Botões do comando que abrem uma app (pelo HomeGuardService), no máximo [ButtonMap.MAX]. */
+    /** Botões do comando que abrem uma app ou fazem uma ação (pelo HomeGuardService), no máximo [ButtonMap.MAX]. */
     val buttons: List<ButtonMap> = emptyList(),
     /** Controlo parental (ver ParentalLock): o código guardado com sal e hash; null = desligado. */
     val pin: String? = null,
@@ -330,7 +354,7 @@ data class DeviceSettings(
                 add(JsonObject().apply {
                     addProperty("key", b.keyCode)
                     addProperty("scan", b.scanCode)
-                    addProperty("app", b.app)
+                    if (b.action != null) addProperty("action", b.action.id) else addProperty("app", b.app)
                 })
             }
         })
@@ -415,6 +439,8 @@ private fun JsonObject.buttons(): List<ButtonMap> {
         ?.mapNotNull { e ->
             val o = e.takeIf { it.isJsonObject }?.asJsonObject ?: return@mapNotNull null
             val key = o.int("key") ?: return@mapNotNull null
+            // Uma ação que esta versão não conheça (de uma mais nova) é ignorada, como um botão sem app.
+            ButtonAction.of(o.str("action"))?.let { return@mapNotNull ButtonMap(key, o.int("scan") ?: 0, "", it) }
             val app = o.str("app")?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
             ButtonMap(key, o.int("scan") ?: 0, app)
         }

@@ -186,6 +186,8 @@
     <string name="buttons_full">이미 버튼이 5개 있어요. 하나를 삭제한 후 추가하세요</string>
     <string name="button_opens">%1$s(으)로 열 앱</string>
     <string name="remove_button">없음(버튼 삭제)</string>
+    <string name="previous_app">이전 앱</string>
+    <string name="sleep">절전 모드</string>
     <string name="button_netflix">Netflix 버튼</string>
     <string name="accessibility_open">접근성 열기</string>
     <string name="needs_guard">\'홈 화면으로 유지\'를 켜야 해요</string>

@@ -186,6 +186,8 @@
     <string name="buttons_full">You already have 5 buttons: remove one to add another</string>
     <string name="button_opens">%1$s opens</string>
     <string name="remove_button">Nothing (remove the button)</string>
+    <string name="previous_app">Previous app</string>
+    <string name="sleep">Sleep</string>
     <string name="button_netflix">Netflix button</string>
     <string name="accessibility_open">Open Accessibility</string>
     <string name="needs_guard">Needs \"Keep as home screen\" on</string>

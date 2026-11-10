@@ -233,10 +233,19 @@ fun SettingsScreen(
                     Page.ButtonApp -> {
                         val device by vm.device.collectAsStateWithLifecycle()
                         val (k, sc) = buttonKey ?: (0 to 0)
-                        AppPickerPage(vm, first, current = device.buttons.firstOrNull { it.keyCode == k && it.scanCode == sc }?.app, none = s.removeButton) {
-                            vm.setButton(k, sc, it)
-                            page = Page.Buttons
-                        }
+                        ButtonTargetPage(
+                            vm,
+                            first,
+                            current = device.buttons.firstOrNull { it.keyCode == k && it.scanCode == sc },
+                            onAction = {
+                                vm.setButtonAction(k, sc, it)
+                                page = Page.Buttons
+                            },
+                            onApp = {
+                                vm.setButton(k, sc, it)
+                                page = Page.Buttons
+                            },
+                        )
                     }
                     Page.PinSetup -> PinSetupPage(vm, onDone = { page = Page.Parental })
                     Page.LockedApps -> LockedAppsPage(vm, first)

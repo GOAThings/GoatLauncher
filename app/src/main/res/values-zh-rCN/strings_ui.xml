@@ -186,6 +186,8 @@
     <string name="buttons_full">已有 5 个按键：请先移除一个再添加</string>
     <string name="button_opens">%1$s 打开的应用</string>
     <string name="remove_button">无（移除此按键）</string>
+    <string name="previous_app">上一个应用</string>
+    <string name="sleep">休眠</string>
     <string name="button_netflix">Netflix 键</string>
     <string name="accessibility_open">打开“无障碍”</string>
     <string name="needs_guard">需要开启“保持为主屏幕”</string>

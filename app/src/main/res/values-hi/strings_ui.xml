@@ -186,6 +186,8 @@
     <string name="buttons_full">आपके पास पहले से 5 बटन हैं: दूसरा जोड़ने के लिए एक हटाएँ</string>
     <string name="button_opens">%1$s खोलता है</string>
     <string name="remove_button">कुछ नहीं (बटन हटाएँ)</string>
+    <string name="previous_app">पिछला ऐप</string>
+    <string name="sleep">स्लीप</string>
     <string name="button_netflix">Netflix बटन</string>
     <string name="accessibility_open">सुलभता खोलें</string>
     <string name="needs_guard">\"होम स्क्रीन बनाए रखें\" चालू होना ज़रूरी है</string>

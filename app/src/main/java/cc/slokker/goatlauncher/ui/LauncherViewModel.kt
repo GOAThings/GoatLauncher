@@ -12,6 +12,7 @@ import cc.slokker.goatlauncher.HomeGuardService
 import cc.slokker.goatlauncher.LauncherApp
 import cc.slokker.goatlauncher.data.AccountSettings
 import cc.slokker.goatlauncher.data.BugReport
+import cc.slokker.goatlauncher.data.ButtonAction
 import cc.slokker.goatlauncher.data.ButtonMap
 import cc.slokker.goatlauncher.data.ClientInfo
 import cc.slokker.goatlauncher.data.DeviceSettings
@@ -369,14 +370,21 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setAutostart(pkg: String?) = settings.updateDevice { it.copy(autostart = pkg) }
 
     /** O botão ([keyCode], [scanCode]) passa a abrir [app]; null tira-o. No máximo ButtonMap.MAX. */
-    fun setButton(keyCode: Int, scanCode: Int, app: String?) = settings.updateDevice { d ->
+    fun setButton(keyCode: Int, scanCode: Int, app: String?) =
+        setButton(keyCode, scanCode, app?.let { ButtonMap(keyCode, scanCode, it) })
+
+    /** O botão ([keyCode], [scanCode]) passa a fazer [action]. */
+    fun setButtonAction(keyCode: Int, scanCode: Int, action: ButtonAction) =
+        setButton(keyCode, scanCode, ButtonMap(keyCode, scanCode, "", action))
+
+    private fun setButton(keyCode: Int, scanCode: Int, button: ButtonMap?) = settings.updateDevice { d ->
         val rest = d.buttons.filterNot { it.keyCode == keyCode && it.scanCode == scanCode }
         val index = d.buttons.indexOfFirst { it.keyCode == keyCode && it.scanCode == scanCode }
         val buttons = when {
-            app == null -> rest
-            index >= 0 -> d.buttons.toMutableList().also { it[index] = ButtonMap(keyCode, scanCode, app) }
+            button == null -> rest
+            index >= 0 -> d.buttons.toMutableList().also { it[index] = button }
             d.buttons.size >= ButtonMap.MAX -> d.buttons
-            else -> d.buttons + ButtonMap(keyCode, scanCode, app)
+            else -> d.buttons + button
         }
         d.copy(buttons = buttons)
     }
