@@ -156,6 +156,12 @@
     <string name="lock_between">مقفلة من %1$d:00 إلى %2$d:00</string>
     <string name="lock_from">من</string>
     <string name="lock_to">حتى</string>
+    <string name="daily_limit">وقت الشاشة اليومي</string>
+    <string name="no_limit">بلا حد</string>
+    <string name="duration_minutes">%1$d د</string>
+    <string name="duration_hours">%1$d س</string>
+    <string name="duration_hours_minutes">%1$d س %2$d د</string>
+    <string name="time_up">انتهى وقت اليوم</string>
     <string name="hour_hint">← → يغيّر الساعة</string>
     <string name="parental_disable">إيقاف الرقابة الأبوية</string>
     <string name="parental_disable_hint">يحذف الرمز والأقفال</string>

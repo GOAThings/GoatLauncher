@@ -156,6 +156,12 @@
     <string name="lock_between">%1$d:00 ile %2$d:00 arası kilitli</string>
     <string name="lock_from">Başlangıç</string>
     <string name="lock_to">Bitiş</string>
+    <string name="daily_limit">Günlük ekran süresi</string>
+    <string name="no_limit">Sınır yok</string>
+    <string name="duration_minutes">%1$d dk</string>
+    <string name="duration_hours">%1$d sa</string>
+    <string name="duration_hours_minutes">%1$d sa %2$d dk</string>
+    <string name="time_up">Bugünkü süre doldu</string>
     <string name="hour_hint">← → saati değiştirir</string>
     <string name="parental_disable">Ebeveyn denetimini kapat</string>
     <string name="parental_disable_hint">Kodu ve kilitleri siler</string>

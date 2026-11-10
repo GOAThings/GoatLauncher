@@ -36,12 +36,23 @@ object ParentalLock {
         unlockedUntil = SystemClock.elapsedRealtime() + GRACE_MS
     }
 
-    private fun unlocked() = SystemClock.elapsedRealtime() < unlockedUntil
+    /** O código foi acertado há pouco (nos últimos [GRACE_MS]). */
+    fun unlocked() = SystemClock.elapsedRealtime() < unlockedUntil
 
-    /** Abrir [pkg] pede o código agora? */
-    fun appLocked(device: DeviceSettings, pkg: String): Boolean =
-        device.pin != null && pkg in device.locked &&
-            inWindow(device.lockFrom, device.lockTo, Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) && !unlocked()
+    /**
+     * Abrir [pkg] pede o código agora? As apps bloqueadas, dentro das horas; com o tempo de ecrã de hoje gasto
+     * ([timeUp]), todas.
+     */
+    fun appLocked(device: DeviceSettings, pkg: String, timeUp: Boolean = false): Boolean =
+        device.pin != null && !unlocked() && (
+            timeUp || pkg in device.locked && inWindow(device.lockFrom, device.lockTo, Calendar.getInstance().get(Calendar.HOUR_OF_DAY))
+            )
+
+    /** Já se gastou o tempo de ecrã de hoje ([usedMs])? Sem código ou sem limite, nunca. */
+    fun timeUp(device: DeviceSettings, usedMs: Long): Boolean {
+        val limit = device.dailyLimit ?: return false
+        return device.pin != null && usedMs >= limit * 60_000L
+    }
 
     /** As definições do próprio controlo parental pedem sempre o código (senão bastava desligá-lo). */
     fun parentalLocked(device: DeviceSettings): Boolean = device.pin != null && !unlocked()

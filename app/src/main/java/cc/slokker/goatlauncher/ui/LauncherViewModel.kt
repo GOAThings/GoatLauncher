@@ -318,7 +318,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     /** Corre [action] já, ou depois de acertar o código se [pkg] estiver bloqueada agora. */
     private fun unlocked(pkg: String, action: () -> Unit) = gated({ c.parental.appLocked(pkg) }, {
-        strings.unlockApp(allApps.value?.firstOrNull { it.packageName == pkg }?.label ?: pkg)
+        // Acabado o tempo de ecrã de hoje, o código é para qualquer app: diz-se porquê.
+        if (c.screenTime.timeUp(settings.device.value)) strings.timeUp
+        else strings.unlockApp(allApps.value?.firstOrNull { it.packageName == pkg }?.label ?: pkg)
     }, action)
 
     /** Corre [action] já, ou depois do código se as Definições e a organização estiverem protegidas. */
@@ -355,7 +357,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Novo código (o primeiro liga o controlo parental); null desliga tudo. */
     fun setPin(pin: String?) = settings.updateDevice {
         if (pin == null) {
-            it.copy(pin = null, locked = emptySet(), lockSettings = false, lockFrom = null, lockTo = null)
+            it.copy(pin = null, locked = emptySet(), lockSettings = false, lockFrom = null, lockTo = null, dailyLimit = null)
         } else {
             it.copy(pin = ParentalLock.encode(pin))
         }

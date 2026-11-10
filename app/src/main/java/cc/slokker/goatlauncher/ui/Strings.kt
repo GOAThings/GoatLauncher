@@ -212,6 +212,15 @@ class Strings(context: Context) {
     fun buttonOpens(button: String) = s(R.string.button_opens, button)
     val removeButton get() = s(R.string.remove_button)
     val previousApp get() = s(R.string.previous_app)
+    val dailyLimit get() = s(R.string.daily_limit)
+    val timeUp get() = s(R.string.time_up)
+    /** Um limite de tempo: "Sem limite", "30 min", "1 h", "1 h 30 min". */
+    fun duration(minutes: Int) = when {
+        minutes <= 0 -> s(R.string.no_limit)
+        minutes < 60 -> s(R.string.duration_minutes, minutes)
+        minutes % 60 == 0 -> s(R.string.duration_hours, minutes / 60)
+        else -> s(R.string.duration_hours_minutes, minutes / 60, minutes % 60)
+    }
     val sleep get() = s(R.string.sleep)
     val buttonNetflix get() = s(R.string.button_netflix)
     val accessibilityOpen get() = s(R.string.accessibility_open)

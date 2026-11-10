@@ -225,7 +225,7 @@ class SettingsRepositoryTest {
     fun linkWithACodeKeepsThisTvsParentalControl() = runBlocking {
         val local = DeviceSettings(
             apps = listOf("local.first"), pin = "sal:hash", locked = setOf("com.netflix.ninja"), lockSettings = true,
-            lockFrom = 20, lockTo = 8,
+            lockFrom = 20, lockTo = 8, dailyLimit = 90,
         )
         disk.snapshot = SettingsSnapshot(account = defaultAccount.toString(), device = local.toJson().toString())
         repo.init()
@@ -251,7 +251,7 @@ class SettingsRepositoryTest {
     @Test
     fun parentalKeysAreExactlyWhatLinkKeeps() {
         // withParentalOf e PARENTAL_KEYS dizem o mesmo: só estas chaves vêm da TV, o resto (e o desconhecido) da conta.
-        val local = DeviceSettings(pin = "sal:hash", locked = setOf("a"), lockSettings = true, lockFrom = 20, lockTo = 8)
+        val local = DeviceSettings(pin = "sal:hash", locked = setOf("a"), lockSettings = true, lockFrom = 20, lockTo = 8, dailyLimit = 60)
         val remote = DeviceSettings.fromJson(json("""{"apps":["x"],"autostart":"x","site_only":1,"pin":"outro:hash","locked":["b"]}"""))
         val kept = remote.withParentalOf(local).toJson()
         val remoteJson = remote.toJson()

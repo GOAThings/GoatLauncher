@@ -491,6 +491,10 @@ internal object SettingsCatalog {
             val from = device.lockFrom
             HourRow(s.lockTo, device.lockTo ?: 0) { h -> vm.updateDevice { it.copy(lockFrom = from, lockTo = h) } }
         },
+        // O tempo por dia nas apps (conta-o o serviço de acessibilidade); acabado, todas as apps pedem o código.
+        cycle("time_limit", parental, Strings::dailyLimit, options = { DeviceSettings.DAILY_LIMITS },
+            read = { it.device.dailyLimit ?: 0 }, label = { min, s -> s.duration(min) },
+            write = device { d, min -> d.copy(dailyLimit = min.takeIf { it > 0 }) }),
         nav("change_pin", parental, Strings::changePin, Page.PinSetup),
         custom("parental_off", parental) { modifier ->
             ConfirmRow(s.parentalDisable, s.parentalDisableHint, onConfirm = {

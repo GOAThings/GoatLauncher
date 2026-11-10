@@ -156,6 +156,12 @@
     <string name="lock_between">Locked from %1$d:00 to %2$d:00</string>
     <string name="lock_from">From</string>
     <string name="lock_to">Until</string>
+    <string name="daily_limit">Daily screen time</string>
+    <string name="no_limit">No limit</string>
+    <string name="duration_minutes">%1$d min</string>
+    <string name="duration_hours">%1$d h</string>
+    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="time_up">Time\'s up for today</string>
     <string name="hour_hint">← → changes the hour</string>
     <string name="parental_disable">Turn off parental control</string>
     <string name="parental_disable_hint">Deletes the code and the locks</string>

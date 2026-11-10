@@ -156,6 +156,12 @@
     <string name="lock_between">%1$d:00 から %2$d:00 までロック</string>
     <string name="lock_from">開始</string>
     <string name="lock_to">終了</string>
+    <string name="daily_limit">1日の利用時間</string>
+    <string name="no_limit">制限なし</string>
+    <string name="duration_minutes">%1$d分</string>
+    <string name="duration_hours">%1$d時間</string>
+    <string name="duration_hours_minutes">%1$d時間%2$d分</string>
+    <string name="time_up">今日の時間は終わりです</string>
     <string name="hour_hint">← → で時刻を変更</string>
     <string name="parental_disable">ペアレンタルコントロールをオフにする</string>
     <string name="parental_disable_hint">コードとロックを削除します</string>

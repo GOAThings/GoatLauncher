@@ -156,6 +156,12 @@
     <string name="lock_between">%1$d:00 से %2$d:00 तक लॉक</string>
     <string name="lock_from">कब से</string>
     <string name="lock_to">कब तक</string>
+    <string name="daily_limit">रोज़ का स्क्रीन टाइम</string>
+    <string name="no_limit">कोई सीमा नहीं</string>
+    <string name="duration_minutes">%1$d मिनट</string>
+    <string name="duration_hours">%1$d घंटे</string>
+    <string name="duration_hours_minutes">%1$d घंटे %2$d मिनट</string>
+    <string name="time_up">आज का समय खत्म</string>
     <string name="hour_hint">← → से घंटा बदलें</string>
     <string name="parental_disable">पैरेंटल कंट्रोल बंद करें</string>
     <string name="parental_disable_hint">कोड और लॉक हटा देता है</string>

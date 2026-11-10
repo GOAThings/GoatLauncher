@@ -323,13 +323,18 @@ data class DeviceSettings(
     /** As apps só ficam bloqueadas entre estas horas (ex.: 20 → 8); null = sempre. */
     val lockFrom: Int? = null,
     val lockTo: Int? = null,
+    /**
+     * O tempo de ecrã por dia (minutos) nas apps: acabado, todas pedem o código até ao dia seguinte (ver
+     * ScreenTime). null = sem limite. As Definições oferecem [DAILY_LIMITS]; o site pode gravar outro até um dia.
+     */
+    val dailyLimit: Int? = null,
     /** Onde a TV está, para o tempo e o dia/noite; null = pelo IP (pode falhar com VPN). Cada TV tem a sua. */
     val location: Place? = null,
     val raw: JsonObject = JsonObject(),
 ) {
     /**
-     * Estas definições com o controlo parental de [local]: o código, as apps bloqueadas, a proteção e as horas (as
-     * chaves [PARENTAL_KEYS]; o SettingsRepositoryTest confirma que são só essas).
+     * Estas definições com o controlo parental de [local]: o código, as apps bloqueadas, a proteção, as horas e o
+     * tempo por dia (as chaves [PARENTAL_KEYS]; o SettingsRepositoryTest confirma que são só essas).
      */
     fun withParentalOf(local: DeviceSettings) = copy(
         pin = local.pin,
@@ -337,6 +342,7 @@ data class DeviceSettings(
         lockSettings = local.lockSettings,
         lockFrom = local.lockFrom,
         lockTo = local.lockTo,
+        dailyLimit = local.dailyLimit,
     )
 
     fun toJson(): JsonObject = raw.deepCopy().apply {
@@ -362,6 +368,7 @@ data class DeviceSettings(
         add("locked", JsonArray().apply { locked.sorted().forEach(::add) })
         addProperty("lock_settings", lockSettings)
         if (lockFrom != null && lockTo != null) add("lock_hours", JsonArray().apply { add(lockFrom); add(lockTo) }) else remove("lock_hours")
+        if (dailyLimit != null) addProperty("time_limit", dailyLimit) else remove("time_limit")
         if (location != null) {
             add("location", JsonObject().apply {
                 addProperty("name", location.name)
@@ -378,7 +385,10 @@ data class DeviceSettings(
          * O controlo parental no JSON: ao ligar a TV com um código, estas ficam as desta TV e o resto vem da conta (ver
          * SettingsRepository.link e [withParentalOf]).
          */
-        val PARENTAL_KEYS = setOf("pin", "locked", "lock_settings", "lock_hours")
+        val PARENTAL_KEYS = setOf("pin", "locked", "lock_settings", "lock_hours", "time_limit")
+
+        /** O tempo de ecrã por dia nas Definições (minutos; 0 = sem limite), pela ordem do OK. */
+        val DAILY_LIMITS = listOf(0, 30, 60, 90, 120, 180, 240)
 
         /** A espera do arranque automático nas Definições (segundos), pela ordem do OK. */
         val AUTOSTART_DELAYS = listOf(0, 3, 5, 10, 20)
@@ -403,6 +413,7 @@ data class DeviceSettings(
                 lockSettings = json.bool("lock_settings") ?: false,
                 lockFrom = json.ints("lock_hours").takeIf { it.size == 2 }?.get(0)?.coerceIn(0, 23),
                 lockTo = json.ints("lock_hours").takeIf { it.size == 2 }?.get(1)?.coerceIn(0, 23),
+                dailyLimit = json.int("time_limit")?.takeIf { it in 1..24 * 60 },
                 location = json.obj("location")?.let { o ->
                     val lat = o.get("lat")?.takeIf { it.isJsonPrimitive }?.asDouble
                     val lon = o.get("lon")?.takeIf { it.isJsonPrimitive }?.asDouble

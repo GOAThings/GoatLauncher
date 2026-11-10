@@ -12,6 +12,7 @@
   "locked": ["com.android.vending", "com.netflix.ninja"],
   "lock_settings": true,
   "lock_hours": [20, 8],
+  "time_limit": 90,
   "location": {"name": "Lisboa, Lisboa, Portugal", "lat": 38.7223, "lon": -9.1393},
   "site_only_key": "kept"
 }

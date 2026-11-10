@@ -7,6 +7,7 @@ import cc.slokker.goatlauncher.data.ClientInfo
 import cc.slokker.goatlauncher.data.CustomIcons
 import cc.slokker.goatlauncher.data.DataStoreSettingsDisk
 import cc.slokker.goatlauncher.data.ParentalGate
+import cc.slokker.goatlauncher.data.ScreenTime
 import cc.slokker.goatlauncher.data.PhoneApps
 import cc.slokker.goatlauncher.data.PinAttemptStore
 import cc.slokker.goatlauncher.data.OnlineWallpapers
@@ -67,7 +68,9 @@ class AppContainer(context: Context) {
 
     val settings = SettingsRepository(DataStoreSettingsDisk(context), backend, sessions, scope)
     /** Se uma app, as Definições ou o controlo parental pedem o código (sempre com as definições lidas). */
-    val parental = ParentalGate(settings)
+    /** O tempo de ecrã de hoje (só nesta TV), para o limite por dia do controlo parental. */
+    val screenTime = ScreenTime(context)
+    val parental = ParentalGate(settings, screenTime::timeUp)
     val pinAttempts = PinAttemptStore(context)
     /** As apps instaladas, para o ecrã, o GoatRemote e o site (ver [start]). */
     val catalog = AppCatalog(context.applicationContext, scope)

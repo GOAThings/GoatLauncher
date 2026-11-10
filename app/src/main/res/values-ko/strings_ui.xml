@@ -156,6 +156,12 @@
     <string name="lock_between">%1$d:00부터 %2$d:00까지 잠김</string>
     <string name="lock_from">시작</string>
     <string name="lock_to">종료</string>
+    <string name="daily_limit">하루 사용 시간</string>
+    <string name="no_limit">제한 없음</string>
+    <string name="duration_minutes">%1$d분</string>
+    <string name="duration_hours">%1$d시간</string>
+    <string name="duration_hours_minutes">%1$d시간 %2$d분</string>
+    <string name="time_up">오늘 사용 시간이 끝났어요</string>
     <string name="hour_hint">← → 로 시간 변경</string>
     <string name="parental_disable">자녀 보호 끄기</string>
     <string name="parental_disable_hint">코드와 잠금을 삭제해요</string>

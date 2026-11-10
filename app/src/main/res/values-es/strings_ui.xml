@@ -156,6 +156,12 @@
     <string name="lock_between">Bloqueadas de %1$d:00 a %2$d:00</string>
     <string name="lock_from">Desde</string>
     <string name="lock_to">Hasta</string>
+    <string name="daily_limit">Tiempo de pantalla al día</string>
+    <string name="no_limit">Sin límite</string>
+    <string name="duration_minutes">%1$d min</string>
+    <string name="duration_hours">%1$d h</string>
+    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="time_up">Se acabó el tiempo de hoy</string>
     <string name="hour_hint">← → cambia la hora</string>
     <string name="parental_disable">Desactivar el control parental</string>
     <string name="parental_disable_hint">Elimina el código y los bloqueos</string>

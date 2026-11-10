@@ -35,6 +35,7 @@ class PersistedNamesTest {
     fun sharedPreferences() {
         assertEquals(listOf("autostart", "boot"), listOf(AutoStart.BOOT_PREFS, AutoStart.BOOT_KEY))
         assertEquals(listOf("pin_attempts", "failures", "failed_at"), listOf(PinAttemptStore.PREFS, PinAttemptStore.KEY_FAILURES, PinAttemptStore.KEY_FAILED_AT))
+        assertEquals(listOf("screen_time", "day", "used_ms"), listOf(ScreenTime.PREFS, ScreenTime.KEY_DAY, ScreenTime.KEY_USED_MS))
         assertEquals(listOf("app_index", "hash", "account"), listOf(AppIndex.Prefs.FILE, AppIndex.Prefs.HASH, AppIndex.Prefs.ACCOUNT))
         assertEquals(
             listOf("youtube", "refresh", "access", "access_until", "client_id", "client_secret", "client_at", "client_version", "device_id"),

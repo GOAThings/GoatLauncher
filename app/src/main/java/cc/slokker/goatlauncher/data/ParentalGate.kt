@@ -7,11 +7,22 @@ package cc.slokker.goatlauncher.data
  *
  * Antes cada um esperava à mão (e um esqueceu-se); as regras em si estão no [ParentalLock].
  */
-class ParentalGate(private val settings: SettingsRepository) {
+class ParentalGate(
+    private val settings: SettingsRepository,
+    /** O tempo de ecrã de hoje já acabou? (ver ScreenTime) */
+    private val timeUp: (DeviceSettings) -> Boolean = { false },
+) {
     /** Abrir [pkg] pede o código agora? */
     suspend fun appLocked(pkg: String): Boolean {
         settings.awaitReady()
-        return ParentalLock.appLocked(settings.device.value, pkg)
+        val device = settings.device.value
+        return ParentalLock.appLocked(device, pkg, timeUp(device))
+    }
+
+    /** O tempo de ecrã de hoje já acabou (e o código não foi acertado há pouco)? */
+    suspend fun timeUpNow(): Boolean {
+        settings.awaitReady()
+        return timeUp(settings.device.value) && !ParentalLock.unlocked()
     }
 
     /** Mexer nas Definições ou na organização pede o código agora? */

@@ -156,6 +156,12 @@
     <string name="lock_between">Gesperrt von %1$d:00 bis %2$d:00 Uhr</string>
     <string name="lock_from">Von</string>
     <string name="lock_to">Bis</string>
+    <string name="daily_limit">Bildschirmzeit pro Tag</string>
+    <string name="no_limit">Kein Limit</string>
+    <string name="duration_minutes">%1$d min</string>
+    <string name="duration_hours">%1$d h</string>
+    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="time_up">Die Zeit für heute ist um</string>
     <string name="hour_hint">← → ändert die Uhrzeit</string>
     <string name="parental_disable">Kindersicherung ausschalten</string>
     <string name="parental_disable_hint">Löscht den Code und die Sperren</string>

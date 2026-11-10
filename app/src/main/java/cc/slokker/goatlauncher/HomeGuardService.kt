@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.view.KeyEvent
@@ -14,6 +15,7 @@ import android.view.accessibility.AccessibilityEvent
 import cc.slokker.goatlauncher.data.ButtonAction
 import cc.slokker.goatlauncher.data.SystemIntents
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -32,15 +34,18 @@ import kotlinx.coroutines.launch
 class HomeGuardService : AccessibilityService() {
 
     private var settingsJob: Job? = null
+    private var screenTimeJob: Job? = null
 
     override fun onServiceConnected() {
         instance = this
         val container = (application as LauncherApp).container
         settingsJob = container.scope.launch { container.settings.device.collect { updateKeyFilter() } }
+        screenTimeJob = container.scope.launch { countScreenTime() }
     }
 
     override fun onDestroy() {
         settingsJob?.cancel()
+        screenTimeJob?.cancel()
         if (instance === this) instance = null
         super.onDestroy()
     }
@@ -161,6 +166,29 @@ class HomeGuardService : AccessibilityService() {
     /** A app anterior: a última que esteve à frente sem ser a de agora (no launcher, a última que esteve aberta). */
     private fun previousApp(): String? = recentApps.firstOrNull { it != foreground }
 
+    /**
+     * O tempo de ecrã por dia do controlo parental: a cada [SCREEN_TIME_TICK_MS], com uma app à frente (não o launcher)
+     * e o ecrã ligado, soma esse tempo ao de hoje. Acabado o tempo, a app da frente dá lugar ao launcher a pedir o
+     * código (como uma bloqueada); com o código certo, fica aberta mais um bocado (ParentalLock.grant) e depois volta
+     * a pedir.
+     */
+    private suspend fun countScreenTime() {
+        val container = (application as LauncherApp).container
+        val power = getSystemService(PowerManager::class.java)
+        while (true) {
+            delay(SCREEN_TIME_TICK_MS)
+            val device = container.settings.device.value
+            val pkg = foreground
+            if (device.pin == null || device.dailyLimit == null || pkg == null || pkg == packageName) continue
+            if (power?.isInteractive == false) continue
+            container.screenTime.add(SCREEN_TIME_TICK_MS)
+            if (container.parental.timeUpNow()) {
+                Log.i(TAG, "Acabou o tempo de ecrã de hoje")
+                AutoStart.start(this, AutoStart.unlockIntent(this, pkg))
+            }
+        }
+    }
+
     /** O ecrã inicial dos outros launchers (o de origem, o Projectivy…): só esse é substituído, não a app toda. */
     private fun homeActivities(): Set<ComponentName> {
         val now = System.currentTimeMillis()
@@ -195,6 +223,9 @@ class HomeGuardService : AccessibilityService() {
         private const val TAG = "HomeGuard"
 
         private const val HOMES_TTL_MS = 60_000L
+
+        /** De quanto em quanto tempo se conta o tempo de ecrã (e se vê se acabou). */
+        private const val SCREEN_TIME_TICK_MS = 30_000L
 
         /** Quantas apps recentes se guardam para a "app anterior" (a de agora e a de antes). */
         private const val RECENT_APPS = 2

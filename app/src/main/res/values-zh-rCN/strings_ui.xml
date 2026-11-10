@@ -156,6 +156,12 @@
     <string name="lock_between">%1$d:00 至 %2$d:00 锁定</string>
     <string name="lock_from">从</string>
     <string name="lock_to">至</string>
+    <string name="daily_limit">每日屏幕使用时间</string>
+    <string name="no_limit">不限制</string>
+    <string name="duration_minutes">%1$d 分钟</string>
+    <string name="duration_hours">%1$d 小时</string>
+    <string name="duration_hours_minutes">%1$d 小时 %2$d 分钟</string>
+    <string name="time_up">今天的时间到了</string>
     <string name="hour_hint">← → 更改小时</string>
     <string name="parental_disable">关闭家长控制</string>
     <string name="parental_disable_hint">删除密码和所有锁定</string>
