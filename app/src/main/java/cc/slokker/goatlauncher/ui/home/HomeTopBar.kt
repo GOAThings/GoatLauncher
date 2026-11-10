@@ -74,7 +74,7 @@ import kotlinx.coroutines.launch
 
 /**
  * À esquerda a saudação, a data e o tempo; ao centro os separadores (Início, Apps, Definições: mudam ao passar
- * o foco, como no tvOS); à direita o estado da rede e as horas.
+ * o foco, como no tvOS); à direita a pesquisa, o dia/noite, o estado da rede e as horas.
  */
 @Composable
 internal fun TopBar(
@@ -91,6 +91,8 @@ internal fun TopBar(
     onNetwork: () -> Unit,
     night: Boolean,
     onNight: () -> Unit,
+    /** Abre a pesquisa do sistema; null numa TV sem pesquisa (o botão não aparece). */
+    onSearch: (() -> Unit)?,
     onFocusChanged: (Boolean) -> Unit,
 ) {
     val s = LocalStrings.current
@@ -187,6 +189,12 @@ internal fun TopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // Pesquisa do sistema (Google TV, Assistente): só nas TVs que a têm.
+            if (onSearch != null) {
+                TopButton(onClick = onSearch) {
+                    Icon(GoatIcons.Search, contentDescription = s.search, modifier = Modifier.size(18.dp))
+                }
+            }
             // Dia/noite: OK troca entre fundo claro e fundo escurecido (e fotos do tom certo).
             TopButton(onClick = onNight) {
                 // O sol e a lua trocam a crescer e a aparecer, em vez de saltar.

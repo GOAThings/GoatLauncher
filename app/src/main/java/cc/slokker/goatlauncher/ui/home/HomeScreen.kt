@@ -137,6 +137,8 @@ fun HomeScreen(vm: LauncherViewModel) {
     val moreApps = tabApps.orEmpty().filter { app -> favorites.none { it.packageName == app.packageName } }
     val gridApps = favorites + moreApps
     val style = HomeStyle.of(account)
+    // A pesquisa do sistema, se a TV tiver (volta a ver-se quando as apps instaladas mudam).
+    val searchIntent = remember(apps) { SystemIntents.search(context) }
     val appleTv = style == HomeStyle.AppleTv
     val columnLayout = style == HomeStyle.SideColumn
     // Apple TV: o Início desce da doca para as outras apps (as mesmas do separador Apps, também as escondidas).
@@ -444,6 +446,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                         onNetwork = { SystemIntents.openNetworkSettings(context) },
                         night = vm.night.collectAsStateWithLifecycle().value,
                         onNight = vm::toggleNight,
+                        onSearch = searchIntent?.let { intent -> { SystemIntents.start(context, intent) } },
                         onFocusChanged = { tabBarFocused = it },
                     )
 
