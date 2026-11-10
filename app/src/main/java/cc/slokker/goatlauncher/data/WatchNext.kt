@@ -177,6 +177,20 @@ internal object WatchNextRows {
         return byApp.values.flatten()
     }
 
+    /**
+     * Os canais das apps ([previews], os programas que cada app publica nas suas filas do ecrã inicial do sistema)
+     * enchem o "Continuar a ver" das apps que não têm nada no Watch Next ([watchNext]): uma app com Watch Next fica só
+     * com ele. Os programas entram como recomendações (ainda por começar), pela ordem da app, até [MAX_PER_APP].
+     */
+    fun withChannels(watchNext: Map<String, List<WatchNextItem>>, previews: List<WatchNextItem>): Map<String, List<WatchNextItem>> {
+        val fill = previews
+            .filter { watchNext[it.packageName].isNullOrEmpty() }
+            .distinctBy { it.packageName + "\u0000" + (it.intentUri ?: it.title) }
+            .groupBy { it.packageName }
+            .mapValues { (_, items) -> items.take(MAX_PER_APP) }
+        return if (fill.isEmpty()) watchNext else watchNext + fill
+    }
+
     /** Por pacote, o mais recente primeiro, sem repetidas, até [MAX_PER_APP] por app e [MAX_TOTAL] ao todo. */
     fun newestByApp(rows: List<WatchNextItem>): Map<String, List<WatchNextItem>> {
         val perApp = HashMap<String, Int>()
@@ -204,7 +218,9 @@ interface WatchNextFeed {
 }
 
 /**
- * Lê o Watch Next do TvProvider (o mesmo que o Google TV e o Projectivy usam) e agrupa-o por app.
+ * Lê o Watch Next do TvProvider (o mesmo que o Google TV e o Projectivy usam) e agrupa-o por app. As apps sem nada no
+ * Watch Next ficam com os programas dos seus canais (as filas que publicam para o ecrã inicial do sistema), se o
+ * sistema os mostrar a outras apps (ver [WatchNextRows.withChannels]).
  * Precisa de READ_TV_LISTINGS (ver o manifesto); sem ela, o sistema só devolve os programas da própria app.
  * O TvProvider não aceita `selection` a quem não é do sistema: lê-se tudo e filtra-se aqui.
  */
@@ -218,12 +234,13 @@ class WatchNextSource(private val context: Context) : WatchNextFeed {
             var bad = 0
             context.contentResolver.query(TvContractCompat.WatchNextPrograms.CONTENT_URI, PROJECTION, null, null, null)
                 ?.use { c ->
-                    WatchNextRows.read(c.count, c::moveToPosition, { read(c) }) {
+                    WatchNextRows.read(c.count, c::moveToPosition, { read(c, WATCH_NEXT) }) {
                         if (bad++ == 0) Log.w(TAG, "Entrada que não se lê: ${it.javaClass.simpleName}")
                     }
                 }
                 .orEmpty()
                 .let(WatchNextRows::newestByApp)
+                .let { WatchNextRows.withChannels(it, previews()) }
                 .also { all ->
                     Log.d(TAG, "${all.values.sumOf { l -> l.size }} entradas de ${all.keys}")
                     // De onde vêm as imagens de cada app (para perceber a qualidade dos cartões). O resto do URI é da app.
@@ -235,6 +252,22 @@ class WatchNextSource(private val context: Context) : WatchNextFeed {
         }
     }
 
+    /** Os programas dos canais das apps; vazio se o sistema não os mostrar (ou não deixar ler). */
+    private fun previews(): List<WatchNextItem> = runCatching {
+        var bad = 0
+        context.contentResolver.query(TvContractCompat.PreviewPrograms.CONTENT_URI, PREVIEW_PROJECTION, null, null, null)
+            ?.use { c ->
+                WatchNextRows.read(c.count, c::moveToPosition, { read(c, PREVIEW) }) {
+                    if (bad++ == 0) Log.w(TAG, "Programa de canal que não se lê: ${it.javaClass.simpleName}")
+                }
+            }
+            .orEmpty()
+            .also { Log.d(TAG, "${it.size} programas de canais de ${it.map { p -> p.packageName }.toSet()}") }
+    }.getOrElse {
+        Log.w(TAG, "Ler os canais das apps", it)
+        emptyList()
+    }
+
     override fun observe(onChange: () -> Unit): () -> Unit {
         if (!supported) return {}
         val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
@@ -243,6 +276,8 @@ class WatchNextSource(private val context: Context) : WatchNextFeed {
         }
         return runCatching {
             context.contentResolver.registerContentObserver(TvContractCompat.WatchNextPrograms.CONTENT_URI, true, observer)
+            // Os canais das apps também enchem o "Continuar a ver" (ver load).
+            runCatching { context.contentResolver.registerContentObserver(TvContractCompat.PreviewPrograms.CONTENT_URI, true, observer) }
             fun() { context.contentResolver.unregisterContentObserver(observer) }
         }.getOrElse {
             Log.w(TAG, "Observar o Watch Next", it)
@@ -250,33 +285,37 @@ class WatchNextSource(private val context: Context) : WatchNextFeed {
         }
     }
 
-    private fun read(c: Cursor): WatchNextItem? {
-        if (c.int(COL_BROWSABLE) == 0) return null // a pessoa tirou-o do "A seguir"
-        val pkg = c.whole(COL_PACKAGE, MAX_PACKAGE) ?: return null
-        val title = c.text(COL_TITLE) ?: c.text(COL_EPISODE_TITLE) ?: return null
-        val poster = c.whole(COL_POSTER, MAX_IMAGE_URI)
-        val thumb = c.whole(COL_THUMB, MAX_IMAGE_URI)
+    /**
+     * Uma linha do Watch Next ou de um canal ([cols] diz de qual). Os programas dos canais não têm tipo nem a última
+     * vez que se viram: entram como recomendações, pela ordem da app.
+     */
+    private fun read(c: Cursor, cols: Columns): WatchNextItem? {
+        if (c.int(cols.browsable) == 0) return null // a pessoa tirou-o do "A seguir" (ou o canal escondeu-o)
+        val pkg = c.whole(cols.pkg, MAX_PACKAGE) ?: return null
+        val title = c.text(cols.title) ?: c.text(cols.episodeTitle) ?: return null
+        val poster = c.whole(cols.poster, MAX_IMAGE_URI)
+        val thumb = c.whole(cols.thumb, MAX_IMAGE_URI)
         return WatchNextItem(
-            id = c.long(COL_ID) ?: return null,
+            id = c.long(cols.id) ?: return null,
             packageName = pkg,
             title = title,
-            episodeTitle = c.text(COL_EPISODE_TITLE),
-            season = c.text(COL_SEASON),
-            episode = c.text(COL_EPISODE),
+            episodeTitle = c.text(cols.episodeTitle),
+            season = c.text(cols.season),
+            episode = c.text(cols.episode),
             imageUri = sharper(poster ?: thumb),
-            aspectRatio = ratio(if (poster != null) c.int(COL_POSTER_RATIO) else c.int(COL_THUMB_RATIO)),
-            positionMs = c.long(COL_POSITION) ?: 0,
-            durationMs = c.long(COL_DURATION) ?: 0,
-            type = c.int(COL_TYPE) ?: WatchNextItem.TYPE_CONTINUE,
-            lastEngagement = c.long(COL_ENGAGEMENT) ?: 0,
-            intentUri = c.whole(COL_INTENT, MAX_INTENT_URI),
-            isChannel = c.int(COL_PROGRAM_TYPE) == TvContractCompat.WatchNextPrograms.TYPE_CHANNEL || c.int(COL_LIVE) == 1,
-            airing = c.text(COL_DESCRIPTION),
-            airStart = c.long(COL_START) ?: 0,
-            airEnd = c.long(COL_END) ?: 0,
+            aspectRatio = ratio(if (poster != null) c.int(cols.posterRatio) else c.int(cols.thumbRatio)),
+            positionMs = c.long(cols.position) ?: 0,
+            durationMs = c.long(cols.duration) ?: 0,
+            type = c.int(cols.type) ?: cols.defaultType,
+            lastEngagement = c.long(cols.engagement) ?: 0,
+            intentUri = c.whole(cols.intent, MAX_INTENT_URI),
+            isChannel = c.int(cols.programType) == TvContractCompat.WatchNextPrograms.TYPE_CHANNEL || c.int(cols.live) == 1,
+            airing = c.text(cols.description),
+            airStart = c.long(cols.start) ?: 0,
+            airEnd = c.long(cols.end) ?: 0,
             // Só o GoatTV põe lá os programas seguintes; nas outras apps é uma sinopse.
-            schedule = c.str(COL_LONG_DESCRIPTION)?.take(GoatTvContract.MAX_SCHEDULE)?.takeIf { pkg in GoatTvContract.PACKAGES }
-                ?.let { parseSchedule(it, c.long(COL_END) ?: 0, System.currentTimeMillis()) }.orEmpty(),
+            schedule = c.str(cols.longDescription)?.take(GoatTvContract.MAX_SCHEDULE)?.takeIf { pkg in GoatTvContract.PACKAGES }
+                ?.let { parseSchedule(it, c.long(cols.end) ?: 0, System.currentTimeMillis()) }.orEmpty(),
         )
     }
 
@@ -296,7 +335,8 @@ class WatchNextSource(private val context: Context) : WatchNextFeed {
         else -> 16f / 9f
     }
 
-    private fun Cursor.str(i: Int): String? = if (isNull(i)) null else getString(i)?.takeIf { it.isNotBlank() }
+    // Uma coluna que esta tabela não tem (-1, ver [Columns]) lê-se como vazia.
+    private fun Cursor.str(i: Int): String? = if (i < 0 || isNull(i)) null else getString(i)?.takeIf { it.isNotBlank() }
 
     /** Texto para mostrar, cortado no máximo. */
     private fun Cursor.text(i: Int): String? = str(i)?.take(MAX_TEXT)
@@ -304,8 +344,8 @@ class WatchNextSource(private val context: Context) : WatchNextFeed {
     /** Um pacote ou URI cortado já não serve: inteiro, ou nada. */
     private fun Cursor.whole(i: Int, max: Int): String? = str(i)?.takeIf { it.length <= max }
 
-    private fun Cursor.long(i: Int): Long? = if (isNull(i)) null else getLong(i)
-    private fun Cursor.int(i: Int): Int? = if (isNull(i)) null else getInt(i)
+    private fun Cursor.long(i: Int): Long? = if (i < 0 || isNull(i)) null else getLong(i)
+    private fun Cursor.int(i: Int): Int? = if (i < 0 || isNull(i)) null else getInt(i)
 
     private companion object {
         const val TAG = "WatchNext"
@@ -341,30 +381,46 @@ class WatchNextSource(private val context: Context) : WatchNextFeed {
             "end_time_utc_millis",
         )
 
-        /** A posição de cada coluna em [PROJECTION], pelo nome (acrescentar uma coluna a meio já não troca as outras). */
-        private fun col(name: String): Int = PROJECTION.indexOf(name).also { check(it >= 0) { "Coluna fora da PROJECTION: $name" } }
+        /**
+         * Os programas dos canais (preview_program): as colunas do Watch Next menos o tipo e a última vez que se viu,
+         * que essa tabela não tem.
+         */
+        val PREVIEW_PROJECTION = PROJECTION.filterNot { it == "watch_next_type" || it == "last_engagement_time_utc_millis" }.toTypedArray()
 
-        val COL_ID = col("_id")
-        val COL_PACKAGE = col("package_name")
-        val COL_TITLE = col("title")
-        val COL_EPISODE_TITLE = col("episode_title")
-        val COL_SEASON = col("season_display_number")
-        val COL_EPISODE = col("episode_display_number")
-        val COL_POSTER = col("poster_art_uri")
-        val COL_POSTER_RATIO = col("poster_art_aspect_ratio")
-        val COL_THUMB = col("thumbnail_uri")
-        val COL_THUMB_RATIO = col("thumbnail_aspect_ratio")
-        val COL_POSITION = col("last_playback_position_millis")
-        val COL_DURATION = col("duration_millis")
-        val COL_TYPE = col("watch_next_type")
-        val COL_ENGAGEMENT = col("last_engagement_time_utc_millis")
-        val COL_INTENT = col("intent_uri")
-        val COL_BROWSABLE = col("browsable")
-        val COL_PROGRAM_TYPE = col("type")
-        val COL_LIVE = col("live")
-        val COL_DESCRIPTION = col("short_description")
-        val COL_LONG_DESCRIPTION = col("long_description")
-        val COL_START = col("start_time_utc_millis")
-        val COL_END = col("end_time_utc_millis")
+        val WATCH_NEXT = Columns(PROJECTION, WatchNextItem.TYPE_CONTINUE)
+        val PREVIEW = Columns(PREVIEW_PROJECTION, WatchNextItem.TYPE_RECOMMENDED)
     }
+}
+
+/**
+ * A posição de cada coluna numa projeção, pelo nome (acrescentar uma coluna a meio não troca as outras). As que têm de
+ * existir falham logo; as que a tabela pode não ter ([type], [engagement]) ficam -1. [defaultType]: o tipo sem coluna.
+ */
+private class Columns(projection: Array<String>, val defaultType: Int) {
+    private val names = projection.toList()
+    private fun col(name: String): Int = names.indexOf(name).also { check(it >= 0) { "Coluna fora da PROJECTION: $name" } }
+    private fun optional(name: String): Int = names.indexOf(name)
+
+    val id = col("_id")
+    val pkg = col("package_name")
+    val title = col("title")
+    val episodeTitle = col("episode_title")
+    val season = col("season_display_number")
+    val episode = col("episode_display_number")
+    val poster = col("poster_art_uri")
+    val posterRatio = col("poster_art_aspect_ratio")
+    val thumb = col("thumbnail_uri")
+    val thumbRatio = col("thumbnail_aspect_ratio")
+    val position = col("last_playback_position_millis")
+    val duration = col("duration_millis")
+    val type = optional("watch_next_type")
+    val engagement = optional("last_engagement_time_utc_millis")
+    val intent = col("intent_uri")
+    val browsable = col("browsable")
+    val programType = col("type")
+    val live = col("live")
+    val description = col("short_description")
+    val longDescription = col("long_description")
+    val start = col("start_time_utc_millis")
+    val end = col("end_time_utc_millis")
 }
