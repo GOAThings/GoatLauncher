@@ -328,6 +328,11 @@ data class DeviceSettings(
      * ScreenTime). null = sem limite. As Definições oferecem [DAILY_LIMITS]; o site pode gravar outro até um dia.
      */
     val dailyLimit: Int? = null,
+    /**
+     * Onde procura o botão Pesquisar: o pacote de uma app, ou "system" (a pesquisa do sistema). null = a primeira app
+     * que sirva (ver AppSearch.resolve); uma app que se desinstale também volta a isso.
+     */
+    val searchApp: String? = null,
     /** Onde a TV está, para o tempo e o dia/noite; null = pelo IP (pode falhar com VPN). Cada TV tem a sua. */
     val location: Place? = null,
     val raw: JsonObject = JsonObject(),
@@ -369,6 +374,7 @@ data class DeviceSettings(
         addProperty("lock_settings", lockSettings)
         if (lockFrom != null && lockTo != null) add("lock_hours", JsonArray().apply { add(lockFrom); add(lockTo) }) else remove("lock_hours")
         if (dailyLimit != null) addProperty("time_limit", dailyLimit) else remove("time_limit")
+        if (searchApp != null) addProperty("search_app", searchApp) else remove("search_app")
         if (location != null) {
             add("location", JsonObject().apply {
                 addProperty("name", location.name)
@@ -414,6 +420,7 @@ data class DeviceSettings(
                 lockFrom = json.ints("lock_hours").takeIf { it.size == 2 }?.get(0)?.coerceIn(0, 23),
                 lockTo = json.ints("lock_hours").takeIf { it.size == 2 }?.get(1)?.coerceIn(0, 23),
                 dailyLimit = json.int("time_limit")?.takeIf { it in 1..24 * 60 },
+                searchApp = json.str("search_app")?.trim()?.takeIf { it.isNotEmpty() && it.length <= 255 },
                 location = json.obj("location")?.let { o ->
                     val lat = o.get("lat")?.takeIf { it.isJsonPrimitive }?.asDouble
                     val lon = o.get("lon")?.takeIf { it.isJsonPrimitive }?.asDouble

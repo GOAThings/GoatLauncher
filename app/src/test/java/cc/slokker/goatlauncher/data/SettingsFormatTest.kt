@@ -46,7 +46,7 @@ class SettingsFormatTest {
         val read = DeviceSettings.fromJson(stored)
         assertEquals(DEVICE_KEYS, read.copy(raw = JsonObject()).toJson().keySet())
         // Sem valor, as opcionais nem aparecem (o patch manda null e o servidor apaga-as).
-        assertEquals(DEVICE_KEYS - setOf("autostart", "pin", "lock_hours", "time_limit", "location"), DeviceSettings().toJson().keySet())
+        assertEquals(DEVICE_KEYS - setOf("autostart", "pin", "lock_hours", "time_limit", "search_app", "location"), DeviceSettings().toJson().keySet())
         val defaults = DeviceSettings().toJson()
         for (key in DEVICE_KEYS) assertNotEquals(key, defaults.get(key), stored.get(key))
     }
@@ -226,7 +226,7 @@ class SettingsFormatTest {
         )
         val DEVICE_KEYS = setOf(
             "apps", "hidden", "icons", "names", "no_continue", "autostart", "autostart_wake", "autostart_delay", "buttons",
-            "pin", "locked", "lock_settings", "lock_hours", "time_limit", "location",
+            "pin", "locked", "lock_settings", "lock_hours", "time_limit", "search_app", "location",
         )
     }
 }
