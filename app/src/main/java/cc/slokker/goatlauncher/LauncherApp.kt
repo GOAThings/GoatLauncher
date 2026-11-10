@@ -20,6 +20,8 @@ class LauncherApp : Application(), SingletonImageLoader.Factory {
         // O controlo parental precisa das definições também num processo sem ecrã (só com o HomeGuardService). É o único
         // a ler as definições: os outros esperam por elas (SettingsRepository.awaitReady).
         container.scope.launch { container.settings.init() }
+        // A sincronização com a conta do arranque: uma por processo (não por ecrã), com o token renovado.
+        container.settings.startSync()
         container.start()
         AutoStart.watchWake(this)
     }

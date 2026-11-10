@@ -10,6 +10,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -229,10 +230,38 @@ class SettingsRepository internal constructor(
         lastSync = clock()
     }
 
-    /** Ao voltar ao ecrã inicial: apanha o que mudou noutra TV, no máximo a cada [STALE_MS]. */
+    /**
+     * A sincronização do arranque do processo: uma só, com o token renovado, depois de ler o disco. É do processo e não
+     * de cada ecrã: um ecrã novo (o sistema fechou o anterior, ou abriu outro por cima) já não faz outro GET.
+     * Só o LauncherApp chama (logo a seguir ao [init]); chamar outra vez devolve a mesma.
+     */
+    @Synchronized
+    fun startSync(): Job = startup ?: scope.launch {
+        awaitReady()
+        sync(refreshToken = true)
+    }.also { startup = it }
+
+    private var startup: Job? = null
+
+    /**
+     * Ao voltar ao ecrã inicial: apanha o que mudou noutra TV, no máximo a cada [STALE_MS]. Espera primeiro pela
+     * sincronização do arranque, e volta a ver se está velho já com o lock: um sync que estava a meio quando isto foi
+     * pedido acabou de ler a conta, e outro GET logo a seguir não traria nada. Se o do arranque falhou (sem rede),
+     * este tenta outra vez.
+     */
     suspend fun syncIfStale() {
-        if (session.value != null && clock() - lastSync > STALE_MS) sync()
+        startup?.join()
+        if (session.value == null || !stale()) return
+        var gen = generation
+        guarded("Sincronizar", { gen }) {
+            syncMutex.withLock {
+                gen = generation
+                if (stale()) syncLocked(gen, refreshToken = false)
+            }
+        }
     }
+
+    private fun stale() = clock() - lastSync > STALE_MS
 
     /** A TV acabou de ser aprovada na conta. */
     suspend fun link(newToken: String, email: String?, deviceName: String?) {

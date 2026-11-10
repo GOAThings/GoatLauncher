@@ -153,6 +153,40 @@ class SettingsRepositoryTest {
     }
 
     @Test
+    fun oneGetPerProcessStartEvenWithAnEarlyResumeOrASecondScreen() = runBlocking {
+        linkedWithRevs()
+        // O GET do arranque fica à espera da rede: o ecrã volta à frente (onResume) e abre-se um ecrã novo entretanto.
+        val reply = CompletableDeferred<Response<JsonObject>>()
+        api.refreshes += { AuthRefreshResponse("t2", null) }
+        api.gets += { reply.await() }
+        val startup = repo.startSync()
+        val resume = scope.launch { repo.syncIfStale() }
+        assertTrue(startup === repo.startSync())
+        reply.complete(notModified())
+        startup.join()
+        resume.join()
+        // Um só GET (e uma só renovação do token); o onResume encontrou-o fresco.
+        assertEquals(1, api.sentEtags.size)
+        assertEquals(1, api.refreshCalls)
+        // Mais tarde, passado o intervalo, volta a sincronizar.
+        now += 6 * 60_000L
+        api.gets += { notModified() }
+        repo.syncIfStale()
+        assertEquals(2, api.sentEtags.size)
+    }
+
+    @Test
+    fun aFailedStartupSyncIsRetriedOnResume() = runBlocking {
+        linkedWithRevs()
+        api.refreshes += { AuthRefreshResponse("t2", null) }
+        api.gets += { throw java.io.IOException("sem rede") }
+        repo.startSync().join()
+        api.gets += { notModified() }
+        repo.syncIfStale()
+        assertEquals(2, api.sentEtags.size)
+    }
+
+    @Test
     fun startupRenewsTheTokenOnce() = runBlocking {
         linkedWithRevs()
         api.refreshes += { AuthRefreshResponse("t2", null) }
