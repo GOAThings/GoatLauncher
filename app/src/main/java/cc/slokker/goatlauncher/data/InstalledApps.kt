@@ -26,6 +26,22 @@ class LauncherApp(
 ) {
     /** A mesma app com outro nome (o que a pessoa escolheu). */
     fun withLabel(name: String) = LauncherApp(packageName, name, banner, icon, color, smallIcon)
+
+    /** A mesma app com outra imagem no cartão (o ícone que a pessoa escolheu, ver CustomIcons). */
+    fun withBanner(image: ImageBitmap) = LauncherApp(packageName, label, image, icon, color, smallIcon)
+}
+
+/**
+ * As apps como aparecem no ecrã: com o nome ([names]) e o ícone ([icons], lido com [load]) que a pessoa escolheu.
+ * Um ícone que já não carrega (ex.: icon pack desinstalado) deixa o original, como no ecrã.
+ */
+suspend fun List<LauncherApp>.asChosen(
+    names: Map<String, String>,
+    icons: Map<String, String>,
+    load: suspend (spec: String) -> ImageBitmap?,
+): List<LauncherApp> = map { app ->
+    val named = names[app.packageName]?.let(app::withLabel) ?: app
+    icons[app.packageName]?.let { load(it) }?.let(named::withBanner) ?: named
 }
 
 /** As apps com entrada no launcher da TV (categoria LEANBACK_LAUNCHER), menos este launcher. */

@@ -32,15 +32,22 @@ import java.net.Socket
  *                        abrir apps a partir do fundo: responde 409, e o comando tenta pelo protocolo.
  *
  * Aqui fica a rede (ligações, limites, quem pode falar); o que cada pedido responde está no [PhoneRoutes]. Abrir uma
- * app é com o [opener] (o AutoStart, na camada da app).
+ * app é com o [opener] (o AutoStart, na camada da app). [chosen] põe nas apps o nome e o ícone que a pessoa escolheu
+ * (ver [asChosen]), para o telemóvel as mostrar como a TV.
  */
-class PhoneApps(context: Context, apps: AppCatalog, opener: AppOpener, private val scope: CoroutineScope) {
+class PhoneApps(
+    context: Context,
+    apps: AppCatalog,
+    opener: AppOpener,
+    private val scope: CoroutineScope,
+    chosen: suspend (List<LauncherApp>) -> List<LauncherApp> = { it },
+) {
     private val audio = context.getSystemService(AudioManager::class.java)
 
     private val routes = PhoneRoutes(
         // A lista do catálogo (já lida), e não uma consulta ao PackageManager por pedido: o telemóvel pede os ícones
         // todos de uma vez, até 16 ao mesmo tempo.
-        apps = apps::current,
+        apps = { chosen(apps.current()) },
         volume = { direction ->
             runCatching { audio.adjustSuggestedStreamVolume(direction, AudioManager.USE_DEFAULT_STREAM_TYPE, AudioManager.FLAG_SHOW_UI) }
                 .onFailure { Log.w(TAG, "Volume", it) }

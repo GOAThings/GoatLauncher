@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.colorspace.ColorSpace
 import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Test
 
 /**
@@ -71,5 +72,29 @@ class PhoneRoutesTest {
         call("GET", "/icon/com.netflix.ninja")
         call("GET", "/icon/com.netflix.ninja")
         assertEquals(1, encoded)
+    }
+
+    @Test
+    fun theChosenNameAndIconGoToThePhone() {
+        val kodi = LauncherApp("org.xbmc.kodi", "Kodi", null, Image(192, 192), Color(0xFF12AB3F), null)
+        val custom = Image(640, 360)
+        val chosen = runBlocking {
+            listOf(netflix, kodi).asChosen(
+                names = mapOf("org.xbmc.kodi" to "Filmes"),
+                icons = mapOf("org.xbmc.kodi" to "file:kodi.png", "com.netflix.ninja" to "pack:gone/netflix"),
+                // O pack do Netflix foi desinstalado: fica o banner original, como no ecrã.
+                load = { spec -> if (spec == "file:kodi.png") custom else null },
+            )
+        }
+        val routes = PhoneRoutes(apps = { chosen }, volume = { }, opener = { OpenResult.OPENED }, pngs = pngs)
+        val raw = "GET /apps HTTP/1.1\r\nHost: 192.168.1.20:6470\r\n\r\n"
+        val list = String(runBlocking { routes.reply(requireNotNull(LanRequest.read(raw.byteInputStream()))) }.body)
+        assertEquals(
+            """[{"package":"com.netflix.ninja","label":"Netflix","banner":true,"color":"#1C2333"},""" +
+                """{"package":"org.xbmc.kodi","label":"Filmes","banner":true,"color":"#12AB3F"}]""",
+            list,
+        )
+        assertSame(custom, chosen[1].banner)
+        assertSame(netflix.banner, chosen[0].banner)
     }
 }

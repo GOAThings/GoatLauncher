@@ -16,6 +16,7 @@ import cc.slokker.goatlauncher.data.SettingsRepository
 import cc.slokker.goatlauncher.data.Updater
 import cc.slokker.goatlauncher.data.WeatherSource
 import cc.slokker.goatlauncher.data.YouTubeSource
+import cc.slokker.goatlauncher.data.asChosen
 import cc.slokker.goatlauncher.data.WatchNextSource
 import cc.slokker.goatlauncher.data.api.BACKEND_URL
 import cc.slokker.goatlauncher.data.api.BackendApi
@@ -76,10 +77,13 @@ class AppContainer(context: Context) {
     val catalog = AppCatalog(context.applicationContext, scope)
     /** As apps desta TV para o site da conta. */
     val appIndex = AppIndex(context, backend, settings.session, catalog)
-    /** A lista de apps para o GoatRemote (o comando no telemóvel), na rede de casa. */
-    val phoneApps = PhoneApps(context.applicationContext, catalog, AutoStart.opener(context.applicationContext, catalog), scope)
-    val watchNext = WatchNextSource(context)
     val icons = CustomIcons(context)
+    /** A lista de apps para o GoatRemote (o comando no telemóvel), na rede de casa, com os nomes e ícones escolhidos. */
+    val phoneApps = PhoneApps(context.applicationContext, catalog, AutoStart.opener(context.applicationContext, catalog), scope) { apps ->
+        val device = settings.device.value
+        apps.asChosen(device.names, device.icons, icons::load)
+    }
+    val watchNext = WatchNextSource(context)
 
     /** Cliente sem token (pedidos fora da conta Slokker, ex.: as fotos do dia do fundo). */
     private val plainHttp = OkHttpClient.Builder()
