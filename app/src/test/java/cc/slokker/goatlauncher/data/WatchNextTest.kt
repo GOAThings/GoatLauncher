@@ -24,6 +24,17 @@ class WatchNextTest {
         assertFalse(card.targetsPublisher("other.app", "pub.app"))
     }
 
+    @Test
+    fun anImplausibleDurationShowsNoProgressOrTimeLeft() {
+        val episode = item(1).copy(positionMs = 10 * 60_000, durationMs = 22 * 60_000)
+        assertEquals(12L, episode.remainingMinutes)
+        assertEquals(10f / 22, episode.progress!!, 0.001f)
+        // O Nuvio deu um episódio com 33 h: nem barra nem "28 h a faltar".
+        val broken = item(2).copy(positionMs = 4 * 3_600_000L, durationMs = 33 * 3_600_000L)
+        assertEquals(null, broken.remainingMinutes)
+        assertEquals(null, broken.progress)
+    }
+
     private fun read(rows: List<() -> WatchNextItem?>, moveTo: (Int) -> Boolean = { true }, onBadRow: (Throwable) -> Unit = {}): List<WatchNextItem> {
         var position = -1
         return WatchNextRows.read(rows.size, { position = it; moveTo(it) }, { rows[position]() }, onBadRow)

@@ -64,12 +64,19 @@ data class WatchNextItem(
     private fun progress(start: Long, end: Long, now: Long): Float? =
         if (end > start && start > 0) ((now - start).toFloat() / (end - start)).coerceIn(0f, 1f) else null
 
+    /**
+     * A duração e a posição fazem sentido: há as duas e a duração não passa de [MAX_DURATION_MS] (o Nuvio chegou a
+     * dar "28 h a faltar" num episódio; mais vale não mostrar a barra e o tempo do que mostrá-los errados).
+     */
+    private val hasPlayback: Boolean
+        get() = durationMs in 1..MAX_DURATION_MS && positionMs > 0
+
     /** 0..1, ou null sem duração ou posição. */
     val progress: Float?
-        get() = if (durationMs > 0 && positionMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else null
+        get() = if (hasPlayback) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else null
 
     val remainingMinutes: Long?
-        get() = if (durationMs > 0 && positionMs > 0) ((durationMs - positionMs).coerceAtLeast(0) + 59_999) / 60_000 else null
+        get() = if (hasPlayback) ((durationMs - positionMs).coerceAtLeast(0) + 59_999) / 60_000 else null
 
     /** O intent que abre a app neste conteúdo, ou null se o `intent_uri` não se ler ou apontar para outra app. */
     fun intent(): Intent? {
@@ -101,6 +108,9 @@ data class WatchNextItem(
 
         /** Só do launcher (não existe no Android TV): uma recomendação que a pessoa ainda não começou. */
         const val TYPE_RECOMMENDED = 100
+
+        /** A maior duração que se acredita: 12 h (um jogo ou uma maratona cabem; um episódio de 33 h não). */
+        const val MAX_DURATION_MS = 12 * 60 * 60 * 1000L
     }
 }
 
