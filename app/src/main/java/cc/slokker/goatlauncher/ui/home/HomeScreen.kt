@@ -6,6 +6,7 @@ import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileGap
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.TilesRowWidth
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.ColumnTileWidth
 import cc.slokker.goatlauncher.ui.PinPrompt
+import cc.slokker.goatlauncher.data.AppGrid
 import android.content.pm.ApplicationInfo
 import android.os.SystemClock
 import androidx.compose.runtime.DisposableEffect
@@ -89,8 +90,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 
-/** Apps no Início (as primeiras da ordem guardada); as restantes estão no separador Apps. */
-const val FavoriteCount = 5
+/** Apps no Início (as primeiras da ordem guardada); as restantes estão no separador Apps. A regra é a do [AppGrid]. */
+const val FavoriteCount = AppGrid.FAVORITES
 
 /** Quanto tempo o foco tem de ficar num favorito para o "Continuar a ver" mudar para ele. */
 private const val SECTION_SETTLE_MS = 150L
@@ -391,7 +392,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                         )
                         when (action) {
                             is HomeAction.Move -> {
-                                if (pkg != null && action.allowed) vm.moveApp(pkg, action.delta, FavoriteCount)
+                                if (pkg != null && action.allowed) vm.moveApp(pkg, action.delta)
                                 focusApp(pkg)
                             }
                             HomeAction.EndMove -> endMove()
@@ -559,20 +560,18 @@ fun HomeScreen(vm: LauncherViewModel) {
                             state.startMove(app.packageName)
                         },
                         // Tirar só se houver quem entre no lugar (a primeira app de baixo).
-                        favorite = if (isFavorite && gridApps.size <= FavoriteCount) null else isFavorite,
+                        favorite = if (isFavorite && !AppGrid.canUnfavorite(gridApps.size)) null else isFavorite,
                         onToggleFavorite = {
                             closeMenu()
-                            val from = gridApps.indexOfFirst { it.packageName == app.packageName }
                             if (isFavorite) {
                                 // Desce para o início da lista de baixo e a primeira de lá sobe para o lugar vago.
                                 // No Início Android a app sai da fila: o foco passa para a vizinha.
                                 if (!onApps && !appleTv) focusApp(HomeState.neighbour(favorites.map { it.packageName }, app.packageName))
-                                vm.moveApp(app.packageName, FavoriteCount - from, FavoriteCount)
-                                vm.finishMove()
+                                vm.unfavorite(app.packageName)
                             } else {
                                 // Entra no último lugar (a que lá estava desce para o início da lista de baixo) e fica
                                 // logo a mover, para se pôr no sítio certo com ‹ ›.
-                                vm.moveApp(app.packageName, minOf(favorites.size, FavoriteCount - 1) - from, FavoriteCount)
+                                vm.favorite(app.packageName)
                                 state.startMove(app.packageName)
                             }
                         },

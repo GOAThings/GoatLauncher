@@ -27,6 +27,7 @@ import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.data.WatchNextItem
 import cc.slokker.goatlauncher.data.WeatherNow
 import cc.slokker.goatlauncher.data.YouTubeLogin
+import cc.slokker.goatlauncher.data.AppGrid
 import cc.slokker.goatlauncher.data.api.BackendDevice
 import cc.slokker.goatlauncher.data.api.BackendUser
 import cc.slokker.goatlauncher.data.networkKind
@@ -517,25 +518,25 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Move [pkg] [delta] lugares na grelha das apps, tal como se vê no separador Apps e na Apple TV: os [favorites]
-     * favoritos e depois todas as outras, também as escondidas. A app vai para o novo lugar e as do meio chegam-se
-     * (descer um favorito traz para os favoritos a primeira app de baixo). Uma app escondida que entre nos
-     * favoritos volta a aparecer no Início. Grava a ordem de todas as apps; só envia para a conta em [finishMove].
+     * Move [pkg] [delta] lugares na grelha das apps ([AppGrid]: os favoritos e depois todas as outras, também as
+     * escondidas). Grava a ordem de todas as apps; só envia para a conta em [finishMove].
      */
-    fun moveApp(pkg: String, delta: Int, favorites: Int) {
+    fun moveApp(pkg: String, delta: Int) = changeGrid { order, hidden -> AppGrid.move(order, hidden, pkg, delta) }
+
+    /** Tira [pkg] dos favoritos (a primeira app de baixo sobe para o lugar) e envia logo. */
+    fun unfavorite(pkg: String) {
+        changeGrid { order, hidden -> AppGrid.unfavorite(order, hidden, pkg) }
+        finishMove()
+    }
+
+    /** Põe [pkg] no último lugar dos favoritos; o ecrã fica a mover a app e envia no fim ([finishMove]). */
+    fun favorite(pkg: String) = changeGrid { order, hidden -> AppGrid.favorite(order, hidden, pkg) }
+
+    private fun changeGrid(change: (order: List<String>, hidden: Set<String>) -> Pair<List<String>, Set<String>>?) {
         val all = installed.value ?: return
         settings.updateDevice(push = false) { d ->
-            val order = ordered(all, d.apps).map { it.packageName }
-            val fav = order.filterNot { it in d.hidden }.take(favorites)
-            val grid = (fav + order.filterNot { it in fav }).toMutableList()
-            val from = grid.indexOf(pkg)
-            if (from < 0) return@updateDevice d
-            val to = (from + delta).coerceIn(grid.indices)
-            if (to != from) {
-                grid.removeAt(from)
-                grid.add(to, pkg)
-            }
-            d.copy(apps = grid, hidden = d.hidden - grid.take(favorites).toSet())
+            val (apps, hidden) = change(ordered(all, d.apps).map { it.packageName }, d.hidden) ?: return@updateDevice d
+            d.copy(apps = apps, hidden = hidden)
         }
     }
 
