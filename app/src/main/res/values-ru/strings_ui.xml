@@ -133,6 +133,10 @@
     <string name="home_guard">Оставлять главным экраном</string>
     <string name="home_guard_on">Вкл.: Home всегда открывает GoatLauncher</string>
     <string name="home_guard_off">Выкл.: включите «GoatLauncher» в разделе «Специальные возможности»</string>
+    <string name="home_setup_title">Открывать GoatLauncher кнопкой «Домой»</string>
+    <string name="home_setup_text">Кнопка «Домой» пока открывает главный экран Android. Включите «GoatLauncher: оставлять главным экраном» в Спец. возможностях, и «Домой» всегда будет открывать GoatLauncher. Это можно сделать и позже в Настройки → Приложения.</string>
+    <string name="home_setup_turn_on">Включить</string>
+    <string name="home_setup_later">Не сейчас</string>
     <string name="parental">Родительский контроль</string>
     <string name="parental_off">Выкл.: задайте код, чтобы блокировать приложения</string>
     <string name="unlock_app">Код для открытия %1$s</string>

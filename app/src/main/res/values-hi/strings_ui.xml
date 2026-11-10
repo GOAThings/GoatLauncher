@@ -133,6 +133,10 @@
     <string name="home_guard">होम स्क्रीन बनाए रखें</string>
     <string name="home_guard_on">चालू: Home हमेशा GoatLauncher खोलता है</string>
     <string name="home_guard_off">बंद: सुलभता में \"GoatLauncher\" चालू करें</string>
+    <string name="home_setup_title">होम बटन से GoatLauncher खोलें</string>
+    <string name="home_setup_text">होम बटन अभी भी Android की अपनी होम स्क्रीन खोलता है। सुलभता में \"GoatLauncher: होम स्क्रीन बनाए रखें\" चालू करें, फिर होम हमेशा GoatLauncher खोलेगा। आप यह बाद में सेटिंग्स → ऐप्स में भी कर सकते हैं।</string>
+    <string name="home_setup_turn_on">चालू करें</string>
+    <string name="home_setup_later">अभी नहीं</string>
     <string name="parental">पैरेंटल कंट्रोल</string>
     <string name="parental_off">बंद: ऐप लॉक करने के लिए कोड सेट करें</string>
     <string name="unlock_app">%1$s खोलने के लिए कोड</string>

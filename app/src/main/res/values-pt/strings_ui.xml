@@ -133,6 +133,10 @@
     <string name="home_guard">Manter como ecrã inicial</string>
     <string name="home_guard_on">Ligado: o Home abre sempre o GoatLauncher</string>
     <string name="home_guard_off">Desligado: liga \"GoatLauncher\" na Acessibilidade</string>
+    <string name="home_setup_title">Abrir o GoatLauncher com o botão Home</string>
+    <string name="home_setup_text">O botão Home ainda abre o ecrã inicial do Android. Liga \"GoatLauncher: manter como ecrã inicial\" na Acessibilidade e o Home passa a abrir sempre o GoatLauncher. Também o podes fazer depois em Definições → Apps.</string>
+    <string name="home_setup_turn_on">Ligar</string>
+    <string name="home_setup_later">Agora não</string>
     <string name="parental">Controlo parental</string>
     <string name="parental_off">Desligado: define um código para bloquear apps</string>
     <string name="unlock_app">Código para abrir %1$s</string>

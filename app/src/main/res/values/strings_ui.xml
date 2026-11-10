@@ -133,6 +133,10 @@
     <string name="home_guard">Keep as home screen</string>
     <string name="home_guard_on">On: Home always opens GoatLauncher</string>
     <string name="home_guard_off">Off: turn on \"GoatLauncher\" in Accessibility</string>
+    <string name="home_setup_title">Open GoatLauncher with the Home button</string>
+    <string name="home_setup_text">The Home button still opens Android\'s own home screen. Turn on \"GoatLauncher: keep as home screen\" in Accessibility and Home will always open GoatLauncher. You can also do it later in Settings → Apps.</string>
+    <string name="home_setup_turn_on">Turn on</string>
+    <string name="home_setup_later">Not now</string>
     <string name="parental">Parental control</string>
     <string name="parental_off">Off: set a code to lock apps</string>
     <string name="unlock_app">Code to open %1$s</string>

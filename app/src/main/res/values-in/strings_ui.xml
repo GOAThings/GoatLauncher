@@ -133,6 +133,10 @@
     <string name="home_guard">Pertahankan sebagai layar utama</string>
     <string name="home_guard_on">Aktif: Home selalu membuka GoatLauncher</string>
     <string name="home_guard_off">Nonaktif: aktifkan \"GoatLauncher\" di Aksesibilitas</string>
+    <string name="home_setup_title">Buka GoatLauncher dengan tombol Beranda</string>
+    <string name="home_setup_text">Tombol Beranda masih membuka layar utama Android. Aktifkan \"GoatLauncher: pertahankan sebagai layar utama\" di Aksesibilitas dan Beranda akan selalu membuka GoatLauncher. Anda juga bisa melakukannya nanti di Setelan → Aplikasi.</string>
+    <string name="home_setup_turn_on">Aktifkan</string>
+    <string name="home_setup_later">Nanti saja</string>
     <string name="parental">Kontrol orang tua</string>
     <string name="parental_off">Nonaktif: atur kode untuk mengunci aplikasi</string>
     <string name="unlock_app">Kode untuk membuka %1$s</string>

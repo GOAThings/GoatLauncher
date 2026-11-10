@@ -133,6 +133,10 @@
     <string name="home_guard">Mantieni come schermata Home</string>
     <string name="home_guard_on">Attivo: Home apre sempre GoatLauncher</string>
     <string name="home_guard_off">Disattivo: attiva \"GoatLauncher\" in Accessibilità</string>
+    <string name="home_setup_title">Apri GoatLauncher con il tasto Home</string>
+    <string name="home_setup_text">Il tasto Home apre ancora la schermata Home di Android. Attiva \"GoatLauncher: mantieni come schermata Home\" in Accessibilità e Home aprirà sempre GoatLauncher. Puoi farlo anche più tardi in Impostazioni → App.</string>
+    <string name="home_setup_turn_on">Attiva</string>
+    <string name="home_setup_later">Non ora</string>
     <string name="parental">Controllo genitori</string>
     <string name="parental_off">Disattivo: imposta un codice per bloccare le app</string>
     <string name="unlock_app">Codice per aprire %1$s</string>

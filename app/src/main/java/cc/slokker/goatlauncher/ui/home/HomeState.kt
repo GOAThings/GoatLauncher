@@ -23,6 +23,9 @@ sealed interface Overlay {
 
     /** O pedido do código do controlo parental (aberto pelo ViewModel). */
     data object Pin : Overlay
+
+    /** Ligar o "Manter como ecrã inicial" (uma janela à parte, só da primeira vez: ver o ViewModel). */
+    data object HomeSetup : Overlay
 }
 
 /**
@@ -63,7 +66,9 @@ class HomeState(initialFocus: String?, private val pinShown: () -> Boolean = { f
     val choosingIcon: LauncherApp? get() = overlays.lastOrNull { it is Overlay.Icon }?.let { (it as Overlay.Icon).app }
 
     /** Uma janela à parte (mudar o nome ou o ícone) está aberta: as teclas dela não passam pelo Início. */
-    val dialogOpen: Boolean get() = overlays.any { it is Overlay.Rename || it is Overlay.Icon }
+    val dialogOpen: Boolean get() = overlays.any { it is Overlay.Rename || it is Overlay.Icon || it is Overlay.HomeSetup }
+
+    val homeSetup: Boolean get() = Overlay.HomeSetup in overlays
 
     /** O código tem o foco: um pedido de foco do Início espera que feche (e é ele que o devolve). */
     val holdsFocus: Boolean get() = pinShown()
@@ -90,7 +95,7 @@ class HomeState(initialFocus: String?, private val pinShown: () -> Boolean = { f
         if (overlays.isNotEmpty()) return
         when (overlay) {
             is Overlay.Menu -> focusApp(overlay.app.packageName)
-            is Overlay.Rename, is Overlay.Icon -> Unit
+            is Overlay.Rename, is Overlay.Icon, Overlay.HomeSetup -> Unit
             Overlay.Pin -> if (onSettings) settingsRefocus++ else focusApp(focusedPkg ?: lastFavorite())
         }
     }

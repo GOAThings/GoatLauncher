@@ -133,6 +133,10 @@
     <string name="home_guard">Manter como tela inicial</string>
     <string name="home_guard_on">Ativado: Home sempre abre o GoatLauncher</string>
     <string name="home_guard_off">Desativado: ative \"GoatLauncher\" em Acessibilidade</string>
+    <string name="home_setup_title">Abrir o GoatLauncher com o botão Home</string>
+    <string name="home_setup_text">O botão Home ainda abre a tela inicial do Android. Ative \"GoatLauncher: manter como tela inicial\" em Acessibilidade e o Home passa a abrir sempre o GoatLauncher. Você também pode fazer isso depois em Configurações → Apps.</string>
+    <string name="home_setup_turn_on">Ativar</string>
+    <string name="home_setup_later">Agora não</string>
     <string name="parental">Controle parental</string>
     <string name="parental_off">Desativado: defina um código para bloquear apps</string>
     <string name="unlock_app">Código para abrir %1$s</string>

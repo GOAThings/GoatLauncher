@@ -133,6 +133,10 @@
     <string name="home_guard">保持为主屏幕</string>
     <string name="home_guard_on">开：Home 键始终打开 GoatLauncher</string>
     <string name="home_guard_off">关：在“无障碍”中开启“GoatLauncher”</string>
+    <string name="home_setup_title">用主页键打开 GoatLauncher</string>
+    <string name="home_setup_text">主页键目前仍会打开 Android 自带的主屏幕。在“无障碍”中开启“GoatLauncher：保持为主屏幕”，主页键就会始终打开 GoatLauncher。你也可以稍后在 设置 → 应用 中完成。</string>
+    <string name="home_setup_turn_on">开启</string>
+    <string name="home_setup_later">以后再说</string>
     <string name="parental">家长控制</string>
     <string name="parental_off">关：设置密码以锁定应用</string>
     <string name="unlock_app">输入密码以打开 %1$s</string>

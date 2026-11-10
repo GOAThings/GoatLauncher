@@ -154,6 +154,21 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /** Ver [UpdatesController.guardStuck]. */
     val guardStuck: StateFlow<Boolean> = updates.guardStuck
 
+    private val homeSetupPrefs = context.getSharedPreferences(HOME_SETUP_PREFS, android.content.Context.MODE_PRIVATE)
+
+    /**
+     * Perguntar uma vez se a pessoa quer ligar o "Manter como ecrã inicial": quem instala sem adb fica com o Home a abrir
+     * o ecrã inicial do Android. Não se pergunta se o GoatLauncher já é o ecrã inicial ou se o serviço já está ligado.
+     */
+    fun shouldAskHomeSetup(): Boolean =
+        !homeSetupPrefs.getBoolean(HOME_SETUP_ASKED, false) &&
+            !HomeGuardService.isDefaultHome(context) && !HomeGuardService.isEnabled(context)
+
+    /** A pessoa respondeu (ligar ou agora não): não se volta a perguntar (fica a linha nas Definições). */
+    fun homeSetupAnswered() {
+        homeSetupPrefs.edit().putBoolean(HOME_SETUP_ASKED, true).apply()
+    }
+
     private val reports = ReportSender(
         scope = viewModelScope,
         backend = c.backend,
@@ -587,6 +602,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private companion object {
 
         const val LANGUAGE_DELAY_MS = 400L
+
+        /** Só nesta TV: se já se perguntou pelo "Manter como ecrã inicial" ([shouldAskHomeSetup]). */
+        const val HOME_SETUP_PREFS = "home_setup"
+        const val HOME_SETUP_ASKED = "asked"
 
         /** Primeiro as apps pela ordem guardada; as que lá não estão vão para o fim (por nome). */
         fun ordered(all: List<App>, order: List<String>): List<App> {

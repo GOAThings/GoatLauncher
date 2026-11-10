@@ -133,6 +133,10 @@
     <string name="home_guard">Als Startbildschirm behalten</string>
     <string name="home_guard_on">An: Die Home-Taste öffnet immer GoatLauncher</string>
     <string name="home_guard_off">Aus: Schalte „GoatLauncher“ unter Bedienungshilfen ein</string>
+    <string name="home_setup_title">GoatLauncher mit der Home-Taste öffnen</string>
+    <string name="home_setup_text">Die Home-Taste öffnet noch den Startbildschirm von Android. Aktiviere „GoatLauncher: als Startbildschirm behalten“ unter Bedienungshilfen, dann öffnet Home immer GoatLauncher. Das geht auch später unter Einstellungen → Apps.</string>
+    <string name="home_setup_turn_on">Aktivieren</string>
+    <string name="home_setup_later">Nicht jetzt</string>
     <string name="parental">Kindersicherung</string>
     <string name="parental_off">Aus: Lege einen Code fest, um Apps zu sperren</string>
     <string name="unlock_app">Code zum Öffnen von %1$s</string>

@@ -654,6 +654,26 @@ fun HomeScreen(vm: LauncherViewModel) {
                 state.choosingIcon?.let { app ->
                     IconPicker(app, current = device.icons[app.packageName], vm = vm, onDone = { state.close(Overlay.Icon(app)) })
                 }
+
+                // Da primeira vez, se o Home ainda abre o ecrã inicial do Android (quem instala sem adb): um bocado
+                // depois de abrir, para não tapar o arranque, e só sem nada por cima.
+                LaunchedEffect(Unit) {
+                    delay(HOME_SETUP_DELAY_MS)
+                    if (state.overlay == null && vm.shouldAskHomeSetup()) state.open(Overlay.HomeSetup)
+                }
+                if (state.homeSetup) {
+                    val answered = {
+                        state.close(Overlay.HomeSetup)
+                        vm.homeSetupAnswered()
+                    }
+                    HomeSetupDialog(
+                        onTurnOn = {
+                            answered()
+                            SystemIntents.start(context, SystemIntents.accessibilitySettings())
+                        },
+                        onLater = answered,
+                    )
+                }
             }
             AnimatedVisibility(visible = idle, enter = fadeIn(tween(AMBIENT_FADE_MS)), exit = fadeOut(tween(250))) {
                 AmbientScene(
@@ -673,6 +693,8 @@ fun HomeScreen(vm: LauncherViewModel) {
 fun dockColor(night: Boolean): Color = if (night) Color.Black.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.26f)
 
 private const val MENU_MS = 120
+
+private const val HOME_SETUP_DELAY_MS = 3000L
 
 private const val AMBIENT_FADE_MS = 1500
 

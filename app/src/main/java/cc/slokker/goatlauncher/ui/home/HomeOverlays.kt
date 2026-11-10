@@ -34,6 +34,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.data.LauncherApp
@@ -66,6 +67,33 @@ internal fun RenameDialog(app: LauncherApp, custom: Boolean, onSave: (String?) -
             }
         }
         LaunchedEffect(Unit) { field.focusSoon() }
+    }
+}
+
+/**
+ * Da primeira vez, se o Home ainda abre o ecrã inicial do Android: ligar o "Manter como ecrã inicial" na Acessibilidade
+ * ([onTurnOn]). Escolher o GoatLauncher em "App de ecrã inicial predefinida" não chega: no Google TV o Android passa a
+ * dizer que é ele, mas o Home continua a abrir o launcher da Google (visto no emulador).
+ */
+@Composable
+internal fun HomeSetupDialog(onTurnOn: () -> Unit, onLater: () -> Unit) {
+    val s = LocalStrings.current
+    val first = remember { FocusRequester() }
+    Dialog(onDismissRequest = onLater, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(
+            Modifier
+                .dialogPanel(640.dp)
+                .padding(20.dp),
+        ) {
+            Text(s.homeSetupTitle, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 8.dp))
+            Text(s.homeSetupText, style = MaterialTheme.typography.bodyMedium, color = GoatColors.TextDim)
+            Spacer(Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                GlassButton(s.homeSetupTurnOn, onClick = onTurnOn, modifier = Modifier.focusRequester(first))
+                GlassButton(s.homeSetupLater, onClick = onLater)
+            }
+        }
+        LaunchedEffect(Unit) { first.focusSoon() }
     }
 }
 

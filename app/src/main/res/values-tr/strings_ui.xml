@@ -133,6 +133,10 @@
     <string name="home_guard">Ana ekran olarak kalsın</string>
     <string name="home_guard_on">Açık: Home tuşu her zaman GoatLauncher\'ı açar</string>
     <string name="home_guard_off">Kapalı: Erişilebilirlik bölümünde \"GoatLauncher\" seçeneğini açın</string>
+    <string name="home_setup_title">Ana ekran tuşuyla GoatLauncher\'ı aç</string>
+    <string name="home_setup_text">Ana ekran tuşu hâlâ Android\'in kendi ana ekranını açıyor. Erişilebilirlik\'te \"GoatLauncher: ana ekran olarak kalsın\" seçeneğini açın, ana ekran tuşu her zaman GoatLauncher\'ı açsın. Bunu daha sonra Ayarlar → Uygulamalar\'dan da yapabilirsiniz.</string>
+    <string name="home_setup_turn_on">Aç</string>
+    <string name="home_setup_later">Şimdi değil</string>
     <string name="parental">Ebeveyn denetimi</string>
     <string name="parental_off">Kapalı: uygulamaları kilitlemek için bir kod belirleyin</string>
     <string name="unlock_app">%1$s uygulamasını açma kodu</string>

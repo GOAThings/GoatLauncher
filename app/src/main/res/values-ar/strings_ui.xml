@@ -133,6 +133,10 @@
     <string name="home_guard">الإبقاء كشاشة رئيسية</string>
     <string name="home_guard_on">مفعّل: زر Home يفتح GoatLauncher دائمًا</string>
     <string name="home_guard_off">متوقف: فعّل «GoatLauncher» في إمكانية الوصول</string>
+    <string name="home_setup_title">افتح GoatLauncher بزر الصفحة الرئيسية</string>
+    <string name="home_setup_text">لا يزال زر الصفحة الرئيسية يفتح الشاشة الرئيسية لنظام Android. فعّل \"GoatLauncher: الإبقاء كشاشة رئيسية\" في إمكانية الوصول وسيفتح زر الصفحة الرئيسية GoatLauncher دائمًا. يمكنك أيضًا القيام بذلك لاحقًا من الإعدادات ← التطبيقات.</string>
+    <string name="home_setup_turn_on">تفعيل</string>
+    <string name="home_setup_later">ليس الآن</string>
     <string name="parental">الرقابة الأبوية</string>
     <string name="parental_off">متوقفة: عيّن رمزًا لقفل التطبيقات</string>
     <string name="unlock_app">الرمز لفتح %1$s</string>

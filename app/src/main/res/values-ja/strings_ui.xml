@@ -133,6 +133,10 @@
     <string name="home_guard">ホーム画面として維持</string>
     <string name="home_guard_on">オン：Home ボタンで常に GoatLauncher を開きます</string>
     <string name="home_guard_off">オフ：ユーザー補助で「GoatLauncher」をオンにしてください</string>
+    <string name="home_setup_title">ホームボタンで GoatLauncher を開く</string>
+    <string name="home_setup_text">ホームボタンはまだ Android のホーム画面を開きます。ユーザー補助で「GoatLauncher：ホーム画面として維持」をオンにすると、ホームで常に GoatLauncher が開きます。あとから 設定 → アプリ でも設定できます。</string>
+    <string name="home_setup_turn_on">オンにする</string>
+    <string name="home_setup_later">後で</string>
     <string name="parental">ペアレンタルコントロール</string>
     <string name="parental_off">オフ：コードを設定してアプリをロックします</string>
     <string name="unlock_app">%1$s を開くためのコード</string>

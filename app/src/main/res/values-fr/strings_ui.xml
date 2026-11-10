@@ -133,6 +133,10 @@
     <string name="home_guard">Garder comme écran d\'accueil</string>
     <string name="home_guard_on">Activé : le bouton Home ouvre toujours GoatLauncher</string>
     <string name="home_guard_off">Désactivé : activez \"GoatLauncher\" dans Accessibilité</string>
+    <string name="home_setup_title">Ouvrir GoatLauncher avec le bouton Accueil</string>
+    <string name="home_setup_text">Le bouton Accueil ouvre encore l\'écran d\'accueil d\'Android. Activez « GoatLauncher : garder comme écran d\'accueil » dans Accessibilité et Accueil ouvrira toujours GoatLauncher. Vous pourrez aussi le faire plus tard dans Paramètres → Apps.</string>
+    <string name="home_setup_turn_on">Activer</string>
+    <string name="home_setup_later">Pas maintenant</string>
     <string name="parental">Contrôle parental</string>
     <string name="parental_off">Désactivé : définissez un code pour verrouiller des apps</string>
     <string name="unlock_app">Code pour ouvrir %1$s</string>
