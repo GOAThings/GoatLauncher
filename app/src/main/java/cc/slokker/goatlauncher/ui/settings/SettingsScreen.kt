@@ -247,7 +247,7 @@ fun SettingsScreen(
                 }
             }
             Text(
-                "GoatLauncher ${BuildConfig.VERSION_NAME}",
+                s.version(BuildConfig.VERSION_NAME),
                 style = MaterialTheme.typography.bodySmall,
                 color = GoatColors.TextFaint,
                 modifier = Modifier.padding(start = 12.dp, top = 10.dp),
