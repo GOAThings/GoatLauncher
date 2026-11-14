@@ -14,6 +14,7 @@ import android.content.pm.ApplicationInfo
 import android.os.SystemClock
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -147,11 +148,17 @@ fun HomeScreen(vm: LauncherViewModel) {
 
     // Onde está o banner de cada app no ecrã (o menu da app abre junto dele). Não é estado: só se lê ao abrir.
     val tileBounds = remember { HashMap<String, androidx.compose.ui.geometry.Rect>() }
-    // O fundo desfocado para o vidro do menu da app (o mesmo das Definições).
+    // O fundo desfocado para o vidro do menu da app.
     val menuWallpaper by vm.wallpaperImage.collectAsStateWithLifecycle()
-    val menuBackdrop = rememberWallpaperBlur(account.wallpaper, menuWallpaper)
+    val wallpaperBlur = rememberWallpaperBlur(account.wallpaper, menuWallpaper)
     // A app com foco, para onde o foco vai, o "mover" e o que está por cima (menu, código…): ver HomeState.
     val state = remember { HomeState(vm.focusedPackage, pinShown = { vm.pinPrompt.value != null }) }
+    // O ecrã de agora (banners incluídos) desfocado, tirado ao abrir o menu; sem ele, só o fundo.
+    var screenBlur by remember { mutableStateOf<ImageBitmap?>(null) }
+    val menuView = LocalView.current
+    val menuOpen = state.menu != null
+    LaunchedEffect(menuOpen) { if (menuOpen) screenBlur = captureScreenBlur(menuView) }
+    val menuBackdrop = screenBlur ?: wallpaperBlur
     // O "Continuar a ver" só muda quando o foco assenta num favorito: a correr pela fila não carrega cada um.
     // O foco é lido num snapshotFlow (não na composição): mudar de app não volta a compor o ecrã todo.
     var sectionPkg by remember { mutableStateOf(vm.focusedPackage) }

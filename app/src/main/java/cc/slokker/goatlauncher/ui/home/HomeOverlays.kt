@@ -120,7 +120,7 @@ internal fun HomeSetupDialog(onTurnOn: () -> Unit, onLater: () -> Unit) {
 internal fun AppMenu(
     app: LauncherApp,
     anchor: Rect?,
-    /** O fundo do ecrã desfocado, para o vidro do menu (ver rememberWallpaperBlur). */
+    /** O ecrã por trás desfocado, para o vidro do menu (ver captureScreenBlur). */
     backdrop: ImageBitmap,
     onMove: () -> Unit,
     /** A app está nos favoritos; null = sem a opção. */
@@ -152,8 +152,8 @@ internal fun AppMenu(
             Modifier
                 .placeNear(anchor)
                 .width(MENU_WIDTH)
-                // Vidro fosco (o fundo desfocado por trás) com um véu mais leve que o das Definições: mais vidro.
-                .frostedGlass(backdrop, MenuShape, tint = MenuTint)
+                // O vidro líquido da GoatTV: o ecrã por trás desfocado, o véu dela, o reflexo e o contorno.
+                .frostedGlass(backdrop, MenuShape)
                 .padding(8.dp)
                 .focusProperties { onExit = { cancelFocusChange() } }
                 .focusGroup(),
@@ -235,7 +235,6 @@ private fun Modifier.placeNear(anchor: Rect?): Modifier = layout { measurable, c
 
 private val MENU_WIDTH = 300.dp
 private val MenuShape = RoundedCornerShape(26.dp)
-private val MenuTint = Color(0xFF0A0D16).copy(alpha = 0.38f)
 private val MENU_MARGIN = 24.dp
 private val MENU_GAP = 12.dp
 /** Quanto o menu entra para dentro do banner, a partir da esquerda (como um balão a sair dele). */
