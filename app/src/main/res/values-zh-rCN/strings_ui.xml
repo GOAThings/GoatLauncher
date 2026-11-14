@@ -36,6 +36,7 @@
     <string name="wallpaper_folder">文件夹：%1$s</string>
     <string name="move">移动</string>
     <string name="more_options">更多选项…</string>
+    <string name="move_app">移动 %1$s</string>
     <string name="hide">从首页隐藏</string>
     <string name="show_on_home">在首页显示</string>
     <string name="hide_continue">隐藏“继续观看”</string>

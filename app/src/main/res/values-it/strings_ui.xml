@@ -36,6 +36,7 @@
     <string name="wallpaper_folder">Cartella: %1$s</string>
     <string name="move">Sposta</string>
     <string name="more_options">Altre opzioni…</string>
+    <string name="move_app">Sposta %1$s</string>
     <string name="hide">Nascondi dalla Home</string>
     <string name="show_on_home">Mostra nella Home</string>
     <string name="hide_continue">Nascondi Continua a guardare</string>

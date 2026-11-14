@@ -36,6 +36,7 @@
     <string name="wallpaper_folder">Папка: %1$s</string>
     <string name="move">Переместить</string>
     <string name="more_options">Ещё…</string>
+    <string name="move_app">Переместить %1$s</string>
     <string name="hide">Скрыть с главной</string>
     <string name="show_on_home">Показывать на главной</string>
     <string name="hide_continue">Скрыть «Продолжить просмотр»</string>

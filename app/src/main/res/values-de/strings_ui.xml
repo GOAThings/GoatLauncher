@@ -36,6 +36,7 @@
     <string name="wallpaper_folder">Ordner: %1$s</string>
     <string name="move">Verschieben</string>
     <string name="more_options">Weitere Optionen…</string>
+    <string name="move_app">%1$s verschieben</string>
     <string name="hide">Auf Start ausblenden</string>
     <string name="show_on_home">Auf Start anzeigen</string>
     <string name="hide_continue">Weiterschauen ausblenden</string>

@@ -36,6 +36,7 @@
     <string name="wallpaper_folder">Dossier : %1$s</string>
     <string name="move">Déplacer</string>
     <string name="more_options">Plus d\'options…</string>
+    <string name="move_app">Déplacer %1$s</string>
     <string name="hide">Masquer de l\'accueil</string>
     <string name="show_on_home">Afficher sur l\'accueil</string>
     <string name="hide_continue">Masquer Reprendre la lecture</string>

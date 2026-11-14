@@ -36,6 +36,7 @@
     <string name="wallpaper_folder">مجلد: %1$s</string>
     <string name="move">نقل</string>
     <string name="more_options">خيارات أخرى…</string>
+    <string name="move_app">نقل %1$s</string>
     <string name="hide">إخفاء من الرئيسية</string>
     <string name="show_on_home">إظهار في الرئيسية</string>
     <string name="hide_continue">إخفاء متابعة المشاهدة</string>

@@ -36,6 +36,7 @@
     <string name="wallpaper_folder">Folder: %1$s</string>
     <string name="move">Pindahkan</string>
     <string name="more_options">Opsi lainnya…</string>
+    <string name="move_app">Pindahkan %1$s</string>
     <string name="hide">Sembunyikan dari Beranda</string>
     <string name="show_on_home">Tampilkan di Beranda</string>
     <string name="hide_continue">Sembunyikan Lanjutkan menonton</string>

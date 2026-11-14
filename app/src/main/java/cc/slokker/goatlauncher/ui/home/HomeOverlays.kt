@@ -159,7 +159,7 @@ internal fun AppMenu(
                 .focusGroup(),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            MenuPill(GoatIcons.Move, s.move, onMove, Modifier.focusRequester(first))
+            MenuPill(GoatIcons.Move, s.moveApp(app.label), onMove, Modifier.focusRequester(first))
             if (favorite != null) {
                 MenuPill(if (favorite) GoatIcons.Star else GoatIcons.StarOutline, if (favorite) s.removeFromFavorites else s.addToFavorites, onToggleFavorite)
             }

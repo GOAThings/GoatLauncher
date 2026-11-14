@@ -36,6 +36,7 @@
     <string name="wallpaper_folder">फ़ोल्डर: %1$s</string>
     <string name="move">जगह बदलें</string>
     <string name="more_options">और विकल्प…</string>
+    <string name="move_app">%1$s को खिसकाएं</string>
     <string name="hide">होम से छिपाएँ</string>
     <string name="show_on_home">होम पर दिखाएँ</string>
     <string name="hide_continue">\"देखना जारी रखें\" छिपाएँ</string>

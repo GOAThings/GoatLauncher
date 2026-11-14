@@ -36,6 +36,7 @@
     <string name="wallpaper_folder">Klasör: %1$s</string>
     <string name="move">Taşı</string>
     <string name="more_options">Diğer seçenekler…</string>
+    <string name="move_app">%1$s uygulamasını taşı</string>
     <string name="hide">Ana ekrandan gizle</string>
     <string name="show_on_home">Ana ekranda göster</string>
     <string name="hide_continue">İzlemeye devam et\'i gizle</string>
