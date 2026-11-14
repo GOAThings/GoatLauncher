@@ -58,6 +58,7 @@ class Strings(context: Context) {
     val useFolderHint get() = s(R.string.use_folder_hint)
     fun wallpaperFolder(name: String) = s(R.string.wallpaper_folder, name)
     val move get() = s(R.string.move)
+    val moreOptions get() = s(R.string.more_options)
     val hide get() = s(R.string.hide)
     val showOnHome get() = s(R.string.show_on_home)
     val hideContinue get() = s(R.string.hide_continue)

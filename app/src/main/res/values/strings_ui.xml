@@ -35,6 +35,7 @@
     <string name="use_folder_hint">One image at a time, changing every 30 minutes</string>
     <string name="wallpaper_folder">Folder: %1$s</string>
     <string name="move">Move</string>
+    <string name="more_options">More options…</string>
     <string name="hide">Hide from Home</string>
     <string name="show_on_home">Show on Home</string>
     <string name="hide_continue">Hide Continue watching</string>

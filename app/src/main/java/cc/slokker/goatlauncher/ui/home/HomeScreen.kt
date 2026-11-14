@@ -1,5 +1,7 @@
 package cc.slokker.goatlauncher.ui.home
 
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import cc.slokker.goatlauncher.ui.common.OkKeys
 import cc.slokker.goatlauncher.ui.common.focusSoon
 import cc.slokker.goatlauncher.ui.home.HomeMetrics.TileWidth
@@ -143,6 +145,8 @@ fun HomeScreen(vm: LauncherViewModel) {
     val homeScroll = rememberScrollState()
     val scope = rememberCoroutineScope()
 
+    // Onde está o banner de cada app no ecrã (o menu da app abre junto dele). Não é estado: só se lê ao abrir.
+    val tileBounds = remember { HashMap<String, androidx.compose.ui.geometry.Rect>() }
     // A app com foco, para onde o foco vai, o "mover" e o que está por cima (menu, código…): ver HomeState.
     val state = remember { HomeState(vm.focusedPackage, pinShown = { vm.pinPrompt.value != null }) }
     // O "Continuar a ver" só muda quando o foco assenta num favorito: a correr pela fila não carrega cada um.
@@ -270,7 +274,10 @@ fun HomeScreen(vm: LauncherViewModel) {
             },
             // Com as definições protegidas, o menu (mover, esconder, mudar nome…) pede o código.
             onLongClick = { vm.withSettingsUnlocked { state.open(Overlay.Menu(app)) } },
-            bannerModifier = modifier.then(if (app.packageName == state.targetPkg) Modifier.focusRequester(target) else Modifier),
+            bannerModifier = modifier
+                .then(if (app.packageName == state.targetPkg) Modifier.focusRequester(target) else Modifier)
+                // Onde o banner está, para o menu da app abrir junto dele (sem recompor: só se lê ao abrir).
+                .onGloballyPositioned { tileBounds[app.packageName] = it.boundsInWindow() },
         )
     }
 
@@ -556,6 +563,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                     }
                     AppMenu(
                         app = app,
+                        anchor = tileBounds[app.packageName],
                         onMove = {
                             closeMenu()
                             state.startMove(app.packageName)

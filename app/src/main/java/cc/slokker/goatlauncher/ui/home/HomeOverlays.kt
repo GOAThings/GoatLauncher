@@ -1,6 +1,19 @@
 package cc.slokker.goatlauncher.ui.home
 
 import cc.slokker.goatlauncher.ui.common.focusSoon
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.tv.material3.Icon
+import androidx.tv.material3.Surface
+import cc.slokker.goatlauncher.ui.common.GoatIcons
+import cc.slokker.goatlauncher.ui.common.glass
 import cc.slokker.goatlauncher.ui.common.PinPad
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.foundation.background
@@ -98,12 +111,14 @@ internal fun HomeSetupDialog(onTurnOn: () -> Unit, onLater: () -> Unit) {
 }
 
 /**
- * Pressão longa num banner: Mover, Pôr/Tirar dos favoritos, Mudar ícone, Mudar nome, Esconder, Informação da app,
- * Desinstalar.
+ * O menu de uma app (manter OK): abre junto ao banner dela ([anchor], em coordenadas da janela; null = ao centro),
+ * como um balão de vidro com uma pílula branca no foco. Primeiro só o principal; "Mais opções…" mostra o resto no
+ * mesmo menu.
  */
 @Composable
 internal fun AppMenu(
     app: LauncherApp,
+    anchor: Rect?,
     onMove: () -> Unit,
     /** A app está nos favoritos; null = sem a opção. */
     favorite: Boolean?,
@@ -122,29 +137,104 @@ internal fun AppMenu(
 ) {
     val s = LocalStrings.current
     val first = remember { FocusRequester() }
-    // Voltar é tratado no ecrã (fecha o menu); aqui só se escurece o fundo e se prende o foco ao menu.
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
+    val firstMore = remember { FocusRequester() }
+    var more by remember(app.packageName) { mutableStateOf(false) }
+    // Voltar é tratado no ecrã (fecha o menu); aqui só se escurece um pouco o fundo e se prende o foco ao menu.
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.15f)),
+    ) {
         Column(
             Modifier
-                .dialogPanel(380.dp)
-                .padding(16.dp)
+                .placeNear(anchor)
+                .width(MENU_WIDTH)
+                .glass(MenuShape, tint = GoatColors.PanelTint)
+                .padding(8.dp)
                 .focusProperties { onExit = { cancelFocusChange() } }
                 .focusGroup(),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            Text(app.label, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 12.dp, bottom = 10.dp))
-            GlassRow(title = s.move, onClick = onMove, modifier = Modifier.focusRequester(first))
-            if (favorite != null) GlassRow(title = if (favorite) s.removeFromFavorites else s.addToFavorites, onClick = onToggleFavorite)
-            GlassRow(title = s.changeIcon, onClick = onChangeIcon)
-            GlassRow(title = s.rename, onClick = onRename)
-            GlassRow(title = if (hidden) s.showOnHome else s.hide, onClick = onHide)
-            GlassRow(title = if (continueOff) s.showContinue else s.hideContinue, onClick = onToggleContinue)
-            if (lock != null) GlassRow(title = if (lock) s.unlockAppMenu else s.lockApp, onClick = onToggleLock)
-            GlassRow(title = s.appInfo, onClick = onInfo)
-            if (onUninstall != null) GlassRow(title = s.uninstall, onClick = onUninstall)
+            MenuPill(GoatIcons.Move, s.move, onMove, Modifier.focusRequester(first))
+            if (favorite != null) {
+                MenuPill(if (favorite) GoatIcons.Star else GoatIcons.StarOutline, if (favorite) s.removeFromFavorites else s.addToFavorites, onToggleFavorite)
+            }
+            MenuPill(GoatIcons.Palette, s.changeIcon, onChangeIcon)
+            MenuPill(GoatIcons.Info, s.appInfo, onInfo)
+            if (!more) {
+                MenuPill(GoatIcons.More, s.moreOptions, { more = true })
+            } else {
+                MenuPill(GoatIcons.Edit, s.rename, onRename, Modifier.focusRequester(firstMore))
+                MenuPill(if (hidden) GoatIcons.Visibility else GoatIcons.VisibilityOff, if (hidden) s.showOnHome else s.hide, onHide)
+                MenuPill(GoatIcons.Play, if (continueOff) s.showContinue else s.hideContinue, onToggleContinue)
+                if (lock != null) MenuPill(GoatIcons.Lock, if (lock) s.unlockAppMenu else s.lockApp, onToggleLock)
+                if (onUninstall != null) MenuPill(GoatIcons.Delete, s.uninstall, onUninstall)
+            }
         }
         LaunchedEffect(Unit) { first.focusSoon() }
+        // Ao abrir "Mais opções…", o foco passa para a primeira das novas.
+        LaunchedEffect(more) { if (more) firstMore.focusSoon() }
     }
 }
+
+/** Uma opção do menu da app: ícone e texto; com foco, uma pílula branca com o texto escuro. */
+@Composable
+private fun MenuPill(icon: ImageVector, title: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = ClickableSurfaceDefaults.shape(CircleShape),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = Color.Transparent,
+            contentColor = GoatColors.Text,
+            focusedContainerColor = Color.White,
+            focusedContentColor = Color.Black,
+            pressedContainerColor = Color.White.copy(alpha = 0.8f),
+            pressedContentColor = Color.Black,
+        ),
+        // Sem crescer: só muda de cor.
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
+    ) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(14.dp))
+            Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+/**
+ * Põe o menu junto ao banner [anchor]: um pouco para dentro da esquerda dele e por cima (por baixo se não couber),
+ * sem sair do ecrã. Sem banner conhecido, fica ao centro.
+ */
+private fun Modifier.placeNear(anchor: Rect?): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
+    val margin = MENU_MARGIN.roundToPx()
+    val gap = MENU_GAP.roundToPx()
+    val w = placeable.width
+    val h = placeable.height
+    val (x, y) = if (anchor == null) {
+        (constraints.maxWidth - w) / 2 to (constraints.maxHeight - h) / 2
+    } else {
+        val x = (anchor.left.toInt() + MENU_INSET.roundToPx()).coerceIn(margin, (constraints.maxWidth - w - margin).coerceAtLeast(margin))
+        val above = anchor.top.toInt() - gap - h
+        val below = anchor.bottom.toInt() + gap
+        val y = when {
+            above >= margin -> above
+            below + h <= constraints.maxHeight - margin -> below
+            else -> (constraints.maxHeight - h - margin).coerceAtLeast(margin)
+        }
+        x to y
+    }
+    layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(x, y) }
+}
+
+private val MENU_WIDTH = 300.dp
+private val MenuShape = RoundedCornerShape(26.dp)
+private val MENU_MARGIN = 24.dp
+private val MENU_GAP = 12.dp
+/** Quanto o menu entra para dentro do banner, a partir da esquerda (como um balão a sair dele). */
+private val MENU_INSET = 32.dp
 
 /**
  * O teclado do código por cima do ecrã (Voltar cancela: ver o ecrã). [onPin] devolve false se estiver errado.
