@@ -147,6 +147,9 @@ fun HomeScreen(vm: LauncherViewModel) {
 
     // Onde está o banner de cada app no ecrã (o menu da app abre junto dele). Não é estado: só se lê ao abrir.
     val tileBounds = remember { HashMap<String, androidx.compose.ui.geometry.Rect>() }
+    // O fundo desfocado para o vidro do menu da app (o mesmo das Definições).
+    val menuWallpaper by vm.wallpaperImage.collectAsStateWithLifecycle()
+    val menuBackdrop = rememberWallpaperBlur(account.wallpaper, menuWallpaper)
     // A app com foco, para onde o foco vai, o "mover" e o que está por cima (menu, código…): ver HomeState.
     val state = remember { HomeState(vm.focusedPackage, pinShown = { vm.pinPrompt.value != null }) }
     // O "Continuar a ver" só muda quando o foco assenta num favorito: a correr pela fila não carrega cada um.
@@ -564,6 +567,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                     AppMenu(
                         app = app,
                         anchor = tileBounds[app.packageName],
+                        backdrop = menuBackdrop,
                         onMove = {
                             closeMenu()
                             state.startMove(app.packageName)

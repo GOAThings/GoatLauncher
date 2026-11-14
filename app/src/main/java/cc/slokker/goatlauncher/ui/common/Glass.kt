@@ -100,7 +100,7 @@ fun Modifier.glass(shape: Shape = GoatShapes.Panel, tint: Color = GoatColors.Gla
  * Vidro fosco, como o das Definições da GoatTV: o fundo do ecrã ([backdrop], uma miniatura do tamanho do ecrã
  * esticada, que fica desfocada) com as cores mais vivas, um véu escuro, o reflexo de luz no topo e o contorno fino.
  */
-fun Modifier.frostedGlass(backdrop: ImageBitmap, shape: Shape = GoatShapes.Panel): Modifier = composed {
+fun Modifier.frostedGlass(backdrop: ImageBitmap, shape: Shape = GoatShapes.Panel, tint: Color = FrostTint): Modifier = composed {
     var origin by remember { mutableStateOf(Offset.Zero) }
     val view = LocalView.current
     this
@@ -127,7 +127,7 @@ fun Modifier.frostedGlass(backdrop: ImageBitmap, shape: Shape = GoatShapes.Panel
                         filterQuality = FilterQuality.Low,
                         colorFilter = Vibrancy,
                     )
-                    drawRect(FrostTint)
+                    drawRect(tint)
                     drawRect(highlight)
                 }
                 drawOutline(outline, rim, style = stroke)

@@ -13,7 +13,8 @@ import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.Surface
 import cc.slokker.goatlauncher.ui.common.GoatIcons
-import cc.slokker.goatlauncher.ui.common.glass
+import cc.slokker.goatlauncher.ui.common.frostedGlass
+import androidx.compose.ui.graphics.ImageBitmap
 import cc.slokker.goatlauncher.ui.common.PinPad
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.foundation.background
@@ -119,6 +120,8 @@ internal fun HomeSetupDialog(onTurnOn: () -> Unit, onLater: () -> Unit) {
 internal fun AppMenu(
     app: LauncherApp,
     anchor: Rect?,
+    /** O fundo do ecrã desfocado, para o vidro do menu (ver rememberWallpaperBlur). */
+    backdrop: ImageBitmap,
     onMove: () -> Unit,
     /** A app está nos favoritos; null = sem a opção. */
     favorite: Boolean?,
@@ -149,7 +152,8 @@ internal fun AppMenu(
             Modifier
                 .placeNear(anchor)
                 .width(MENU_WIDTH)
-                .glass(MenuShape, tint = GoatColors.PanelTint)
+                // Vidro fosco (o fundo desfocado por trás) com um véu mais leve que o das Definições: mais vidro.
+                .frostedGlass(backdrop, MenuShape, tint = MenuTint)
                 .padding(8.dp)
                 .focusProperties { onExit = { cancelFocusChange() } }
                 .focusGroup(),
@@ -231,6 +235,7 @@ private fun Modifier.placeNear(anchor: Rect?): Modifier = layout { measurable, c
 
 private val MENU_WIDTH = 300.dp
 private val MenuShape = RoundedCornerShape(26.dp)
+private val MenuTint = Color(0xFF0A0D16).copy(alpha = 0.38f)
 private val MENU_MARGIN = 24.dp
 private val MENU_GAP = 12.dp
 /** Quanto o menu entra para dentro do banner, a partir da esquerda (como um balão a sair dele). */
