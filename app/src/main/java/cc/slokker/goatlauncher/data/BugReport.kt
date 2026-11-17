@@ -9,7 +9,8 @@ import java.util.Date
 
 /**
  * Relatórios para a zona admin do site (`POST /api/reports`): o logcat desta app, o último crash e o que a pessoa
- * escreveu. Antes de sair da TV, os tokens (conta e YouTube) e o email passam a `***`. Igual ao da GoatTV.
+ * escreveu. Antes de sair da TV, os tokens (conta e YouTube), os emails, os URLs, os servidores e os IPs passam a
+ * `***` (ver [redact]). Igual ao da GoatTV.
  */
 object BugReport {
     internal const val CRASH_FILE = "last_crash.txt"
@@ -65,20 +66,71 @@ object BugReport {
         return if (host == null) "$scheme:" else "$scheme://$host"
     }
 
-    /** Troca por `***` os [secrets] e o que tem cara de credencial (parâmetros, caminhos Xtream, user:pass@, tokens). */
+    /**
+     * Troca por `***` os [secrets] e o que tem cara de credencial ou de endereço: URLs inteiros, parâmetros, caminhos
+     * Xtream e Stalker, MACs, user:pass@, tokens, emails, servidores e IPs (v4 e v6). As regras são as do GoatTV
+     * (BugReportRules, no itv-shared), mais os emails, o IPv6 e os nomes de pacotes, que aqui contam muito.
+     */
     fun redact(text: String, secrets: Collection<String>): String {
         var out = text
         for (secret in secrets.filter { it.length >= 3 }.distinct().sortedByDescending { it.length }) out = out.replace(secret, "***")
+        // Os links podem ter credenciais em qualquer parte do caminho ou do servidor: sai o URL inteiro.
+        out = URL.replace(out) { "${it.groupValues[1]}://***" }
         out = QUERY.replace(out) { "${it.groupValues[1]}=***" }
         out = XTREAM_PATH.replace(out) { "/${it.groupValues[1]}/***/***/" }
+        out = STALKER_PATH.replace(out, "/stalker/***/***/")
+        out = MAC.replace(out, "***")
         out = USER_INFO.replace(out) { "${it.groupValues[1]}***@" }
         out = AUTH.replace(out) { "${it.groupValues[1]} ***" }
+        // O email antes dos servidores, senão ficava `nome@***`.
+        out = EMAIL.replace(out, "***")
+        out = HOST.replace(out) { if (looksLikeCode(it.value)) it.value else "***" }
+        // Um `::` sozinho (Kotlin, C++) não é endereço: só sai se tiver algum número.
+        out = IPV6.replace(out) { if (it.value.any(Char::isLetterOrDigit)) "***" else it.value }
+        out = IPV4.replace(out, "***")
         return out
     }
 
-    private val QUERY = Regex("(?i)\\b([\\w.-]{0,40}(?:password|passwd|pass|pwd|user|token|auth|key|secret|signature|sig|credential)[\\w.-]{0,40})=([^&\\s\"']+)")
+    /**
+     * Um nome com pontos que é código, um ficheiro ou um pacote (fica, para o relatório servir) e não um servidor. Na
+     * dúvida, é servidor.
+     */
+    private fun looksLikeCode(name: String): Boolean {
+        val labels = name.split('.')
+        val last = labels.last().lowercase()
+        if (last in FILE_ENDINGS) return true
+        // com.netflix.ninja, org.xbmc.kodi: os pacotes das apps são o que mais aparece no registo do launcher.
+        if (labels.size >= 3 && labels[0] in PACKAGE_ROOTS) return true
+        if (last.length == 2 || last in COMMON_TLDS || '-' in name) return false
+        return name.any { it.isUpperCase() } || labels[0] in CODE_ROOTS || "${labels[0]}.${labels[1]}" in CODE_ROOTS
+    }
+
+    private val URL = Regex("\\b([a-zA-Z][a-zA-Z0-9+.-]*)://[^\\s\"'<>]+")
+    private val QUERY = Regex("(?i)\\b(mac|sn|device_id2?|[\\w.-]{0,40}(?:password|passwd|pass|pwd|user|token|auth|key|secret|signature|sig|credential)[\\w.-]{0,40})=([^&\\s\"']+)")
     private val XTREAM_PATH = Regex("/(live|movie|series|timeshift)/[^/\\s]+/[^/\\s]+/")
+    private val STALKER_PATH = Regex("/stalker/[^/\\s]+/[^/\\s]+/")
+    private val MAC = Regex("(?i)\\b[0-9a-f]{2}(?:(?::|%3A)[0-9a-f]{2}){5}\\b")
     private val USER_INFO = Regex("([a-zA-Z][a-zA-Z0-9+.-]*://)[^/\\s@]+@")
     private val AUTH = Regex("(?i)(authorization:?|bearer)\\s+(?:(?:bearer|basic|token)\\s+)?[^\\s,]+")
+    private val EMAIL = Regex("(?<![A-Za-z0-9_.+-])[A-Za-z0-9_.+-]+@(?:[A-Za-z0-9-]+\\.)+[A-Za-z][A-Za-z0-9-]+")
+    private val HOST = Regex("(?<![\\w.-])(?:[A-Za-z0-9_-]+\\.)+[A-Za-z][A-Za-z0-9-]*[A-Za-z0-9](?![\\w-])")
+    private val IPV4 = Regex("(?<![\\w.])\\d{1,3}(?:\\.\\d{1,3}){3}(?![\\w.])")
+    private const val H = "[0-9A-Fa-f]{1,4}"
+    private const val V4 = "\\d{1,3}(?:\\.\\d{1,3}){3}"
+    /**
+     * Os IPv6 inteiros (8 grupos) ou com `::`, também com um IPv4 no fim (`::ffff:1.2.3.4`) e com a interface
+     * (`fe80::1%wlan0`). Uma hora (`01:12:03`) não tem `::` nem 8 grupos, por isso fica.
+     */
+    private val IPV6 = Regex(
+        "(?<![A-Za-z0-9_:.%])(?:" +
+            "(?:(?:$H:){6}|(?:$H(?::$H){0,5})?::(?:$H:){0,5})$V4(?![A-Za-z0-9_]|\\.\\d)" +
+            "|(?:(?:$H:){7}$H|(?:$H(?::$H){0,6})?::(?:$H(?::$H){0,6})?)(?:%[A-Za-z0-9_.-]+|(?![A-Za-z0-9_:%]|\\.\\d))" +
+            ")",
+    )
+    private val FILE_ENDINGS = setOf("kt", "java", "swift", "cpp", "dex", "jar", "apk", "ipa", "dylib", "xml", "json", "png", "jpg", "webp", "gz", "ts", "m3u", "m3u8", "mp4", "mkv", "php", "html", "js", "css", "txt", "log")
+    private val COMMON_TLDS = setOf("com", "net", "org", "info", "biz", "xyz", "top", "site", "online", "club", "live", "pro", "stream", "app", "dev", "tech", "store", "shop", "cloud", "link", "icu", "vip", "fun", "space", "website", "one", "world", "today", "media", "example", "invalid", "test", "local", "lan")
+    private val CODE_ROOTS = setOf("java", "javax", "kotlin", "kotlinx", "android", "androidx", "dalvik", "libcore", "sun", "okhttp3", "okio", "retrofit2", "coil", "coil3", "com.android", "com.google", "com.squareup", "com.apple", "org.videolan", "org.json", "cc.slokker")
+    /** Os começos dos pacotes das apps (`com.`, `org.`…), que um servidor quase nunca tem. */
+    private val PACKAGE_ROOTS = setOf("com", "org", "net", "io")
     private val ORIGIN = Regex("^([a-zA-Z][a-zA-Z0-9+.-]*):(?://(?:[^/?#@]*@)?(\\[[^\\]/?#]*]|[^/?#:]*))?")
 }
