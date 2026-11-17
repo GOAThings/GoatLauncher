@@ -47,6 +47,8 @@ import androidx.tv.material3.Text
 import cc.slokker.goatlauncher.BuildConfig
 import cc.slokker.goatlauncher.data.Wallpaper
 import cc.slokker.goatlauncher.ui.LauncherViewModel
+import cc.slokker.goatlauncher.data.api.DELETE_ACCOUNT_URL
+import cc.slokker.goatlauncher.data.api.PRIVACY_URL
 import cc.slokker.goatlauncher.ui.LocalStrings
 import cc.slokker.goatlauncher.ui.common.GoatIcons
 import cc.slokker.goatlauncher.ui.common.ImageBrowser
@@ -204,6 +206,8 @@ fun SettingsScreen(
                     Page.HiddenApps -> HiddenAppsPage(vm, first)
                     Page.Account -> AccountPage(vm, first, onPage = open)
                     Page.YouTube -> YouTubePage(vm, first, onDone = { page = Page.Account })
+                    Page.Privacy -> SiteLinkPage(vm, PRIVACY_URL, first)
+                    Page.DeleteAccount -> SiteLinkPage(vm, DELETE_ACCOUNT_URL, first)
                     Page.Autostart -> {
                         val device by vm.device.collectAsStateWithLifecycle()
                         AppPickerPage(vm, first, current = device.autostart, none = s.autostartNone) {

@@ -220,6 +220,15 @@
     <string name="unlink_hint">Настройки останутся на этом ТВ, но перестанут синхронизироваться</string>
     <string name="press_again_to_confirm">Нажмите ещё раз для подтверждения</string>
     <string name="unlinked">Этот ТВ больше не привязан</string>
+    <string name="privacy">Конфиденциальность</string>
+    <string name="privacy_policy">Политика конфиденциальности</string>
+    <string name="privacy_policy_hint">Что лаунчер хранит и отправляет, и зачем</string>
+    <string name="delete_account">Удалить аккаунт GOAT</string>
+    <string name="delete_account_hint">На сайте, после входа; удаляет аккаунт и всё, что в нём есть</string>
+    <string name="link_scan">Отсканируйте QR-код телефоном, чтобы открыть страницу</string>
+    <string name="link_open_here">Открыть на этом ТВ</string>
+    <string name="link_qr_description">QR-код страницы</string>
+    <string name="link_contact">Вопросы: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Настройки Android</string>
     <string name="version">GoatLauncher %1$s</string>

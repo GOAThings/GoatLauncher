@@ -220,6 +220,15 @@
     <string name="unlink_hint">تبقى الإعدادات على هذا التلفزيون لكن تتوقف المزامنة</string>
     <string name="press_again_to_confirm">اضغط مرة أخرى للتأكيد</string>
     <string name="unlinked">لم يعد هذا التلفزيون مرتبطًا</string>
+    <string name="privacy">الخصوصية</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
+    <string name="privacy_policy_hint">ما يحفظه المشغّل وما يرسله، ولماذا</string>
+    <string name="delete_account">حذف حساب GOAT</string>
+    <string name="delete_account_hint">على الموقع بعد تسجيل الدخول؛ يحذف الحساب وكل ما فيه</string>
+    <string name="link_scan">امسح رمز QR بهاتفك لفتح الصفحة</string>
+    <string name="link_open_here">فتح على هذا التلفزيون</string>
+    <string name="link_qr_description">رمز QR للصفحة</string>
+    <string name="link_contact">للاستفسارات: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">إعدادات Android</string>
     <string name="version">GoatLauncher %1$s</string>

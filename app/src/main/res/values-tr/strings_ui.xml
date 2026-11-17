@@ -220,6 +220,15 @@
     <string name="unlink_hint">Ayarlar bu TV\'de kalır ama artık eşitlenmez</string>
     <string name="press_again_to_confirm">Onaylamak için tekrar basın</string>
     <string name="unlinked">Bu TV artık bağlı değil</string>
+    <string name="privacy">Gizlilik</string>
+    <string name="privacy_policy">Gizlilik politikası</string>
+    <string name="privacy_policy_hint">Başlatıcının neleri sakladığı, gönderdiği ve nedeni</string>
+    <string name="delete_account">GOAT hesabını sil</string>
+    <string name="delete_account_hint">Web sitesinde, giriş yaptıktan sonra; hesabı ve içindeki her şeyi siler</string>
+    <string name="link_scan">Sayfayı açmak için QR kodunu telefonunuzla tarayın</string>
+    <string name="link_open_here">Bu TV\'de aç</string>
+    <string name="link_qr_description">Sayfanın QR kodu</string>
+    <string name="link_contact">Sorular: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Android ayarları</string>
     <string name="version">GoatLauncher %1$s</string>

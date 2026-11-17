@@ -220,6 +220,15 @@
     <string name="unlink_hint">设置会保留在此电视上，但不再同步</string>
     <string name="press_again_to_confirm">再按一次以确认</string>
     <string name="unlinked">此电视已取消关联</string>
+    <string name="privacy">隐私</string>
+    <string name="privacy_policy">隐私政策</string>
+    <string name="privacy_policy_hint">启动器保存和发送哪些数据，以及原因</string>
+    <string name="delete_account">删除 GOAT 账户</string>
+    <string name="delete_account_hint">在网站上登录后操作；将删除账户及其中的所有内容</string>
+    <string name="link_scan">用手机扫描二维码打开页面</string>
+    <string name="link_open_here">在此电视上打开</string>
+    <string name="link_qr_description">页面二维码</string>
+    <string name="link_contact">如有疑问：%1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Android 设置</string>
     <string name="version">GoatLauncher %1$s</string>

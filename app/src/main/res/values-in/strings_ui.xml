@@ -220,6 +220,15 @@
     <string name="unlink_hint">Pengaturan tetap ada di TV ini, tetapi tidak disinkronkan lagi</string>
     <string name="press_again_to_confirm">Tekan lagi untuk mengonfirmasi</string>
     <string name="unlinked">TV ini tidak tertaut lagi</string>
+    <string name="privacy">Privasi</string>
+    <string name="privacy_policy">Kebijakan privasi</string>
+    <string name="privacy_policy_hint">Apa yang disimpan dan dikirim launcher, dan alasannya</string>
+    <string name="delete_account">Hapus akun GOAT</string>
+    <string name="delete_account_hint">Di situs web, setelah masuk; menghapus akun dan semua isinya</string>
+    <string name="link_scan">Pindai kode QR dengan ponsel untuk membuka halaman</string>
+    <string name="link_open_here">Buka di TV ini</string>
+    <string name="link_qr_description">Kode QR halaman</string>
+    <string name="link_contact">Pertanyaan: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Pengaturan Android</string>
     <string name="version">GoatLauncher %1$s</string>

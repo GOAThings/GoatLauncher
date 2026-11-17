@@ -39,6 +39,21 @@ object SystemIntents {
     fun uninstall(pkg: String): Intent =
         Intent(Intent.ACTION_DELETE, Uri.fromParts("package", pkg, null)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
+    /**
+     * [url] num browser desta TV, se houver um (muitas TVs não têm). As TVs com os "stubs" do Android TV respondem a
+     * tudo com um aviso de "nenhuma app": esses não contam. Ver os <queries> do manifesto.
+     */
+    fun browser(context: Context, url: String): Intent? =
+        Intent(Intent.ACTION_VIEW, Uri.parse(url)).addCategory(Intent.CATEGORY_BROWSABLE)
+            .takeIf { it.resolveActivity(context.packageManager)?.packageName?.let { pkg -> pkg !in NO_BROWSER } == true }
+            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+    /**
+     * Os pacotes que "abrem" um endereço só para dizer que não há browser. (O "android" é o ecrã de escolha, quando há
+     * vários browsers: esse conta.)
+     */
+    private val NO_BROWSER = setOf("com.android.tv.frameworkpackagestubs")
+
     /** Abre [intent]; devolve false se não houver quem o abra ou a app recusar. */
     fun start(context: Context, intent: Intent?): Boolean {
         if (intent == null) return false

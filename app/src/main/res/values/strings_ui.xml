@@ -220,6 +220,15 @@
     <string name="unlink_hint">Settings stay on this TV but stop syncing</string>
     <string name="press_again_to_confirm">Press again to confirm</string>
     <string name="unlinked">This TV is no longer linked</string>
+    <string name="privacy">Privacy</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="privacy_policy_hint">What the launcher keeps and sends, and why</string>
+    <string name="delete_account">Delete GOAT account</string>
+    <string name="delete_account_hint">On the website, after you sign in; erases the account and everything in it</string>
+    <string name="link_scan">Scan the QR code with your phone to open the page</string>
+    <string name="link_open_here">Open on this TV</string>
+    <string name="link_qr_description">QR code for the page</string>
+    <string name="link_contact">Questions: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Android settings</string>
     <string name="version">GoatLauncher %1$s</string>

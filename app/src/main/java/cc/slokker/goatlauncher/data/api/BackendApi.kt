@@ -14,6 +14,13 @@ import retrofit2.http.Path
 
 const val BACKEND_URL = "https://thegoat.systems/"
 
+/** A política de privacidade (pública) e o apagar da conta: o site pede o login ele próprio, o token nunca vai no endereço. */
+const val PRIVACY_URL = "${BACKEND_URL}privacy"
+const val DELETE_ACCOUNT_URL = "${BACKEND_URL}account/delete"
+
+/** Para dúvidas sobre a privacidade ou a conta. */
+const val CONTACT_EMAIL = "contact.goathings@gmail.com"
+
 /** Nome desta app na conta Slokker (cada TV fica registada como um dispositivo do Launcher). */
 const val BACKEND_APP = "launcher"
 

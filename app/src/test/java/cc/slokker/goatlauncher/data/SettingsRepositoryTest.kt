@@ -279,6 +279,18 @@ class SettingsRepositoryTest {
     }
 
     @Test
+    fun rejectedTokenFromElsewhereUnlinks() = runBlocking {
+        linkedWithRevs()
+        // Um 401 com um token antigo (renovado entretanto) não desliga a conta.
+        repo.rejected("antigo")
+        assertEquals("t1", repo.session.value?.token)
+        // Com o token desta TV (ex.: o índice das apps), segue sem conta.
+        repo.rejected("t1")
+        assertNull(repo.session.value)
+        assertNull(sessionDisk.value[SessionStore.Keys.TOKEN])
+    }
+
+    @Test
     fun notFoundOnRefreshUnlinks() = runBlocking {
         linkedWithRevs()
         api.refreshes += { httpError(404) }

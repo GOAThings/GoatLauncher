@@ -58,6 +58,12 @@
             <action android:name="android.intent.action.GET_CONTENT" />
             <data android:mimeType="image/*" />
         </intent>
+        <!-- Um browser para a política de privacidade e o apagar da conta (ver SystemIntents.browser). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
         <provider android:authorities="android.media.tv" />
     </queries>
 

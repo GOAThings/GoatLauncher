@@ -5,7 +5,6 @@ import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import androidx.compose.ui.platform.LocalContext
 import cc.slokker.goatlauncher.ui.Strings
 import cc.slokker.goatlauncher.ui.LocalStrings
-import android.graphics.Bitmap
 import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.MaterialTheme
@@ -44,13 +42,11 @@ import cc.slokker.goatlauncher.data.api.BackendUser
 import cc.slokker.goatlauncher.data.api.DevicePollRequest
 import cc.slokker.goatlauncher.data.api.DeviceStartRequest
 import cc.slokker.goatlauncher.ui.common.onBackKey
+import cc.slokker.goatlauncher.ui.common.qrBitmap
 import cc.slokker.goatlauncher.ui.theme.TvSafePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import cc.slokker.goatlauncher.ui.common.glass
 import cc.slokker.goatlauncher.ui.theme.GoatColors
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.EncodeHintType
-import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import retrofit2.HttpException
@@ -208,14 +204,6 @@ private suspend fun runActivation(
             }
         }
     }
-}
-
-private fun qrBitmap(text: String, size: Int = 512): ImageBitmap {
-    val matrix = QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, size, size, mapOf(EncodeHintType.MARGIN to 1))
-    val pixels = IntArray(size * size) { i ->
-        if (matrix[i % size, i / size]) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
-    }
-    return Bitmap.createBitmap(pixels, size, size, Bitmap.Config.ARGB_8888).asImageBitmap()
 }
 
 /** O nome desta TV na conta: o que se deu à box no Android (ex.: "Sala"), senão o modelo. */

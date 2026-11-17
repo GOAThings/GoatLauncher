@@ -1,6 +1,21 @@
 package cc.slokker.goatlauncher.ui.settings
 
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import cc.slokker.goatlauncher.data.SystemIntents
+import cc.slokker.goatlauncher.data.api.CONTACT_EMAIL
+import cc.slokker.goatlauncher.ui.common.qrBitmap
+import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import cc.slokker.goatlauncher.ui.Strings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -97,6 +112,53 @@ internal fun AccountPage(vm: LauncherViewModel, first: FocusRequester, onPage: (
             }
         }
 
+        // Sempre à vista, com ou sem conta nesta TV: o site pede o login ele próprio.
+        item { SectionLabel(s.privacy) }
+        item { NavRow(s.privacyPolicy, onClick = { onPage(Page.Privacy) }, subtitle = s.privacyPolicyHint) }
+        item { NavRow(s.deleteAccount, onClick = { onPage(Page.DeleteAccount) }, subtitle = s.deleteAccountHint) }
+    }
+}
+
+/**
+ * Uma página do site (a política de privacidade, o apagar da conta): muitas TVs não têm browser, por isso o endereço
+ * e um QR para abrir no telemóvel; se houver um browser nesta TV, também se pode abrir aqui. O endereço nunca leva o
+ * token: o site pede o login ele próprio.
+ */
+@Composable
+internal fun SiteLinkPage(vm: LauncherViewModel, url: String, first: FocusRequester) {
+    val s = LocalStrings.current
+    val context = LocalContext.current
+    val qr = remember(url) { qrBitmap(url) }
+    val browser = remember(url) { SystemIntents.browser(context, url) }
+    Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp).verticalScroll(rememberScrollState())) {
+        Text(s.linkScan, style = MaterialTheme.typography.titleSmall, color = GoatColors.TextDim)
+        Text(
+            url.removePrefix("https://"),
+            style = MaterialTheme.typography.headlineSmall.copy(textDirection = TextDirection.Ltr),
+            color = GoatColors.Sky,
+        )
+        Spacer(Modifier.height(14.dp))
+        // Sem browser, o QR fica com o foco: a página tem de ter onde o pôr (e o Voltar funciona na mesma).
+        Box(
+            Modifier
+                .size(220.dp)
+                .clip(GoatShapes.Panel)
+                .background(Color.White)
+                .then(if (browser == null) Modifier.focusRequester(first).focusable() else Modifier),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(qr, contentDescription = s.linkQrDescription, Modifier.size(196.dp))
+        }
+        Spacer(Modifier.height(12.dp))
+        Text(s.linkContact(CONTACT_EMAIL), style = MaterialTheme.typography.bodyMedium, color = GoatColors.TextFaint)
+        if (browser != null) {
+            Spacer(Modifier.height(10.dp))
+            GlassRow(
+                title = s.linkOpenHere,
+                onClick = { if (!SystemIntents.start(context, browser)) vm.toast(s.cantOpen) },
+                modifier = Modifier.focusRequester(first),
+            )
+        }
     }
 }
 

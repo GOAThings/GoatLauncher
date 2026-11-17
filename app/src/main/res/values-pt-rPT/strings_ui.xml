@@ -220,6 +220,15 @@
     <string name="unlink_hint">As definições ficam nesta TV, mas deixam de sincronizar</string>
     <string name="press_again_to_confirm">Carrega de novo para confirmar</string>
     <string name="unlinked">Esta TV já não está ligada à conta</string>
+    <string name="privacy">Privacidade</string>
+    <string name="privacy_policy">Política de privacidade</string>
+    <string name="privacy_policy_hint">O que o launcher guarda e envia, e porquê</string>
+    <string name="delete_account">Apagar a conta GOAT</string>
+    <string name="delete_account_hint">No site, depois de entrares; apaga a conta e tudo o que nela está</string>
+    <string name="link_scan">Lê o QR com o telemóvel para abrir a página</string>
+    <string name="link_open_here">Abrir nesta TV</string>
+    <string name="link_qr_description">Código QR da página</string>
+    <string name="link_contact">Dúvidas: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Definições do Android</string>
     <string name="version">GoatLauncher %1$s</string>

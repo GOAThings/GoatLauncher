@@ -220,6 +220,15 @@
     <string name="unlink_hint">सेटिंग इस TV पर रहेंगी, पर सिंक नहीं होंगी</string>
     <string name="press_again_to_confirm">पुष्टि के लिए फिर से दबाएँ</string>
     <string name="unlinked">यह TV अब खाते से जुड़ा नहीं है</string>
+    <string name="privacy">गोपनीयता</string>
+    <string name="privacy_policy">गोपनीयता नीति</string>
+    <string name="privacy_policy_hint">लॉन्चर क्या रखता और भेजता है, और क्यों</string>
+    <string name="delete_account">GOAT खाता हटाएं</string>
+    <string name="delete_account_hint">वेबसाइट पर, साइन इन करने के बाद; खाता और उसमें मौजूद सब कुछ मिटा देता है</string>
+    <string name="link_scan">पेज खोलने के लिए अपने फ़ोन से QR कोड स्कैन करें</string>
+    <string name="link_open_here">इस TV पर खोलें</string>
+    <string name="link_qr_description">पेज का QR कोड</string>
+    <string name="link_contact">सवाल: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Android सेटिंग</string>
     <string name="version">GoatLauncher %1$s</string>

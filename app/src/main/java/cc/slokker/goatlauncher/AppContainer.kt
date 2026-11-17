@@ -76,7 +76,7 @@ class AppContainer(context: Context) {
     /** As apps instaladas, para o ecrã, o GoatRemote e o site (ver [start]). */
     val catalog = AppCatalog(context.applicationContext, scope)
     /** As apps desta TV para o site da conta. */
-    val appIndex = AppIndex(context, backend, settings.session, catalog)
+    val appIndex = AppIndex(context, backend, settings.session, catalog, onUnauthorized = settings::rejected)
     val icons = CustomIcons(context)
     /** A lista de apps para o GoatRemote (o comando no telemóvel), na rede de casa, com os nomes e ícones escolhidos. */
     val phoneApps = PhoneApps(context.applicationContext, catalog, AutoStart.opener(context.applicationContext, catalog), scope) { apps ->

@@ -220,6 +220,15 @@
     <string name="unlink_hint">設定はこのテレビに残りますが、同期はされなくなります</string>
     <string name="press_again_to_confirm">もう一度押して確定</string>
     <string name="unlinked">このテレビのリンクを解除しました</string>
+    <string name="privacy">プライバシー</string>
+    <string name="privacy_policy">プライバシーポリシー</string>
+    <string name="privacy_policy_hint">ランチャーが保存・送信するデータとその理由</string>
+    <string name="delete_account">GOAT アカウントを削除</string>
+    <string name="delete_account_hint">ウェブサイトでログイン後に行います。アカウントとその中のすべてが削除されます</string>
+    <string name="link_scan">スマートフォンで QR コードをスキャンしてページを開いてください</string>
+    <string name="link_open_here">このテレビで開く</string>
+    <string name="link_qr_description">ページの QR コード</string>
+    <string name="link_contact">お問い合わせ: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Android の設定</string>
     <string name="version">GoatLauncher %1$s</string>

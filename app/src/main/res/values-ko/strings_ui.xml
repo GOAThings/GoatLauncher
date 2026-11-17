@@ -220,6 +220,15 @@
     <string name="unlink_hint">설정은 이 TV에 남지만 더 이상 동기화되지 않아요</string>
     <string name="press_again_to_confirm">한 번 더 눌러 확인하세요</string>
     <string name="unlinked">이 TV의 연결이 해제되었어요</string>
+    <string name="privacy">개인정보</string>
+    <string name="privacy_policy">개인정보 처리방침</string>
+    <string name="privacy_policy_hint">런처가 저장하고 보내는 정보와 그 이유</string>
+    <string name="delete_account">GOAT 계정 삭제</string>
+    <string name="delete_account_hint">웹사이트에서 로그인한 뒤 진행해요. 계정과 그 안의 모든 것이 삭제돼요</string>
+    <string name="link_scan">휴대폰으로 QR 코드를 스캔해 페이지를 여세요</string>
+    <string name="link_open_here">이 TV에서 열기</string>
+    <string name="link_qr_description">페이지 QR 코드</string>
+    <string name="link_contact">문의: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Android 설정</string>
     <string name="version">GoatLauncher %1$s</string>

@@ -33,6 +33,8 @@ internal enum class Page(private val parentOf: (hasPin: Boolean) -> Page?, priva
     Location({ Page.General }, { s, _ -> s.location }),
     Account({ Page.Main }, { s, _ -> s.account }),
     YouTube({ Page.Account }, { s, _ -> s.youtube }),
+    Privacy({ Page.Account }, { s, _ -> s.privacyPolicy }),
+    DeleteAccount({ Page.Account }, { s, _ -> s.deleteAccount }),
     Report({ Page.Main }, { s, _ -> s.sendReport }),
     ;
 

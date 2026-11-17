@@ -220,6 +220,15 @@
     <string name="unlink_hint">Le impostazioni restano su questa TV, ma non si sincronizzano più</string>
     <string name="press_again_to_confirm">Premi di nuovo per confermare</string>
     <string name="unlinked">Questa TV non è più collegata</string>
+    <string name="privacy">Privacy</string>
+    <string name="privacy_policy">Informativa sulla privacy</string>
+    <string name="privacy_policy_hint">Cosa conserva e invia il launcher, e perché</string>
+    <string name="delete_account">Elimina l\'account GOAT</string>
+    <string name="delete_account_hint">Sul sito, dopo l\'accesso; cancella l\'account e tutto ciò che contiene</string>
+    <string name="link_scan">Inquadra il codice QR con il telefono per aprire la pagina</string>
+    <string name="link_open_here">Apri su questa TV</string>
+    <string name="link_qr_description">Codice QR della pagina</string>
+    <string name="link_contact">Domande: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Impostazioni di Android</string>
     <string name="version">GoatLauncher %1$s</string>

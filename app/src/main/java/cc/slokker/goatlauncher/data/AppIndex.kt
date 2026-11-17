@@ -25,12 +25,15 @@ import okhttp3.RequestBody.Companion.toRequestBody
  * parte, só as que o servidor ainda não tem (a resposta diz quais faltam).
  *
  * [session]: a conta desta TV (null = sem conta). Os PNG vêm do [catalog] (os mesmos que o GoatRemote recebe).
+ * [onUnauthorized]: o servidor respondeu 401 com o token dado (a TV foi desligada na conta); ver
+ * SettingsRepository.rejected, que só desliga se esse token ainda for o desta TV.
  */
 class AppIndex(
     context: Context,
     private val api: BackendApi,
     private val session: StateFlow<SessionStore.Session?>,
     private val catalog: AppCatalog,
+    private val onUnauthorized: suspend (token: String) -> Unit = {},
 ) {
     private val prefs = context.getSharedPreferences(Prefs.FILE, Context.MODE_PRIVATE)
     private val mutex = Mutex()
@@ -43,6 +46,9 @@ class AppIndex(
 
     private class Upload(val png: ByteArray, val hash: String)
 
+    /** O servidor recusou o token (401) a meio do envio: o resto não vale a pena. [token]: o que o pedido levou. */
+    private class Unauthorized(val token: String?) : Exception("HTTP 401")
+
     /**
      * Envia o índice de [apps] se mudou desde o último envio desta conta. [afterLink]: a TV acabou de ser ligada (a
      * uma conta nova, ou outra vez à mesma, que a recebe como outra TV): envia-se sempre.
@@ -52,6 +58,9 @@ class AppIndex(
         if (afterLink) prefs.edit().remove(Prefs.HASH).remove(Prefs.ACCOUNT).apply()
         try {
             withContext(Dispatchers.Default) { send(apps, indexKey(session)) }
+        } catch (e: Unauthorized) {
+            Log.w(TAG, "Índice das apps: HTTP 401, a TV foi desligada na conta")
+            onUnauthorized(e.token ?: session.token)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -75,6 +84,7 @@ class AppIndex(
                 add("apps", list)
             })
         }
+        if (res.code() == 401) throw Unauthorized(res.raw().request.header("Authorization"))
         val missing = res.body()?.getAsJsonArray("missing")?.mapNotNull { it.takeIf { e -> e.isJsonPrimitive }?.asString }
         if (!res.isSuccessful || missing == null) {
             Log.w(TAG, "Índice das apps: HTTP ${res.code()}")
@@ -88,6 +98,7 @@ class AppIndex(
             val icon = withContext(Dispatchers.IO) { api.putAppIcon(pkg, png.toRequestBody(PNG)) }
             when {
                 icon.isSuccessful -> Unit
+                icon.code() == 401 -> throw Unauthorized(icon.raw().request.header("Authorization"))
                 // Grande demais para o servidor: essa app fica sem imagem no site, e não se tenta outra vez.
                 isIconTooBig(icon.code(), runCatching { icon.errorBody()?.string() }.getOrNull()) ->
                     Log.w(TAG, "Ícone de $pkg recusado (icon_too_big, ${png.size} bytes): fica de fora")

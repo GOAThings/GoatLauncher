@@ -295,6 +295,15 @@ class SettingsRepository internal constructor(
         }
     }
 
+    /**
+     * Um pedido com a conta feito fora daqui (o índice das apps) levou 401: a TV foi desligada na conta, segue sem
+     * conta, como num sync. Só se [token] (o que o pedido levou) ainda for o desta TV: entretanto renovado, desligado
+     * ou ligado a outra conta, a recusa já não diz nada sobre a sessão de agora.
+     */
+    suspend fun rejected(token: String) {
+        if (sessions.token == token) unlink() else dropped("401")
+    }
+
     private fun dropped(what: String) {
         Log.i(TAG, "$what: a conta mudou entretanto, resposta ignorada")
     }
