@@ -83,6 +83,19 @@ class WallpaperRotationTest {
     }
 
     @Test
+    fun photosWithABlackFrameAreSkipped() {
+        images.framed += day1.url
+        rotation.start()
+        assertEquals(day2, rotation.onlinePhoto.value)
+        assertTrue(day1.url in pool.calls.last().skip)
+        // Cada foto mede-se uma vez, mesmo trocando de dia para noite e de volta.
+        night.value = true
+        night.value = false
+        assertEquals(1, images.frameChecks.count { it == day1.url })
+        assertEquals(1, images.frameChecks.count { it == day2.url })
+    }
+
+    @Test
     fun theLastPhotoShowsAtOnceThenRotatesAtTheInterval() {
         pool.last = day2
         pool.until = 12_345L
@@ -159,6 +172,8 @@ class WallpaperRotationTest {
         val widths = mutableMapOf<String, Int>()
         val light = mutableMapOf<String, Double>()
         val measured = mutableListOf<String>()
+        val framed = mutableSetOf<String>()
+        val frameChecks = mutableListOf<String>()
         var folder = emptyList<File>()
 
         override suspend fun preload(url: String): Boolean? = if (url in landscape) landscape[url] else true
@@ -167,6 +182,11 @@ class WallpaperRotationTest {
             val key = (data as? File)?.path ?: data.toString()
             measured += key
             return light[key]
+        }
+
+        override suspend fun framed(url: String): Boolean? {
+            frameChecks += url
+            return url in framed
         }
 
         override suspend fun folderImages(dir: File) = folder

@@ -3,6 +3,7 @@ package cc.slokker.goatlauncher.ui.state
 import android.content.Context
 import android.graphics.BitmapFactory
 import cc.slokker.goatlauncher.data.AccountSettings
+import cc.slokker.goatlauncher.data.ImageFrame
 import cc.slokker.goatlauncher.data.ImageImport
 import cc.slokker.goatlauncher.data.OnlinePhoto
 import cc.slokker.goatlauncher.data.OnlineWallpapers
@@ -37,6 +38,9 @@ interface WallpaperImages {
 
     /** A luminosidade média (0..1) de [data] (um URL ou um ficheiro); null se não carregar. */
     suspend fun luminance(data: Any): Double?
+
+    /** Se a foto (já na cache) tem uma moldura preta (ver ImageFrame); null se não carregar. */
+    suspend fun framed(url: String): Boolean?
 
     /** As imagens de uma pasta (ver ImageImport.images). */
     suspend fun folderImages(dir: File): List<File>
@@ -75,6 +79,9 @@ class WallpaperRotation(
 
     /** Se cada foto (URL ou caminho) é clara (true) ou escura (false), para o modo dia/noite. */
     private val photoLight = mutableMapOf<String, Boolean>()
+
+    /** Fotos online já medidas sem moldura (as com moldura vão para [badPhotos]). */
+    private val unframed = mutableSetOf<String>()
 
     /** Chamado uma vez, ao arrancar o ecrã (depois de tudo o resto estar pronto: a escolha corre já até esperar). */
     fun start() {
@@ -136,6 +143,10 @@ class WallpaperRotation(
                 return@repeat
             }
             if ((photoWidths[image.url] ?: Int.MAX_VALUE) < minWidth) return@repeat
+            if (isFramed(image.url)) {
+                badPhotos += image.url
+                return@repeat
+            }
             val light = isLight(image.url, image.url)
             if (light != null && light == night) {
                 if (fallback == null) fallback = image
@@ -161,6 +172,17 @@ class WallpaperRotation(
         // Mede no máximo umas quantas (cada uma é uma leitura pequena da imagem).
         return others.take(FOLDER_TONE_TRIES).firstOrNull { f -> isLight(f, f.path).let { it == null || it != night } }
             ?: others.firstOrNull()
+    }
+
+    /**
+     * Uma foto com moldura preta não serve de fundo: o Crop deixava a moldura à vista como barras. Mede-se uma vez por
+     * foto; se não se conseguir medir, fica (é melhor do que perder uma foto boa).
+     */
+    private suspend fun isFramed(url: String): Boolean {
+        if (url in unframed) return false
+        val framed = images.framed(url) ?: return false
+        if (!framed) unframed += url
+        return framed
     }
 
     /** Acima de 35% de luminosidade média conta como clara; null se não carregar. Mede-se uma vez por imagem. */
@@ -214,5 +236,19 @@ class CoilWallpaperImages(private val context: Context) : WallpaperImages {
         } / (px.size * 255.0)
     }
 
+    /** Numa cópia com [FRAME_SIZE] px no lado maior (chega para faixas de 1%). */
+    override suspend fun framed(url: String): Boolean? = withContext(Dispatchers.IO) {
+        val result = SingletonImageLoader.get(context).execute(
+            ImageRequest.Builder(context).data(url).size(FRAME_SIZE, FRAME_SIZE).scale(Scale.FIT).allowHardware(false).build(),
+        )
+        val bmp = (result as? SuccessResult)?.image?.toBitmap() ?: return@withContext null
+        val px = IntArray(bmp.width * bmp.height).also { bmp.getPixels(it, 0, bmp.width, 0, 0, bmp.width, bmp.height) }
+        ImageFrame.isFramed(px, bmp.width, bmp.height)
+    }
+
     override suspend fun folderImages(dir: File): List<File> = ImageImport.images(dir)
+
+    private companion object {
+        const val FRAME_SIZE = 256
+    }
 }
