@@ -101,7 +101,12 @@ class SettingsRepository internal constructor(
     private var deviceDirty = false
     /** A TV foi ligada com um código: a primeira leitura da conta não mexe no controlo parental (ver [adopt]). */
     private var keepParental = false
-    private var lastSync = 0L
+    /**
+     * Quando a conta foi lida pela última vez ([clock]); null: ainda não foi, neste processo. Não pode ser 0: o relógio
+     * conta desde que a TV ligou, e nos primeiros [STALE_MS] o "agora - 0" ainda não estava velho, por isso um sync do
+     * arranque que falhou (rede ainda em baixo) só voltava a ser tentado 5 minutos depois de ligar a TV.
+     */
+    private var lastSync: Long? = null
 
     /** O que a conta tinha da última leitura ou gravação: a base de onde se calcula o que mudou nesta TV. */
     private var accountBase: JsonObject? = null
@@ -261,7 +266,7 @@ class SettingsRepository internal constructor(
         }
     }
 
-    private fun stale() = clock() - lastSync > STALE_MS
+    private fun stale() = lastSync.let { it == null || clock() - it > STALE_MS }
 
     /** A TV acabou de ser aprovada na conta. */
     suspend fun link(newToken: String, email: String?, deviceName: String?) {

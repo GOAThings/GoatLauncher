@@ -186,6 +186,24 @@ class SettingsRepositoryTest {
         assertEquals(2, api.sentEtags.size)
     }
 
+    /** Logo a seguir a ligar a TV, o relógio (elapsedRealtime) ainda está abaixo dos 5 minutos: tenta-se na mesma. */
+    @Test
+    fun aFailedStartupSyncIsRetriedOnResumeRightAfterBoot() = runBlocking {
+        now = 40_000L
+        linkedWithRevs()
+        api.refreshes += { AuthRefreshResponse("t2", null) }
+        api.gets += { throw java.io.IOException("sem rede") }
+        repo.startSync().join()
+        now += 20_000L
+        api.gets += { notModified() }
+        repo.syncIfStale()
+        assertEquals(2, api.sentEtags.size)
+        // Lida a conta, o intervalo conta outra vez a partir daí.
+        now += 60_000L
+        repo.syncIfStale()
+        assertEquals(2, api.sentEtags.size)
+    }
+
     @Test
     fun startupRenewsTheTokenOnce() = runBlocking {
         linkedWithRevs()
