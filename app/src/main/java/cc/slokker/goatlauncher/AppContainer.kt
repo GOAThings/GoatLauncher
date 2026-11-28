@@ -83,7 +83,7 @@ class AppContainer(context: Context) {
         val device = settings.device.value
         apps.asChosen(device.names, device.icons, icons::load)
     }
-    val watchNext = WatchNextSource(context)
+    val watchNext by lazy { WatchNextSource(context, plainHttp) }
 
     /** Cliente sem token (pedidos fora da conta Slokker, ex.: as fotos do dia do fundo). */
     private val plainHttp = OkHttpClient.Builder()

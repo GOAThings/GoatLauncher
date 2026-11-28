@@ -13,6 +13,7 @@ import androidx.compose.runtime.Immutable
 import androidx.tvprovider.media.tv.TvContractCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 import java.util.Calendar
 
 /** Uma entrada do "Continuar a ver" (Watch Next do Android TV), publicada pela app [packageName]. */
@@ -234,9 +235,10 @@ interface WatchNextFeed {
  * Precisa de READ_TV_LISTINGS (ver o manifesto); sem ela, o sistema só devolve os programas da própria app.
  * O TvProvider não aceita `selection` a quem não é do sistema: lê-se tudo e filtra-se aqui.
  */
-class WatchNextSource(private val context: Context) : WatchNextFeed {
+class WatchNextSource(private val context: Context, http: OkHttpClient) : WatchNextFeed {
 
     private val supported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+    private val backdrops = Backdrops(http)
 
     override suspend fun load(): Map<String, List<WatchNextItem>>? = withContext(Dispatchers.IO) {
         if (!supported) return@withContext emptyMap()
@@ -251,6 +253,7 @@ class WatchNextSource(private val context: Context) : WatchNextFeed {
                 .orEmpty()
                 .let(WatchNextRows::newestByApp)
                 .let { WatchNextRows.withChannels(it, previews()) }
+                .let { backdrops.apply(it) }
                 .also { all ->
                     Log.d(TAG, "${all.values.sumOf { l -> l.size }} entradas de ${all.keys}")
                     // De onde vêm as imagens de cada app (para perceber a qualidade dos cartões). O resto do URI é da app.
