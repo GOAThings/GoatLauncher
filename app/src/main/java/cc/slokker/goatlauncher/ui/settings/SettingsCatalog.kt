@@ -1,5 +1,6 @@
 package cc.slokker.goatlauncher.ui.settings
 
+import androidx.compose.ui.focus.FocusRequester
 import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -81,6 +82,10 @@ internal class SettingsScope(
     val s: Strings,
     val context: Context,
     val onPage: (Page) -> Unit,
+    /** Na coluna das categorias: a linha que leva a [Page] ganhou o foco (o painel da direita mostra-a). */
+    val onFocusPage: ((Page) -> Unit)? = null,
+    /** Na coluna das categorias: o FocusRequester da linha que leva a cada página (para Voltar regressar a ela). */
+    val navRequester: ((Page) -> FocusRequester)? = null,
 ) {
     val account get() = values.account
     val device get() = values.device

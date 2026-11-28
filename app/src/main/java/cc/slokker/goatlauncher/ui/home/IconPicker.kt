@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -294,16 +295,18 @@ private fun PackGrid(
 private fun PackIconCell(spec: String, vm: LauncherViewModel, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val image by produceState<ImageBitmap?>(null, spec) { value = vm.icons.load(spec) }
     val shape = GoatShapes.Control
+    var focused by remember { mutableStateOf(false) }
     Surface(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().aspectRatio(16f / 9f),
+        // O crescer é de desenho (ver drawnScale): o do Surface fazia a grelha saltar ao andar entre ícones.
+        modifier = modifier.drawnScale(if (focused) 1.1f else 1f).fillMaxWidth().aspectRatio(16f / 9f).onFocusChanged { focused = it.isFocused },
         shape = ClickableSurfaceDefaults.shape(shape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color(0x1FFFFFFF),
             focusedContainerColor = Color(0x33FFFFFF),
             pressedContainerColor = Color(0x33FFFFFF),
         ),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
         border = ClickableSurfaceDefaults.border(focusedBorder = Border(BorderStroke(3.dp, Color.White), inset = 0.dp, shape = shape)),
     ) {
         image?.let { CustomIconImage(it, background = Color.Transparent) }

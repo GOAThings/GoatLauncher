@@ -65,7 +65,7 @@ internal fun LocationPage(vm: LauncherViewModel, first: FocusRequester) {
             searching = false
         }
     }
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+    LazyColumn(state = rememberPaneListState(), contentPadding = PaddingValues(vertical = 4.dp)) {
         item {
             Text(s.locationHint, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 6.dp))
         }
@@ -109,7 +109,7 @@ internal fun LanguagePage(vm: LauncherViewModel, first: FocusRequester) {
     val account by vm.account.collectAsStateWithLifecycle()
     val current = Strings.normalize(account.language)
     val options = listOf("auto" to s.languageAuto) + Strings.LANGUAGES
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+    LazyColumn(state = rememberPaneListState(), contentPadding = PaddingValues(vertical = 4.dp)) {
         items(options, key = { it.first }) { (code, name) ->
             ChoiceRow(
                 title = name,

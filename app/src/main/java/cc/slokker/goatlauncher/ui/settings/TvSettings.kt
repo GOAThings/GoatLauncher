@@ -61,7 +61,7 @@ internal fun ProtectedPage(vm: LauncherViewModel, first: FocusRequester) {
 @Composable
 internal fun AppPickerPage(vm: LauncherViewModel, first: FocusRequester, current: String?, none: String, onPick: (String?) -> Unit) {
     val apps by vm.allApps.collectAsStateWithLifecycle()
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+    LazyColumn(state = rememberPaneListState(), contentPadding = PaddingValues(vertical = 4.dp)) {
         item {
             ChoiceRow(title = none, selected = current == null, onClick = { onPick(null) }, modifier = Modifier.focusRequester(first))
         }
@@ -85,7 +85,7 @@ internal fun ButtonTargetPage(
 ) {
     val s = LocalStrings.current
     val apps by vm.allApps.collectAsStateWithLifecycle()
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+    LazyColumn(state = rememberPaneListState(), contentPadding = PaddingValues(vertical = 4.dp)) {
         item {
             ChoiceRow(title = s.removeButton, selected = current == null, onClick = { onApp(null) }, modifier = Modifier.focusRequester(first))
         }
@@ -159,7 +159,7 @@ internal fun LockedAppsPage(vm: LauncherViewModel, first: FocusRequester) {
     val list = apps.orEmpty()
     Column {
         Text(s.lockedAppsHint, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 6.dp))
-        LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        LazyColumn(state = rememberPaneListState(), contentPadding = PaddingValues(vertical = 4.dp)) {
             items(list, key = { it.packageName }) { app ->
                 val locked = app.packageName in device.locked
                 GlassRow(
@@ -191,7 +191,7 @@ internal fun ButtonsPage(vm: LauncherViewModel, first: FocusRequester, onEdit: (
     val device by vm.device.collectAsStateWithLifecycle()
     val apps by vm.allApps.collectAsStateWithLifecycle()
     val guard = rememberGuardEnabled()
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+    LazyColumn(state = rememberPaneListState(), contentPadding = PaddingValues(vertical = 4.dp)) {
         items(device.buttons, key = { "${it.keyCode}:${it.scanCode}" }) { b ->
             NavRow(
                 title = buttonName(b.keyCode, b.scanCode, s),

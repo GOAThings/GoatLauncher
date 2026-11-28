@@ -188,13 +188,16 @@ private fun PreviewTopBar(account: AccountSettings, weather: WeatherNow?, showAp
     val s = LocalStrings.current
     Box(Modifier.fillMaxWidth().height(48.dp)) {
         TopGreeting(account.showGreeting, weather, Modifier.align(Alignment.CenterStart))
-        Row(
-            Modifier.align(Alignment.Center).background(GoatColors.ControlFill, GoatShapes.Bar).padding(BarPadding),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            listOfNotNull(s.tabHome, s.tabApps.takeIf { showApps }, s.settings).forEachIndexed { i, label ->
-                Box(Modifier.background(if (i == 0) Color.White.copy(alpha = 0.2f) else Color.Transparent, GoatShapes.Control)) {
-                    TabLabel(label, onPill = i == 0, barFocused = false, selected = i == 0)
+        // Como a barra verdadeira: Início e Apps (só na disposição Android); na Apple TV não há separadores.
+        if (showApps) {
+            Row(
+                Modifier.align(Alignment.Center).background(GoatColors.ControlFill, GoatShapes.Bar).padding(BarPadding),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                listOf(s.tabHome, s.tabApps).forEachIndexed { i, label ->
+                    Box(Modifier.background(if (i == 0) Color.White.copy(alpha = 0.2f) else Color.Transparent, GoatShapes.Control)) {
+                        TabLabel(label, onPill = i == 0, barFocused = false, selected = i == 0)
+                    }
                 }
             }
         }

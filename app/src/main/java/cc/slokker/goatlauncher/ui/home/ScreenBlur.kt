@@ -31,18 +31,23 @@ suspend fun captureScreenBlur(view: View): ImageBitmap? {
         }.onFailure { cont.resume(false) }
     }
     if (!ok) return null
-    return withContext(Dispatchers.Default) {
-        val work = IntArray(BLUR_W * BLUR_H)
-        val tmp = IntArray(BLUR_W * BLUR_H)
-        small.getPixels(work, 0, BLUR_W, 0, 0, BLUR_W, BLUR_H)
-        // 3 passagens de box blur ≈ gaussiano (a desfocagem da GoatTV).
-        repeat(3) {
-            boxPass(work, tmp, horizontal = true)
-            boxPass(tmp, work, horizontal = false)
-        }
-        small.setPixels(work, 0, BLUR_W, 0, 0, BLUR_W, BLUR_H)
-        small.asImageBitmap()
+    return withContext(Dispatchers.Default) { blurInPlace(small).asImageBitmap() }
+}
+
+/**
+ * Desfoca [bitmap] (mutável, BLUR_W × BLUR_H) no sítio e devolve-o: 3 passagens de box blur ≈ gaussiano, a
+ * desfocagem do vidro da GoatTV. É a mesma para o menu da app e para o vidro das Definições.
+ */
+internal fun blurInPlace(bitmap: Bitmap): Bitmap {
+    val work = IntArray(BLUR_W * BLUR_H)
+    val tmp = IntArray(BLUR_W * BLUR_H)
+    bitmap.getPixels(work, 0, BLUR_W, 0, 0, BLUR_W, BLUR_H)
+    repeat(3) {
+        boxPass(work, tmp, horizontal = true)
+        boxPass(tmp, work, horizontal = false)
     }
+    bitmap.setPixels(work, 0, BLUR_W, 0, 0, BLUR_W, BLUR_H)
+    return bitmap
 }
 
 private fun boxPass(input: IntArray, output: IntArray, horizontal: Boolean) {
@@ -82,6 +87,6 @@ private tailrec fun Context.activity(): Activity? = when (this) {
 }
 
 /** O tamanho da miniatura e o raio da desfocagem: os do vidro da GoatTV sobre o vídeo. */
-private const val BLUR_W = 128
-private const val BLUR_H = 72
+internal const val BLUR_W = 128
+internal const val BLUR_H = 72
 private const val RADIUS = 3

@@ -66,7 +66,7 @@ internal fun ReportPage(vm: LauncherViewModel, first: FocusRequester) {
     fun send() {
         if (report != ReportState.Sending) vm.sendReport(message)
     }
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+    LazyColumn(state = rememberPaneListState(), contentPadding = PaddingValues(vertical = 4.dp)) {
         item {
             Text(s.sendReportSub, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 6.dp))
         }
@@ -85,7 +85,7 @@ internal fun AccountPage(vm: LauncherViewModel, first: FocusRequester, onPage: (
     val s = LocalStrings.current
     val account by vm.account.collectAsStateWithLifecycle()
     val session by vm.session.collectAsStateWithLifecycle()
-    LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+    LazyColumn(state = rememberPaneListState(), contentPadding = PaddingValues(vertical = 4.dp)) {
         item { SectionLabel(s.account) }
         val current = session
         if (current == null) {

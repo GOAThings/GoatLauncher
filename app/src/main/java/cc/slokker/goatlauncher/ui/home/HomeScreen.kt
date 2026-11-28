@@ -18,14 +18,12 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +45,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -65,6 +64,9 @@ import cc.slokker.goatlauncher.ui.settings.SettingsScreen
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
@@ -97,14 +99,18 @@ import kotlinx.coroutines.flow.collectLatest
 /** Apps no Início (as primeiras da ordem guardada); as restantes estão no separador Apps. A regra é a do [AppGrid]. */
 const val FavoriteCount = AppGrid.FAVORITES
 
-/** Quanto tempo o foco tem de ficar num favorito para o "Continuar a ver" mudar para ele. */
-private const val SECTION_SETTLE_MS = 150L
+/**
+ * Quanto tempo o foco tem de ficar num favorito para o "Continuar a ver" mudar para ele: depois de o cartão acabar
+ * de crescer e de acender (FocusSpring, ~0,6 s). O destaque novo constrói-se num frame comprido (na SHIELD 30–80 ms),
+ * que a meio dessas animações dava um salto. Na Apple TV o de cima também só muda depois de o foco pousar (~0,9 s).
+ */
+private const val SECTION_SETTLE_MS = 600L
 
 /** Quanto tempo fica a ajuda "Mantém OK para reordenar" no Início. */
 private const val HINT_MS = 5_000L
 
-/** Duração da troca de separador (o fade do conteúdo), com folga. */
-private const val TAB_FADE_MS = 320L
+/** Duração da troca de separador (o frame que constrói o separador novo e o fade do TabCrossfade), com folga. */
+private const val TAB_FADE_MS = 450L
 
 /**
  * Ecrã inicial, com dois separadores (Início e Apps) e as Definições à parte.
@@ -135,10 +141,13 @@ fun HomeScreen(vm: LauncherViewModel) {
     val list = apps.orEmpty()
     val tabApps by vm.appsTab.collectAsStateWithLifecycle()
     val currentList by rememberUpdatedState(list)
-    val favorites = list.take(FavoriteCount)
+    // As listas só se refazem quando as apps mudam. Feitas de novo a cada composição eram "outras" (o Compose compara
+    // as listas pela instância): mudar o destaque voltava a compor todos os cartões da fila, da doca e da grelha de
+    // baixo (na disposição Apple TV, a meio do deslize para as outras apps, e na SHIELD isso dava um salto).
+    val favorites = remember(list) { list.take(FavoriteCount) }
     // No separador Apps: os favoritos e depois todas as outras, incluindo as escondidas do Início.
-    val moreApps = tabApps.orEmpty().filter { app -> favorites.none { it.packageName == app.packageName } }
-    val gridApps = favorites + moreApps
+    val moreApps = remember(tabApps, favorites) { tabApps.orEmpty().filter { app -> favorites.none { it.packageName == app.packageName } } }
+    val gridApps = remember(favorites, moreApps) { favorites + moreApps }
     val style = HomeStyle.of(account)
     val appleTv = style == HomeStyle.AppleTv
     val columnLayout = style == HomeStyle.SideColumn
@@ -161,19 +170,30 @@ fun HomeScreen(vm: LauncherViewModel) {
     val menuBackdrop = screenBlur ?: wallpaperBlur
     // O "Continuar a ver" só muda quando o foco assenta num favorito: a correr pela fila não carrega cada um.
     // O foco é lido num snapshotFlow (não na composição): mudar de app não volta a compor o ecrã todo.
+    // Só os favoritos têm "Continuar a ver": numa das outras apps (a grelha por baixo da doca na Apple TV, o separador
+    // Apps) fica o do último favorito. Antes passava a "nenhum", e na Apple TV isso reconstruía o ecrã a meio do deslize
+    // para as outras apps (na SHIELD, um frame comprido que fazia a grelha saltar), para nada: os cartões já lá não se veem.
     var sectionPkg by remember { mutableStateOf(vm.focusedPackage) }
+    val currentFavorites by rememberUpdatedState(favorites)
     LaunchedEffect(Unit) {
         snapshotFlow { state.focusedPkg }.collectLatest { pkg ->
+            if (pkg != null && currentFavorites.none { it.packageName == pkg }) return@collectLatest
             if (sectionPkg != null) delay(SECTION_SETTLE_MS)
             sectionPkg = pkg
         }
     }
-    val sectionApp = favorites.firstOrNull { it.packageName == sectionPkg }?.takeIf { account.showContinueWatching && !onApps }
-    val sectionItems = sectionApp?.let { watchNext[it.packageName] }.orEmpty()
+    // A app do destaque sem contar com o separador aberto: o fundo e os véus seguem o separador que está a aparecer
+    // (fadeScreen), e não mudam no frame em que o separador novo se constrói (ver TabCrossfade).
+    val heroApp = favorites.firstOrNull { it.packageName == sectionPkg }?.takeIf { account.showContinueWatching }
+    val heroItems = heroApp?.let { watchNext[it.packageName] }.orEmpty()
+    val sectionApp = heroApp?.takeIf { !onApps }
+    val sectionItems = if (sectionApp != null) heroItems else emptyList()
     var shelfIndex by remember(sectionPkg) { mutableIntStateOf(0) }
-    val shelfPos = shelfIndex.coerceIn(0, (sectionItems.size - 1).coerceAtLeast(0))
+    val shelfPos = shelfIndex.coerceIn(0, (heroItems.size - 1).coerceAtLeast(0))
     // O conteúdo que enche o fundo: o do destaque, ou (apps ao lado) o primeiro da app com foco.
-    val shelfItem = sectionItems.getOrNull(shelfPos)?.takeIf { style.heroBackdrop }
+    val shelfItem = heroItems.getOrNull(shelfPos)?.takeIf { style.heroBackdrop }
+    // O separador cujo fade já começou. Lê-se só no TabBackdrop: mudá-lo não volta a compor o ecrã todo.
+    val fadeScreen = remember { mutableStateOf(screen) }
 
     var tabBarFocused by remember { mutableStateOf(false) }
     val moving = state.moving
@@ -237,8 +257,14 @@ fun HomeScreen(vm: LauncherViewModel) {
     // Ao voltar ao Início vindo das Apps ou das Definições (por Voltar ou pelos separadores), o foco vai para o
     // último favorito, se não estiver nos separadores (senão perdia-se com o conteúdo que saiu).
     var previousScreen by remember { mutableStateOf(screen) }
+    // O separador de onde se abriram as Definições (para onde Voltar regressa).
+    var settingsFrom by remember { mutableStateOf<Screen>(Screen.Home) }
     LaunchedEffect(screen) {
+        if (screen == Screen.Settings && previousScreen != Screen.Settings) settingsFrom = previousScreen
         if (screen == Screen.Home && previousScreen != Screen.Home && !tabBarFocused) focusApp(lastFavorite())
+        // → e logo ↓ nos separadores: as Apps abrem já com o foco fora da barra (no Início que está a sair); sem isto
+        // o foco perdia-se com ele e voltava aos separadores, e era preciso outro ↓ para chegar à grelha.
+        if (screen == Screen.Apps && previousScreen != Screen.Apps && !tabBarFocused) focusApp(null)
         previousScreen = screen
     }
 
@@ -258,6 +284,7 @@ fun HomeScreen(vm: LauncherViewModel) {
 
     @Composable
     fun Tile(app: LauncherApp, home: Boolean, modifier: Modifier = Modifier, width: Dp = TileWidth, label: Boolean = account.showAppName) {
+        val slotActive = LocalFadeSlotActive.current
         val spec = device.icons[app.packageName]
         // (ícone, já se sabe?): com um ícone escolhido, até ele carregar fica só a cor da app, para não piscar
         // o banner original antes. Se não carregar (ex.: icon pack desinstalado), aparece o original.
@@ -287,7 +314,8 @@ fun HomeScreen(vm: LauncherViewModel) {
             bannerModifier = modifier
                 .then(if (app.packageName == state.targetPkg) Modifier.focusRequester(target) else Modifier)
                 // Onde o banner está, para o menu da app abrir junto dele (sem recompor: só se lê ao abrir).
-                .onGloballyPositioned { tileBounds[app.packageName] = it.boundsInWindow() },
+                // Só o separador à vista (os outros ficam construídos, invisíveis): o menu abre junto ao banner certo.
+                .onGloballyPositioned { if (slotActive) tileBounds[app.packageName] = it.boundsInWindow() },
         )
     }
 
@@ -327,15 +355,16 @@ fun HomeScreen(vm: LauncherViewModel) {
         }
     }
 
-    // Fundo do destaque: a imagem do conteúdo, se tiver a forma do ecrã (ver rememberHeroBackdrop).
-    val backdrop = rememberHeroBackdrop(shelfItem)
-    val shelfFullBleed = backdrop.fullBleed
+    // Fundo do destaque: a imagem do conteúdo, se tiver a forma do ecrã (ver rememberHeroBackdrop). Lê-se só no fundo e no
+    // destaque (ver rememberHeroBackdropState): quando a imagem carrega, o ecrã todo não volta a compor.
+    val backdrop = rememberHeroBackdropState(shelfItem)
 
     // Modo ambiente: sem tocar no comando durante account.idleMinutes (com o launcher à frente), fica só o fundo
     // e as horas. Ao voltar de uma app, a contagem recomeça.
     // A hora da última tecla não é estado do Compose: escrevê-la a cada tecla recompunha o ecrã inteiro (na SHIELD,
     // 50–190 ms por tecla). O temporizador lê-a quando acorda; só "idle" muda o ecrã.
     val lastInput = remember { longArrayOf(SystemClock.elapsedRealtime()) }
+    val tabPrebuild = remember(style.hasAppsTab) { listOfNotNull(Screen.Apps.takeIf { style.hasAppsTab }, Screen.Settings) }
     var idle by remember { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     // Mudar o nome e mudar o ícone são janelas à parte (Dialog): as teclas delas não passam pelo onPreviewKeyEvent de
@@ -435,22 +464,25 @@ fun HomeScreen(vm: LauncherViewModel) {
                         true
                     },
             ) {
-                HeroBackdropImage(backdrop, visible = shelfFullBleed && !onApps)
-                // Sempre que há destaque (com a imagem do conteúdo ou sobre o fundo normal), para o texto grande se ler.
-                val sideScrim by animateFloatAsState(if (shelfItem != null && !onApps) 1f else 0f, tween(400), label = "side")
-                // Apps ao lado: o texto fica por cima da imagem toda (não só à esquerda), por isso escurece-se mais.
-                val columnDim by animateFloatAsState(if (columnLayout && shelfFullBleed && !onApps) 1f else 0f, tween(400), label = "columnDim")
-                val appsDim by animateFloatAsState(if (onApps || onSettings) 1f else 0f, tween(250), label = "dim")
-                HomeScrims(side = { sideScrim }, columnDim = { columnDim }, appsDim = { appsDim })
+                TabBackdrop(backdrop, hero = shelfItem != null, columnLayout = columnLayout, tab = fadeScreen)
 
                 Column(Modifier.fillMaxSize().padding(TvSafePadding)) {
+                    // Nas Definições (página inteira) a barra de cima esconde-se, ao ritmo do fade da página, e o foco
+                    // não entra nela.
+                    val barAlpha by animateFloatAsState(
+                        if (fadeScreen.value == Screen.Settings) 0f else 1f,
+                        tween(if (fadeScreen.value == Screen.Settings) BAR_OUT_MS else BAR_IN_MS),
+                        label = "topBar",
+                    )
+                    Box(
+                        Modifier
+                            .graphicsLayer { alpha = barAlpha }
+                            .focusProperties { onEnter = { if (onSettings) cancelFocusChange() } }
+                            .focusGroup(),
+                    ) {
                     TopBar(
                         showApps = style.hasAppsTab,
-                        selected = when {
-                            onApps -> 1
-                            onSettings -> if (appleTv) 1 else 2
-                            else -> 0
-                        },
+                        selected = if (onApps || (onSettings && settingsFrom == Screen.Apps)) 1 else 0,
                         clock24h = account.clock24h,
                         showGreeting = account.showGreeting,
                         weather = weather?.takeIf { account.showWeather },
@@ -463,24 +495,34 @@ fun HomeScreen(vm: LauncherViewModel) {
                         onNight = vm::toggleNight,
                         onFocusChanged = { tabBarFocused = it },
                     )
+                    }
 
-                    AnimatedContent(
-                        targetState = screen,
-                        transitionSpec = { fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(150)) },
+                    TabCrossfade(
+                        target = screen,
                         modifier = Modifier.weight(1f).fillMaxWidth(),
-                        label = "tab",
+                        onFadeStart = { fadeScreen.value = it },
+                        // As Apps e as Definições constroem-se invisíveis num momento calmo: nem a primeira visita tem o
+                        // frame comprido de as construir.
+                        prebuild = tabPrebuild,
+                        canPrebuild = { SystemClock.elapsedRealtime() - lastInput[0] > PREBUILD_IDLE_MS },
                     ) { tab ->
                         if (tab == Screen.Settings) {
-                            // Definições no próprio separador. Escolhidas pelo foco nos separadores, não tiram de lá o foco.
-                            SettingsScreen(
-                                vm,
-                                autoFocus = !tabBarFocused,
-                                refocus = state.settingsRefocus,
-                                onExit = {
-                                    vm.openHome()
-                                    focusApp(lastFavorite())
-                                },
-                            )
+                            // Definições em página inteira (abertas no botão da roda): ocupam também o sítio da barra
+                            // de cima, que se esconde. Voltar regressa ao separador de onde se veio.
+                            Box(Modifier.extendUp(TopBarHeight)) {
+                                SettingsScreen(
+                                    vm,
+                                    refocus = state.settingsRefocus,
+                                    onExit = {
+                                        if (settingsFrom == Screen.Apps) {
+                                            vm.openApps()
+                                        } else {
+                                            vm.openHome()
+                                            focusApp(lastFavorite())
+                                        }
+                                    },
+                                )
+                            }
                         } else if (tab == Screen.Apps) {
                             // ---- Apps: todas as apps, os favoritos na primeira linha ----
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
@@ -511,7 +553,8 @@ fun HomeScreen(vm: LauncherViewModel) {
                             HomeBody(
                                 style = style,
                                 section = { modifier ->
-                                    ContinueSection(style, sectionApp, sectionItems, shelfPos, showLogo = !shelfFullBleed, actions = sectionActions, modifier = modifier)
+                                    // heroApp (e não sectionApp): ao ir para as Apps, o Início fica igual enquanto desaparece no fade.
+                                    ContinueSection(style, heroApp, heroItems, shelfPos, showLogo = !backdrop.value.fullBleed, actions = sectionActions, modifier = modifier)
                                 },
                                 favorites = {
                                     when {
@@ -562,7 +605,7 @@ fun HomeScreen(vm: LauncherViewModel) {
                 // Guarda a última app para o fade de saída não ficar vazio.
                 var menuShown by remember { mutableStateOf<LauncherApp?>(null) }
                 state.menu?.let { menuShown = it }
-                AnimatedVisibility(visible = state.menu != null, enter = fadeIn(tween(MENU_MS)), exit = fadeOut(tween(MENU_MS))) {
+                AnimatedVisibility(visible = state.menu != null, enter = fadeIn(tween(MENU_MS, delayMillis = MENU_BUILD_MS)), exit = fadeOut(tween(MENU_MS))) {
                     val app = menuShown ?: return@AnimatedVisibility
                     val isFavorite = favorites.any { it.packageName == app.packageName }
                     // As apps do sistema não se desinstalam (o Android só ofereceria desinstalar as atualizações).
@@ -642,7 +685,7 @@ fun HomeScreen(vm: LauncherViewModel) {
 
                 var pinShown by remember { mutableStateOf<PinPrompt?>(null) }
                 if (pinPrompt != null) pinShown = pinPrompt
-                AnimatedVisibility(visible = pinPrompt != null, enter = fadeIn(tween(MENU_MS)), exit = fadeOut(tween(MENU_MS))) {
+                AnimatedVisibility(visible = pinPrompt != null, enter = fadeIn(tween(MENU_MS, delayMillis = MENU_BUILD_MS)), exit = fadeOut(tween(MENU_MS))) {
                     val prompt = pinShown ?: return@AnimatedVisibility
                     PinOverlay(prompt.title, waitMs = vm::pinWaitMs, onPin = vm::submitPin)
                 }
@@ -708,10 +751,33 @@ fun HomeScreen(vm: LauncherViewModel) {
     }
 }
 
+/**
+ * O fundo do destaque e os véus por cima dele, para o separador [tab] (o que está a aparecer: muda quando o fade do
+ * TabCrossfade começa, não no frame em que o separador novo se constrói, senão as animações começavam com um salto).
+ * Lê [tab] e a imagem do destaque ([backdropState]) aqui dentro: só isto volta a compor quando mudam.
+ */
+@Composable
+private fun TabBackdrop(backdropState: State<HeroBackdrop>, hero: Boolean, columnLayout: Boolean, tab: State<Screen>) {
+    val backdrop = backdropState.value
+    val onApps = tab.value == Screen.Apps
+    val onSettings = tab.value == Screen.Settings
+    HeroBackdropImage(backdrop, visible = backdrop.fullBleed && !onApps)
+    // Sempre que há destaque (com a imagem do conteúdo ou sobre o fundo normal), para o texto grande se ler.
+    val sideScrim by animateFloatAsState(if (hero && !onApps) 1f else 0f, tween(400), label = "side")
+    // Apps ao lado: o texto fica por cima da imagem toda (não só à esquerda), por isso escurece-se mais.
+    val columnDim by animateFloatAsState(if (columnLayout && backdrop.fullBleed && !onApps) 1f else 0f, tween(400), label = "columnDim")
+    val appsDim by animateFloatAsState(if (onApps || onSettings) 1f else 0f, tween(250), label = "dim")
+    HomeScrims(side = { sideScrim }, columnDim = { columnDim }, appsDim = { appsDim })
+}
+
 /** O vidro da doca (Apple TV): escuro no modo noite, claro no modo dia, como o resto do ecrã. */
 fun dockColor(night: Boolean): Color = if (night) Color.Black.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.26f)
 
 private const val MENU_MS = 120
+
+/** O menu constrói-se no primeiro frame (na SHIELD ~30 ms): o fade só começa dois frames depois, para esse frame
+ * pesado passar ainda invisível. */
+private const val MENU_BUILD_MS = 34
 
 private const val HOME_SETUP_DELAY_MS = 3000L
 
@@ -728,3 +794,21 @@ private fun homeKeyOf(key: Key, moving: Boolean): HomeKey = when (key) {
     Key.Back -> HomeKey.Back
     else -> HomeKey.Other
 }
+
+/** A altura da barra de cima (a do TopBar): as Definições em página inteira ocupam também esse sítio. */
+private val TopBarHeight = 48.dp
+
+/** A barra de cima some-se ao abrir as Definições e volta ao fechá-las, ao ritmo do fade da página. */
+private const val BAR_OUT_MS = 150
+private const val BAR_IN_MS = 220
+
+/** Estende o conteúdo [by] para cima (por cima do que está antes dele na coluna), sem mudar o espaço que ocupa. */
+private fun Modifier.extendUp(by: Dp): Modifier = layout { measurable, constraints ->
+    val extra = by.roundToPx()
+    val maxH = if (constraints.hasBoundedHeight) constraints.maxHeight + extra else constraints.maxHeight
+    val placeable = measurable.measure(constraints.copy(minHeight = minOf(constraints.minHeight + extra, maxH), maxHeight = maxH))
+    layout(placeable.width, (placeable.height - extra).coerceAtLeast(0)) { placeable.place(0, -extra) }
+}
+
+/** Sem teclas há este tempo: dá para construir, invisíveis, os separadores ainda não visitados. */
+private const val PREBUILD_IDLE_MS = 1_500L

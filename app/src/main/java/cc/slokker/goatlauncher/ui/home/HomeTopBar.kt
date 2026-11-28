@@ -44,7 +44,10 @@ import androidx.compose.ui.focus.onFocusChanged
 import cc.slokker.goatlauncher.data.WeatherNow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.foundation.focusGroup
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
@@ -69,6 +72,9 @@ import cc.slokker.goatlauncher.ui.theme.GoatShapes
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.math.abs
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 
@@ -94,13 +100,37 @@ internal fun TopBar(
     onFocusChanged: (Boolean) -> Unit,
 ) {
     val s = LocalStrings.current
-    val entries = listOfNotNull(s.tabHome to onHome, (s.tabApps to onApps).takeIf { showApps }, s.settings to onSettings)
+    // As Definições já não são um separador: abrem-se no botão da roda, entre a rede e as horas.
+    val entries = listOfNotNull(s.tabHome to onHome, (s.tabApps to onApps).takeIf { showApps })
     val tabs = remember(entries.size) { List(entries.size) { FocusRequester() } }
     // Só se troca de separador ao andar com ← → nos separadores (acabado de carregar). Quando o sistema põe lá o
     // foco sozinho (ex.: o elemento com foco desapareceu ao mudar de página nas Definições), não se abre nada.
     var arrowedAt by remember { mutableLongStateOf(0L) }
+    // Se o foco está em algum sítio da barra (separadores ou botões), para o Início: com o foco cá em cima, abrir uma
+    // página não lho tira. Como nos separadores, ao passar de um elemento para outro a barra diz por um instante que
+    // perdeu o foco; só conta se no frame seguinte continuar fora.
+    val outerScope = rememberCoroutineScope()
+    val anyFocus = remember { BooleanArray(1) }
+    var reportJob by remember { mutableStateOf<Job?>(null) }
     // Numa camada sua: a barra a mexer (destaque, foco) não obriga a redesenhar o resto do ecrã.
-    Box(Modifier.fillMaxWidth().height(48.dp).graphicsLayer()) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .graphicsLayer()
+            .onFocusChanged {
+                anyFocus[0] = it.hasFocus
+                reportJob?.cancel()
+                if (it.hasFocus) {
+                    onFocusChanged(true)
+                } else {
+                    reportJob = outerScope.launch {
+                        withFrameNanos { }
+                        if (!anyFocus[0]) onFocusChanged(false)
+                    }
+                }
+            },
+    ) {
         TopGreeting(showGreeting, weather, Modifier.align(Alignment.CenterStart))
         // Barra translúcida, sem contorno; o separador aberto é um botão mais claro lá dentro (cantos como os da GoatTV).
         // Esse destaque é um só e desliza (com mola) para o separador aberto ou com foco; com foco fica branco.
@@ -109,18 +139,46 @@ internal fun TopBar(
         val scope = rememberCoroutineScope()
         var openJob by remember { mutableStateOf<Job?>(null) }
         var pendingOpen by remember { mutableStateOf<(() -> Unit)?>(null) }
+        var leaveJob by remember { mutableStateOf<Job?>(null) }
+        // Se o foco está dentro da barra (o último aviso dela); não é estado do Compose: só se lê no leaveJob.
+        val barFocus = remember { BooleanArray(1) }
+        val selectedTab by rememberUpdatedState(selected.coerceIn(entries.indices))
         val bounds = remember(entries.size) { mutableStateListOf(*Array(entries.size) { 0f to 0f }) }
         val target = if (focusedTab >= 0) focusedTab else selected.coerceIn(entries.indices)
-        val pillX by animateFloatAsState(bounds[target].first, spring(dampingRatio = 0.82f, stiffness = 420f), label = "tabX")
-        val pillW by animateFloatAsState(bounds[target].second, spring(dampingRatio = 0.82f, stiffness = 420f), label = "tabW")
+        // A mola acaba a meio píxel do sítio: com o limite por defeito continuava a mexer décimas de píxel (a pedir
+        // frames) bem depois de parecer parada, e a página só deve abrir com a barra parada (ver pillSettled).
+        val pillXState = animateFloatAsState(bounds[target].first, PillSpring, label = "tabX")
+        val pillWState = animateFloatAsState(bounds[target].second, PillSpring, label = "tabW")
+        val pillX by pillXState
+        val pillW by pillWState
         val pillColor by animateColorAsState(if (focusedTab >= 0) Color.White else Color.White.copy(alpha = 0.2f), tween(180), label = "tabColor")
+        // Só um separador (Apple TV: não há Apps, e as Definições são o botão da roda): não há barra de separadores.
+        if (entries.size > 1) {
         Box(
             Modifier
                 .align(Alignment.Center)
                 .onFocusChanged {
-                    // Saiu da barra antes de a página abrir (ex.: ↓ logo a seguir): abre-a já.
-                    if (!it.hasFocus) pendingOpen?.let { open -> openJob?.cancel(); pendingOpen = null; open() }
-                    onFocusChanged(it.hasFocus)
+                    barFocus[0] = it.hasFocus
+                    leaveJob?.cancel()
+                    if (!it.hasFocus) {
+                        // Ao passar de um separador para o do lado, a barra diz por um instante que perdeu o foco (o
+                        // separador antigo larga-o antes de o novo o apanhar). Só conta como sair se no frame seguinte
+                        // o foco continuar fora; antes, isto abria a página pendente a meio de → → → (construía as
+                        // Apps de passagem).
+                        leaveJob = scope.launch {
+                            withFrameNanos { }
+                            if (barFocus[0]) return@launch
+                            if (anyFocus[0]) {
+                                // Foi para os botões da direita (a caminho da roda, por exemplo): o separador por onde
+                                // passou não abre.
+                                openJob?.cancel()
+                                pendingOpen = null
+                                return@launch
+                            }
+                            // Saiu da barra antes de a página abrir (ex.: ↓ logo a seguir): abre-a já.
+                            pendingOpen?.let { open -> openJob?.cancel(); pendingOpen = null; open() }
+                        }
+                    }
                 }
                 .onPreviewKeyEvent { e ->
                     if (e.type == KeyEventType.KeyDown && (e.key == Key.DirectionLeft || e.key == Key.DirectionRight)) arrowedAt = SystemClock.uptimeMillis()
@@ -136,7 +194,10 @@ internal fun TopBar(
                 },
         ) {
             Row(
-                Modifier.focusRestorer(tabs[selected.coerceIn(tabs.indices)]),
+                // Ao entrar na barra (de baixo, ou com ← do botão à direita), o foco cai sempre no separador aberto.
+                // Com focusRestorer caía às vezes noutro (← vindo do botão do dia/noite punha-o no Início) sem o
+                // abrir, porque essa tecla foi tratada fora da barra: ficava o foco no Início com as Definições à vista.
+                Modifier.focusProperties { onEnter = { tabs[selectedTab].requestFocus() } }.focusGroup(),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 entries.forEachIndexed { i, (label, action) ->
@@ -160,13 +221,24 @@ internal fun TopBar(
                                     pendingOpen = action
                                     openJob = scope.launch {
                                         delay(TAB_OPEN_DELAY_MS)
+                                        // Construir a página nova leva um frame comprido (na SHIELD 30–100 ms): só com o
+                                        // destaque parado (a menos de um píxel do sítio), senão o fim do deslize dá um salto.
+                                        withTimeoutOrNull(TAB_SETTLE_MAX_MS) {
+                                            snapshotFlow {
+                                                abs(pillXState.value - bounds[i].first) < PILL_SETTLED_PX &&
+                                                    abs(pillWState.value - bounds[i].second) < PILL_SETTLED_PX
+                                            }.first { it }
+                                        }
                                         pendingOpen = null
                                         action()
                                     }
                                 } else if (!it.isFocused && focusedTab == -1) {
                                     openJob?.cancel()
                                 }
-                                if (it.isFocused) arrowedAt = 0L
+                                // arrowedAt não se apaga aqui: com ← ← ← rápidos o Compose pode entregar as mudanças de
+                                // foco todas de uma vez, depois da última tecla; apagá-la no separador do meio fazia o
+                                // último não abrir (ficava o foco no Início com as Definições à vista). Já vale só
+                                // TAB_ARROW_MS depois da tecla.
                             },
                         shape = ClickableSurfaceDefaults.shape(GoatShapes.Control),
                         // O fundo é o destaque que desliza (atrás); aqui fica transparente.
@@ -181,6 +253,7 @@ internal fun TopBar(
                     }
                 }
             }
+        }
         }
         Row(
             Modifier.align(Alignment.CenterEnd),
@@ -217,6 +290,10 @@ internal fun TopBar(
                     modifier = Modifier.size(18.dp),
                 )
             }
+            // As Definições do launcher (página inteira).
+            TopButton(onClick = onSettings) {
+                Icon(GoatIcons.Settings, contentDescription = s.settings, modifier = Modifier.size(18.dp))
+            }
             TopClock(clock24h)
         }
     }
@@ -227,6 +304,15 @@ private const val TAB_ARROW_MS = 400L
 
 /** Quanto o foco tem de ficar num separador (a andar com ← →) para ele abrir: o tempo do destaque deslizar. */
 private const val TAB_OPEN_DELAY_MS = 250L
+
+/** Quanto mais se espera, no máximo, que o destaque pare antes de abrir a página (depois de [TAB_OPEN_DELAY_MS]). */
+private const val TAB_SETTLE_MAX_MS = 250L
+
+/** A que distância do sítio (px) o destaque já conta como parado para abrir a página. */
+private const val PILL_SETTLED_PX = 1f
+
+/** O deslize do destaque dos separadores; acaba a meio píxel (ver o TopBar). */
+private val PillSpring = spring(dampingRatio = 0.82f, stiffness = 420f, visibilityThreshold = 0.5f)
 
 /** O nome de um separador: preto sobre o destaque com foco, branco no aberto, apagado nos outros. */
 @Composable

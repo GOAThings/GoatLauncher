@@ -31,7 +31,8 @@ class NightClockTest {
     private fun ticks(vararg times: Long) = flow {
         for (t in times) {
             emit(t)
-            delay(5)
+            // 50 ms: com 5 ms, com a máquina ocupada (a suíte toda a correr), o combine às vezes saltava um minuto.
+            delay(50)
         }
     }
 

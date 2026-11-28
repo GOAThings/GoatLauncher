@@ -32,6 +32,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -130,15 +132,16 @@ internal fun HomeBody(
             Spacer(Modifier.height(12.dp))
             FavoritesBlock(favorites, moveHint)
         }
+        // A secção fica numa caixa de tamanho fixo, encostada a baixo: enquanto ela muda de altura (a troca entre
+        // favoritos anima o tamanho), só a caixa volta a medir. Solta na coluna, a fila dos favoritos ficava com
+        // outro espaço a cada frame e media-se outra vez durante toda a animação.
         HomeStyle.Shelf, HomeStyle.Spotlight -> Column(Modifier.fillMaxSize()) {
-            Spacer(Modifier.weight(1f))
-            section(Modifier)
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.BottomStart) { section(Modifier) }
             Spacer(Modifier.height(28.dp))
             FavoritesBlock(favorites, moveHint)
         }
         HomeStyle.CardRow -> Column(Modifier.fillMaxSize()) {
-            Spacer(Modifier.weight(1f))
-            section(Modifier)
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.BottomStart) { section(Modifier) }
             Spacer(Modifier.height(12.dp))
             FavoritesBlock(favorites, moveHint)
         }
@@ -219,12 +222,17 @@ internal fun ContinueSection(
 ) {
     val current = app?.takeIf { items.isNotEmpty() }
     when (style) {
-        HomeStyle.AppleTv -> AnimatedContent(
-            targetState = current?.let { it to items },
-            contentKey = { it?.first?.packageName },
-            transitionSpec = { fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(120)) },
+        // Os cartões novos constroem-se primeiro e só depois há fade: na SHIELD construí-los levava um frame de ~40 ms,
+        // e com o AnimatedContent ele caía no início do fade (a doca perdia um frame a cada troca de app).
+        HomeStyle.AppleTv -> BuildThenFade(
+            target = current?.let { it to items },
+            keyOf = { it?.first?.packageName },
+            outMs = 120,
+            inMs = 220,
+            inDelayMs = 60,
             modifier = modifier,
-            label = "topShelf",
+            // O que sai fica construído (invisível): desfazê-lo no fim do fade custava um frame.
+            keepAlive = 1,
         ) { section ->
             if (section != null) {
                 // ↓ volta à app dona dos cartões (não à que estiver por baixo deles), como no tvOS.
@@ -241,12 +249,15 @@ internal fun ContinueSection(
                 Spacer(Modifier.fillMaxSize())
             }
         }
-        HomeStyle.SideColumn -> AnimatedContent(
-            targetState = current?.let { it to items },
-            contentKey = { it?.first?.packageName },
-            transitionSpec = { fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(120)) },
+        HomeStyle.SideColumn -> BuildThenFade(
+            target = current?.let { it to items },
+            keyOf = { it?.first?.packageName },
+            outMs = 120,
+            inMs = 220,
+            inDelayMs = 60,
             modifier = modifier,
-            label = "side",
+            // O que sai fica construído (invisível): desfazê-lo no fim do fade custava um frame.
+            keepAlive = 1,
         ) { section ->
             if (section != null) {
                 Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Bottom) {
@@ -268,12 +279,15 @@ internal fun ContinueSection(
                 Spacer(Modifier.fillMaxSize())
             }
         }
-        HomeStyle.Carousel -> AnimatedContent(
-            targetState = current,
-            contentKey = { it?.packageName },
-            transitionSpec = { fadeIn(tween(260, delayMillis = 80)) togetherWith fadeOut(tween(140)) },
+        HomeStyle.Carousel -> BuildThenFade(
+            target = current,
+            keyOf = { it?.packageName },
+            outMs = 140,
+            inMs = 260,
+            inDelayMs = 80,
             modifier = modifier,
-            label = "carousel",
+            // O que sai fica construído (invisível): desfazê-lo no fim do fade custava um frame.
+            keepAlive = 1,
         ) { shown ->
             // A app que está a sair não desenha os conteúdos da que entra (os [items] já são os novos).
             if (shown != null && items.firstOrNull()?.packageName == shown.packageName) {
@@ -290,12 +304,16 @@ internal fun ContinueSection(
                 Spacer(Modifier.fillMaxSize())
             }
         }
-        HomeStyle.Shelf, HomeStyle.Spotlight -> AnimatedContent(
-            targetState = current,
-            contentKey = { it?.packageName },
-            transitionSpec = { fadeIn(tween(260, delayMillis = 80)) togetherWith fadeOut(tween(140)) },
+        // Como na Apple TV: o destaque novo constrói-se primeiro (na SHIELD ~30 ms) e só depois há fade.
+        HomeStyle.Shelf, HomeStyle.Spotlight -> BuildThenFade(
+            target = current,
+            keyOf = { it?.packageName },
+            outMs = 140,
+            inMs = 260,
+            inDelayMs = 80,
             modifier = modifier,
-            label = "shelf",
+            // O que sai fica construído (invisível): desfazê-lo no fim do fade custava um frame.
+            keepAlive = 1,
         ) { shown ->
             val item = items.getOrNull(index)
             if (shown != null && item != null && item.packageName == shown.packageName) {
@@ -356,21 +374,35 @@ internal class HeroBackdrop(val fullBleed: Boolean, val loaded: Painter?)
  * GoatTV) não enchem o ecrã: fica o fundo normal e o logo aparece pequeno no texto.
  */
 @Composable
-internal fun rememberHeroBackdrop(item: WatchNextItem?): HeroBackdrop {
+internal fun rememberHeroBackdrop(item: WatchNextItem?): HeroBackdrop = rememberHeroBackdropState(item).value
+
+/**
+ * O mesmo que [rememberHeroBackdrop], mas sem o ler: quando a imagem acaba de carregar só volta a compor quem lê o
+ * estado (o fundo e o texto do destaque), não quem o pediu. No ecrã inicial era o ecrã todo, mais um frame comprido
+ * (na SHIELD ~45 ms) logo a seguir ao do destaque novo.
+ */
+@Composable
+internal fun rememberHeroBackdropState(item: WatchNextItem?): State<HeroBackdrop> {
     val painter = rememberAsyncImagePainter(ImageRequest.Builder(LocalContext.current).data(item?.imageUri).build())
-    val state by painter.state.collectAsState()
-    val size = (state as? AsyncImagePainter.State.Success)?.painter?.intrinsicSize
-    // Enquanto a imagem do conteúdo seguinte carrega, vale a decisão do anterior: o fundo não cai para o papel de
-    // parede e o logo pequeno não aparece por um instante (o texto saltava).
-    val pending = state is AsyncImagePainter.State.Loading || state is AsyncImagePainter.State.Empty
-    var lastFullBleed by remember { mutableStateOf(false) }
-    // Os canais em direto (ex.: GoatTV) só têm o logo: nunca enchem o ecrã, mesmo que o logo seja largo.
-    val fullBleed = item != null && !item.isChannel && item.imageUri != null && (
-        if (pending) lastFullBleed
-        else size != null && size.height > 0f && abs(size.width / size.height - 16f / 9f) < 0.25f
-        )
-    if (!pending) lastFullBleed = fullBleed
-    return HeroBackdrop(fullBleed, (state as? AsyncImagePainter.State.Success)?.painter)
+    val painterState = painter.state.collectAsState()
+    // A última decisão já tomada (não é estado: só se lê enquanto a imagem seguinte carrega).
+    val lastFullBleed = remember { booleanArrayOf(false) }
+    return remember(item, painterState) {
+        derivedStateOf {
+            val state = painterState.value
+            val size = (state as? AsyncImagePainter.State.Success)?.painter?.intrinsicSize
+            // Enquanto a imagem do conteúdo seguinte carrega, vale a decisão do anterior: o fundo não cai para o papel
+            // de parede e o logo pequeno não aparece por um instante (o texto saltava).
+            val pending = state is AsyncImagePainter.State.Loading || state is AsyncImagePainter.State.Empty
+            // Os canais em direto (ex.: GoatTV) só têm o logo: nunca enchem o ecrã, mesmo que o logo seja largo.
+            val fullBleed = item != null && !item.isChannel && item.imageUri != null && (
+                if (pending) lastFullBleed[0]
+                else size != null && size.height > 0f && abs(size.width / size.height - 16f / 9f) < 0.25f
+                )
+            if (!pending) lastFullBleed[0] = fullBleed
+            HeroBackdrop(fullBleed, (state as? AsyncImagePainter.State.Success)?.painter)
+        }
+    }
 }
 
 /**

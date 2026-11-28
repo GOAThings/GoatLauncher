@@ -5,11 +5,16 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -23,21 +28,48 @@ import cc.slokker.goatlauncher.ui.common.SectionLabel
  * A primeira que pode receber o foco leva o [first]. [spacing]: espaço entre as linhas (a página principal tem cartões).
  */
 @Composable
-internal fun SettingsList(vm: LauncherViewModel, page: Page, first: FocusRequester, onPage: (Page) -> Unit, spacing: Dp? = null) {
+internal fun SettingsList(
+    vm: LauncherViewModel,
+    page: Page,
+    first: FocusRequester,
+    onPage: (Page) -> Unit,
+    spacing: Dp? = null,
+    /** Ver [SettingsScope.onFocusPage]. */
+    onFocusPage: ((Page) -> Unit)? = null,
+    /** Ver [SettingsScope.navRequester]. */
+    navRequester: ((Page) -> FocusRequester)? = null,
+) {
     val s = LocalStrings.current
     val context = LocalContext.current
     val account by vm.account.collectAsStateWithLifecycle()
     val device by vm.device.collectAsStateWithLifecycle()
     val values = SettingsValues(account, device)
-    val scope = SettingsScope(vm, values, s, context, onPage)
+    val scope = SettingsScope(vm, values, s, context, onPage, onFocusPage, navRequester)
     val shown = SettingsCatalog.on(page).filter { it.visible(values) }
     val firstKey = shown.firstOrNull { it.focusable }?.key
     LazyColumn(
+        state = rememberPaneListState(),
         contentPadding = PaddingValues(vertical = 4.dp),
         verticalArrangement = if (spacing != null) Arrangement.spacedBy(spacing) else Arrangement.Top,
     ) {
         shown.forEach { setting -> row(setting, scope, if (setting.key == firstKey) Modifier.focusRequester(first) else Modifier) }
     }
+}
+
+/**
+ * Sobe a cada pedido para as listas do painel voltarem ao início. Numa lista que desceu, a primeira linha sai do ecrã e
+ * deixa de estar composta: o → das categorias (que entra sempre nela) não a encontrava e caía na linha visível mais
+ * perto (a segunda, ao voltar às Definições).
+ */
+internal val LocalPaneTop = compositionLocalOf { 0 }
+
+/** O estado de uma lista do painel: volta ao início quando [LocalPaneTop] sobe (fora do painel nunca sobe). */
+@Composable
+internal fun rememberPaneListState(): LazyListState {
+    val state = rememberLazyListState()
+    val top = LocalPaneTop.current
+    LaunchedEffect(top) { if (top > 0) state.scrollToItem(0) }
+    return state
 }
 
 private fun LazyListScope.row(setting: Setting, scope: SettingsScope, modifier: Modifier) {
@@ -78,12 +110,17 @@ private fun SettingRow(setting: Setting, scope: SettingsScope, modifier: Modifie
                 setting.to?.let(scope.onPage)
                 Unit
             }
+            val to = setting.to
+            val follow = scope.onFocusPage
+            val requester = if (to != null) scope.navRequester?.invoke(to) else null
             NavRow(
                 title = setting.title(s),
                 onClick = onClick,
                 subtitle = setting.subtitle?.invoke(scope),
                 leading = leading,
-                modifier = modifier,
+                modifier = modifier
+                    .then(if (requester != null) Modifier.focusRequester(requester) else Modifier)
+                    .then(if (to != null && follow != null) Modifier.onFocusChanged { if (it.isFocused) follow(to) } else Modifier),
             )
         }
         is Setting.Custom -> setting.content(scope, modifier)

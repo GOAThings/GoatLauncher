@@ -35,7 +35,7 @@ internal fun HiddenAppsPage(vm: LauncherViewModel, first: FocusRequester) {
     val list = apps.orEmpty()
     Column {
         Text(s.hiddenAppsHint, style = MaterialTheme.typography.bodySmall, color = GoatColors.TextFaint, modifier = Modifier.padding(start = 12.dp, bottom = 6.dp))
-        LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+        LazyColumn(state = rememberPaneListState(), contentPadding = PaddingValues(vertical = 4.dp)) {
             items(list, key = { it.packageName }) { app ->
                 val hidden = app.packageName in device.hidden
                 GlassRow(

@@ -146,17 +146,19 @@ internal fun timePattern(s: Strings, clock24h: Boolean, amPm: Boolean = true): S
 fun WatchNextCard(item: WatchNextItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
     val width = CardHeight * item.aspectRatio.coerceIn(0.6f, 2f)
+    var focused by remember { mutableStateOf(false) }
     Column(modifier.width(width)) {
         Surface(
             onClick = onClick,
-            modifier = Modifier.fillMaxWidth().height(CardHeight),
+            // O crescer é de desenho (ver drawnScale): o do Surface fazia a fila saltar ao andar entre cartões.
+            modifier = Modifier.drawnScale(if (focused) 1.08f else 1f).fillMaxWidth().height(CardHeight).onFocusChanged { focused = it.isFocused },
             shape = ClickableSurfaceDefaults.shape(CardShape),
             colors = ClickableSurfaceDefaults.colors(
                 containerColor = GoatColors.CardSurface,
                 focusedContainerColor = GoatColors.CardSurface,
                 pressedContainerColor = GoatColors.CardSurface,
             ),
-            scale = ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
+            scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
             border = ClickableSurfaceDefaults.border(
                 focusedBorder = Border(BorderStroke(3.dp, GoatColors.FocusRing), inset = 0.dp, shape = CardShape),
             ),
@@ -210,14 +212,15 @@ fun TopShelfCard(item: WatchNextItem, height: Dp, onClick: () -> Unit, modifier:
     Column(modifier.width(height * 16 / 9)) {
         Surface(
             onClick = onClick,
-            modifier = Modifier.fillMaxWidth().height(height).onFocusChanged { focused = it.isFocused },
+            // O crescer é de desenho (ver drawnScale): o do Surface fazia a fila saltar ao andar entre cartões.
+            modifier = Modifier.drawnScale(if (focused) 1.05f else 1f).fillMaxWidth().height(height).onFocusChanged { focused = it.isFocused },
             shape = ClickableSurfaceDefaults.shape(TopShelfShape),
             colors = ClickableSurfaceDefaults.colors(
                 containerColor = GoatColors.CardSurface,
                 focusedContainerColor = GoatColors.CardSurface,
                 pressedContainerColor = GoatColors.CardSurface,
             ),
-            scale = ClickableSurfaceDefaults.scale(focusedScale = 1.05f),
+            scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
             border = ClickableSurfaceDefaults.border(
                 focusedBorder = Border(BorderStroke(3.dp, GoatColors.FocusRing), inset = 0.dp, shape = TopShelfShape),
             ),

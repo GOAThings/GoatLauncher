@@ -14,6 +14,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -131,22 +133,33 @@ fun AppBanner(
     // Ícone transparente com o fundo "transparente" (Aparência): o cartão não tem cor, vê-se o fundo do ecrã.
     val container = if (isSeeThrough(custom)) Color.Transparent else app.color
     // A escala do foco é feita aqui (não pelo Surface) para o efeito de foco crescer com o cartão.
-    val focusScale by animateFloatAsState(if (focused) FocusScale else 1f, tween(150), label = "focusScale")
+    val focusScale by animateFloatAsState(if (focused) FocusScale else 1f, FocusSpring, label = "focusScale")
     // Em modo "mover" o cartão abana, como as apps da Apple TV: roda uns graus para cada lado, sem parar.
-    val jiggle = rememberInfiniteTransition(label = "jiggle")
-    val wobble by jiggle.animateFloat(
-        initialValue = -JiggleDegrees, targetValue = JiggleDegrees,
-        animationSpec = infiniteRepeatable(tween(JIGGLE_MS, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "wobble",
-    )
+    // Só o cartão a mover tem o relógio: um por cartão, sempre a correr, acordava a app em cada frame.
+    val wobble = if (moving) {
+        val jiggle = rememberInfiniteTransition(label = "jiggle")
+        jiggle.animateFloat(
+            initialValue = -JiggleDegrees, targetValue = JiggleDegrees,
+            animationSpec = infiniteRepeatable(tween(JIGGLE_MS, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "wobble",
+        )
+    } else {
+        null
+    }
     Surface(
         onClick = onClick,
         onLongClick = onLongClick,
         modifier = modifier
             .size(width, width * 9 / 16)
-            .graphicsLayer {
-                scaleX = armedScale * focusScale
-                scaleY = armedScale * focusScale
-                rotationZ = if (moving) wobble else 0f
+            // Numa camada sua (crescer só redesenha o cartão), mas a escala e o abanar são de desenho, não da camada:
+            // o deslize que traz o cartão com foco à vista mede-o com as transformações da camada, e a meio do
+            // crescer pedia um bocado diferente em cada tecla (na Apple TV a grelha saltava de cima para baixo).
+            .graphicsLayer()
+            .drawWithContent {
+                val s = armedScale * focusScale
+                withTransform({
+                    rotate(wobble?.value ?: 0f)
+                    scale(s, s)
+                }) { this@drawWithContent.drawContent() }
             }
             .focusEffect(focused, app.color, moving)
             .onFocusChanged {

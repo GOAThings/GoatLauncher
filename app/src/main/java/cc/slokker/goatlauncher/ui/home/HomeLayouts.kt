@@ -73,27 +73,47 @@ import coil3.compose.AsyncImage
 
 /**
  * O texto do destaque: a app, o título, "T2 E1 · faltam 6 min" (ou o programa de um canal) e o progresso.
- * [showLogo]: a imagem não enche o ecrã (ex.: logo de um canal), por isso aparece pequena por cima.
+ * [showLogo]: a imagem não enche o ecrã (ex.: logo de um canal), por isso aparece pequena: por cima do texto, ou
+ * ao lado dele com [logoBeside] (o destaque do Início: por cima, com o programa, o progresso e o "a seguir", o
+ * logo subia até debaixo da barra de cima).
  */
 @Composable
-fun HeroText(app: LauncherApp, item: WatchNextItem, showLogo: Boolean, modifier: Modifier = Modifier) {
+fun HeroText(app: LauncherApp, item: WatchNextItem, showLogo: Boolean, modifier: Modifier = Modifier, logoBeside: Boolean = false) {
+    val logo = showLogo && item.imageUri != null
+    if (logo && logoBeside) {
+        Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+            HeroLogo(item, Modifier.padding(end = 28.dp))
+            HeroLines(app, item, Modifier.weight(1f, fill = false))
+        }
+    } else {
+        Column(modifier) {
+            if (logo) HeroLogo(item, Modifier.padding(bottom = 16.dp))
+            HeroLines(app, item)
+        }
+    }
+}
+
+/** Sem imagem de fundo (ex.: logo de um canal): o logo aparece num cartão, como na fila de cartões. */
+@Composable
+private fun HeroLogo(item: WatchNextItem, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .size(width = 176.dp, height = 99.dp)
+            .background(GoatColors.CardSurface, GoatShapes.Control)
+            .padding(14.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        AsyncImage(model = item.imageUri, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+    }
+}
+
+/** As linhas de texto do destaque (ver [HeroText]). */
+@Composable
+private fun HeroLines(app: LauncherApp, item: WatchNextItem, modifier: Modifier = Modifier) {
     val s = LocalStrings.current
     // O programa a dar muda à hora certa, como o OnAirLine por baixo (o mesmo minuto).
     val now = currentMinute()
     Column(modifier) {
-        // Sem imagem de fundo (ex.: logo de um canal): o logo aparece num cartão, como na fila de cartões.
-        if (showLogo && item.imageUri != null) {
-            Box(
-                Modifier
-                    .padding(bottom = 16.dp)
-                    .size(width = 176.dp, height = 99.dp)
-                    .background(GoatColors.CardSurface, GoatShapes.Control)
-                    .padding(14.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                AsyncImage(model = item.imageUri, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
-            }
-        }
         Text(
             (if (item.type == WatchNextItem.TYPE_RECOMMENDED) s.shelfRecommended(app.label) else s.shelfLabel(app.label)).uppercase(s.locale),
             style = MaterialTheme.typography.labelMedium.copy(letterSpacing = tracking(2f)),

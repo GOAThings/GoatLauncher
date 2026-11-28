@@ -1,6 +1,10 @@
 package cc.slokker.goatlauncher.ui.home
 
 import android.content.Context
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.animation.Crossfade
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.ImageBitmap
@@ -103,7 +107,7 @@ fun wallpaperImage(context: Context, wallpaper: Wallpaper, rotating: Any?): Any?
 }
 
 /**
- * O fundo em miniatura (64×36), para o vidro das Definições: esticado por trás do painel, fica desfocado, como o
+ * O fundo em miniatura (128×72) e desfocado, para o vidro das Definições: esticado por trás do painel, como o
  * vidro da GoatTV sobre o vídeo (o Android só tem desfocagem nativa a partir do 12, e a SHIELD está no 11).
  * Sem foto, ou enquanto ela carrega, é o desenho da app em miniatura.
  */
@@ -117,19 +121,22 @@ fun rememberWallpaperBlur(wallpaper: Wallpaper, rotating: Any?): ImageBitmap {
             CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, androidx.compose.ui.graphics.Canvas(bitmap), Size(BLUR_W.toFloat(), BLUR_H.toFloat())) {
                 builtin.draw(this)
             }
+            blurInPlace(bitmap.asAndroidBitmap())
         }
     }
+    // A miniatura é a do vidro da GoatTV (128×72) e é desfocada como lá. Antes era só reduzida a 64×36 e esticada:
+    // sem desfocar, viam-se os quadrados.
     val photo by produceState<ImageBitmap?>(null, image) {
         value = image?.let {
             val request = ImageRequest.Builder(context).data(it).size(BLUR_W, BLUR_H).scale(Scale.FILL).allowHardware(false).build()
-            (context.imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap()?.asImageBitmap()
+            val loaded = (context.imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap() ?: return@let null
+            withContext(Dispatchers.Default) {
+                blurInPlace(Bitmap.createScaledBitmap(loaded, BLUR_W, BLUR_H, true).copy(Bitmap.Config.ARGB_8888, true)).asImageBitmap()
+            }
         }
     }
     return photo ?: drawn
 }
-
-private const val BLUR_W = 64
-private const val BLUR_H = 36
 
 // ---- Desenhos ----
 

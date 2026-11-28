@@ -119,16 +119,20 @@ internal fun ShelfHero(
             }
             .focusable(interactionSource = interaction),
     ) {
-        AnimatedContent(
-            targetState = item,
-            contentKey = { it.id },
-            transitionSpec = {
-                (slideInHorizontally(tween(320, easing = FastOutSlowInEasing)) { it / 8 * direction } + fadeIn(tween(260, delayMillis = 40)))
-                    .togetherWith(slideOutHorizontally(tween(260, easing = FastOutSlowInEasing)) { -it / 8 * direction } + fadeOut(tween(160)))
-                    .using(SizeTransform(clip = false))
-            },
-            label = "hero",
-        ) { shown -> HeroText(app, shown, showLogo) }
+        // ‹ › trocam o conteúdo a deslizar para o lado para onde se anda. O novo constrói-se primeiro (na SHIELD o
+        // frame em que se compõe custava um frame à animação) e fica encostado a baixo, como os botões por baixo dele.
+        BuildThenFade(
+            target = item,
+            keyOf = { it.id },
+            outMs = 160,
+            inMs = 260,
+            inDelayMs = 40,
+            contentAlignment = Alignment.BottomStart,
+            slideInFraction = direction / 8f,
+            slideOutFraction = -direction / 8f,
+        // Os canais (nomes curtos) têm o logo ao lado: por cima, com o programa, o progresso e o "a seguir", subia até à
+        // barra de cima. Os outros (títulos compridos) ficam com ele por cima, para o título caber.
+        ) { shown -> HeroText(app, shown, showLogo, logoBeside = shown.isChannel) }
         Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             // Parece um botão: com foco fica na cor da marca, com o anel do foco (o foco está no destaque inteiro).
