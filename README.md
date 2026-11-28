@@ -12,8 +12,10 @@ A home screen for Android TV and Google TV.
 | ![Appearance, Android TV style](docs/screenshots/appearance-android-tv.jpg) | ![Appearance, tvOS style](docs/screenshots/appearance-tvos.jpg) |
 | ![Aurora focus effect](docs/screenshots/effect-aurora.jpg) | ![Floating ring focus effect](docs/screenshots/effect-floating-ring.jpg) |
 
-Continue watching from GoatTV with a demo playlist (made-up channels; the programme names are Blender Foundation
-open movies). Wallpaper: the built-in "Lake".
+Continue watching from a Jellyfin client (RealJF) with Blender Foundation open movies (Big Buck Bunny, Sintel, Tears
+of Steel, Cosmos Laundromat; © Blender Foundation, CC BY 3.0/4.0, [blender.org](https://studio.blender.org/films/)),
+and from GoatTV with a demo playlist (made-up channels). Wallpapers (CC0, Wikimedia Commons): "Marmolada, Italy" by
+Marco Bonomo and "Lake Mountain Landscape" by Bonnie Moreland.
 
 ## Install
 
