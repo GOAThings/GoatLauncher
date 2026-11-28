@@ -366,9 +366,9 @@ private val CarouselShape = RoundedCornerShape(18.dp)
 @Composable
 private fun CarouselCard(item: WatchNextItem, height: Dp, modifier: Modifier) {
     Box(modifier.size(width = height * 16 / 9, height = height).clip(CarouselShape).background(GoatColors.CardSurface), contentAlignment = Alignment.Center) {
-        if (item.bigImageUri != null) {
+        if (item.imageUri != null) {
             AsyncImage(
-                model = item.bigImageUri,
+                model = item.imageUri,
                 contentDescription = null,
                 contentScale = if (item.isChannel) ContentScale.Fit else ContentScale.Crop,
                 // O logo de um canal fica em cima, longe do texto do cartão do meio.

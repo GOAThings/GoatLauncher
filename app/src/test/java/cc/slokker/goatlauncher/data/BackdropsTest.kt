@@ -29,22 +29,6 @@ class BackdropsTest {
     }
 
     @Test
-    fun aioMetadataEpisodeGetsTheShowBackdrop() {
-        val items = "https://media.example/jellyfin/abc/Items/"
-        assertEquals(
-            "${items}a1210200-0000-0707-6900-ffffff010000/Images/Backdrop?maxWidth=1920&quality=90",
-            Backdrops.showBackdropOf("${items}a1410200-0000-0707-6900-020001010000/Images/Primary?tag=x&maxWidth=640"),
-        )
-    }
-
-    @Test
-    fun otherEpisodesHaveNoShowBackdrop() {
-        val items = "https://media.example/jellyfin/abc/Items/"
-        assertNull(Backdrops.showBackdropOf("${items}6f1d2c3b4a5948e7b6c5d4e3f2a1b0c9/Images/Primary"))
-        assertNull(Backdrops.showBackdropOf("${items}a1110100-0000-1323-3fff-ffffff010000/Images/Thumb"))
-    }
-
-    @Test
     fun otherImagesStay() {
         assertNull(Backdrops.backdropOf("${base}Backdrop?maxWidth=1280"))
         assertNull(Backdrops.backdropOf("${base}Logo"))

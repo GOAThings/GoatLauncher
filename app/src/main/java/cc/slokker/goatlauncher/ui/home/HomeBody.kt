@@ -383,7 +383,7 @@ internal fun rememberHeroBackdrop(item: WatchNextItem?): HeroBackdrop = remember
  */
 @Composable
 internal fun rememberHeroBackdropState(item: WatchNextItem?): State<HeroBackdrop> {
-    val painter = rememberAsyncImagePainter(ImageRequest.Builder(LocalContext.current).data(item?.bigImageUri).build())
+    val painter = rememberAsyncImagePainter(ImageRequest.Builder(LocalContext.current).data(item?.imageUri).build())
     val painterState = painter.state.collectAsState()
     // A última decisão já tomada (não é estado: só se lê enquanto a imagem seguinte carrega).
     val lastFullBleed = remember { booleanArrayOf(false) }
@@ -395,7 +395,7 @@ internal fun rememberHeroBackdropState(item: WatchNextItem?): State<HeroBackdrop
             // de parede e o logo pequeno não aparece por um instante (o texto saltava).
             val pending = state is AsyncImagePainter.State.Loading || state is AsyncImagePainter.State.Empty
             // Os canais em direto (ex.: GoatTV) só têm o logo: nunca enchem o ecrã, mesmo que o logo seja largo.
-            val fullBleed = item != null && !item.isChannel && item.bigImageUri != null && (
+            val fullBleed = item != null && !item.isChannel && item.imageUri != null && (
                 if (pending) lastFullBleed[0]
                 else size != null && size.height > 0f && abs(size.width / size.height - 16f / 9f) < 0.25f
                 )
