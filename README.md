@@ -8,8 +8,9 @@ A home screen for Android TV and Google TV.
 |---|---|
 | ![Continue watching: Spotlight](docs/screenshots/home-android-tv.jpg) | ![Continue watching: Spotlight with what's next](docs/screenshots/home-android-tv-spotlight-next.jpg) |
 | ![Continue watching: row of cards](docs/screenshots/home-android-tv-cards.jpg) | ![Continue watching: apps on the side](docs/screenshots/home-android-tv-side.jpg) |
-| ![Continue watching: carousel](docs/screenshots/home-android-tv-carousel.jpg) | ![Home, tvOS style](docs/screenshots/home-tvos-day.jpg) |
-| ![Home, tvOS style at night](docs/screenshots/home-tvos-night.jpg) | ![Change icon: use the app's icon](docs/screenshots/change-icon.jpg) |
+| ![Continue watching: carousel](docs/screenshots/home-android-tv-carousel.jpg) | ![Continue watching off](docs/screenshots/home-android-tv-off.jpg) |
+| ![Home, tvOS style](docs/screenshots/home-tvos-day.jpg) | ![Home, tvOS style at night](docs/screenshots/home-tvos-night.jpg) |
+| ![Apps tab](docs/screenshots/apps-tab.jpg) | ![Change icon: use the app's icon](docs/screenshots/change-icon.jpg) |
 | ![Settings](docs/screenshots/settings.jpg) | ![Settings, wallpaper](docs/screenshots/settings-wallpaper.jpg) |
 | ![Appearance, Android TV style](docs/screenshots/appearance-android-tv.jpg) | ![Appearance, tvOS style](docs/screenshots/appearance-tvos.jpg) |
 | ![Aurora focus effect](docs/screenshots/effect-aurora.jpg) | ![Floating ring focus effect](docs/screenshots/effect-floating-ring.jpg) |
