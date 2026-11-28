@@ -41,7 +41,15 @@ data class WatchNextItem(
     val airEnd: Long = 0,
     /** Canal em direto do GoatTV: os programas depois do que está a dar (da descrição longa), o primeiro às [airEnd]. */
     val schedule: List<Programme> = emptyList(),
+    /** Imagem para o que enche o ecrã (destaque, carrossel), se for outra: num episódio, o fundo da série (ver Backdrops). */
+    val wideImageUri: String? = null,
 ) {
+    /** A imagem do destaque, do carrossel e dos cartões grandes do tvOS. */
+    val bigImageUri: String? get() = wideImageUri ?: imageUri
+
+    /** Um episódio de uma série (tem temporada, número ou título de episódio). */
+    val isEpisode: Boolean get() = !isChannel && (season != null || episode != null || episodeTitle != null)
+
     /**
      * O que está a dar às [now] num canal em direto: o programa publicado, ou um dos seguintes se esse já acabou (a
      * app pode não ter voltado a publicar). null sem programa, ou com todos já passados.

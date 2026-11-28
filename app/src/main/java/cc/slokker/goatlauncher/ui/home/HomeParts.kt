@@ -227,9 +227,9 @@ fun TopShelfCard(item: WatchNextItem, height: Dp, onClick: () -> Unit, modifier:
             glow = ClickableSurfaceDefaults.glow(focusedGlow = Glow(elevationColor = Color.Black.copy(alpha = 0.6f), elevation = 16.dp)),
         ) {
             Box(Modifier.fillMaxSize()) {
-                if (item.imageUri != null) {
+                if (item.bigImageUri != null) {
                     val painter = rememberAsyncImagePainter(
-                        ImageRequest.Builder(LocalContext.current).data(item.imageUri).crossfade(true).build(),
+                        ImageRequest.Builder(LocalContext.current).data(item.bigImageUri).crossfade(true).build(),
                     )
                     val state by painter.state.collectAsState()
                     val size = (state as? AsyncImagePainter.State.Success)?.painter?.intrinsicSize
