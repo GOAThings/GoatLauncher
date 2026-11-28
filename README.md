@@ -12,8 +12,8 @@ A home screen for Android TV and Google TV.
 | ![Appearance, Android TV style](docs/screenshots/appearance-android-tv.jpg) | ![Appearance, tvOS style](docs/screenshots/appearance-tvos.jpg) |
 | ![Aurora focus effect](docs/screenshots/effect-aurora.jpg) | ![Floating ring focus effect](docs/screenshots/effect-floating-ring.jpg) |
 
-Continue watching from Nuvio. "Big Buck Bunny" and "Sintel" © Blender Foundation, CC BY 3.0; "Cosmos Laundromat"
-© Blender Foundation, CC BY 4.0. Focus effect wallpapers: CC0 photos from Wikimedia Commons.
+Continue watching from GoatTV with a demo playlist (made-up channels; the programme names are Blender Foundation
+open movies). Wallpaper: the built-in "Lake".
 
 ## Install
 
