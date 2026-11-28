@@ -116,7 +116,9 @@ fun SettingsScreen(
         followJob?.cancel()
         followJob = scope.launch {
             delay(PANE_FOLLOW_MS)
-            if (page.category(hasPin) != target) page = target
+            // Só se o foco ficou nas categorias: se caiu lá por um instante (ex.: a linha com foco do painel
+            // desapareceu) e o painel o voltou a pedir, a página não muda.
+            if (!paneFocused && page.category(hasPin) != target) page = target
         }
     }
 
@@ -135,9 +137,12 @@ fun SettingsScreen(
     LaunchedEffect(paneFocusRequest) {
         if (paneFocusRequest == 0 || page == Page.WallpaperFiles) return@LaunchedEffect
         // A página nova constrói-se primeiro (ver BuildThenFade): espera que o primeiro elemento dela exista.
-        repeat(FOCUS_WAIT_FRAMES) {
+        repeat(FOCUS_WAIT_FRAMES) { frame ->
             withFrameNanos { }
-            if (paneFirsts[page]?.requestFocusSafely() == true) return@LaunchedEffect
+            if (paneFirsts[page]?.enter() == true) return@LaunchedEffect
+            // Ainda não deu: se a lista da página desceu (ex.: voltar de uma subpágina), a primeira linha não está
+            // composta. A página volta ao início e tenta-se outra vez.
+            if (frame == SCROLL_TOP_AFTER_FRAMES) paneTop++
         }
     }
     // Fechado o pedido do código (certo ou cancelado), o foco volta para dentro das Definições. Só quando [refocus]
@@ -422,6 +427,8 @@ private const val PANE_FOLLOW_MS = 220L
 private const val PANE_OUT_MS = 90
 private const val PANE_IN_MS = 160
 private const val FOCUS_WAIT_FRAMES = 30
+/** Ao fim destes frames sem conseguir pôr o foco na primeira linha, a página volta ao início (ver LocalPaneTop). */
+private const val SCROLL_TOP_AFTER_FRAMES = 4
 private const val PANE_KEEP = 12
 
 /** As categorias a construir antes, invisíveis (o Controlo parental pede o código: fica de fora). */

@@ -67,6 +67,7 @@ fun parentFolder(dir: File): File? = if (ImageImport.isRoot(dir)) null else dir.
  */
 @Composable
 fun ImageBrowser(dir: File?, onDir: (File?) -> Unit, onPick: (File) -> Unit, first: FocusRequester, onPickFolder: ((File) -> Unit)? = null) {
+    val requested = dir
     val s = LocalStrings.current
     val context = LocalContext.current
     val permission = if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE
@@ -84,8 +85,14 @@ fun ImageBrowser(dir: File?, onDir: (File?) -> Unit, onPick: (File) -> Unit, fir
         return
     }
 
-    val entries by produceState<List<File>?>(null, dir) { value = if (dir == null) ImageImport.roots() else ImageImport.list(dir) }
-    LaunchedEffect(dir, entries != null) { if (entries != null) first.focusSoon() }
+    // A pasta que se vê e o que tem: a anterior fica à vista até a nova carregar, e trocam as duas de uma vez. Antes a
+    // lista ficava vazia enquanto carregava: a linha com foco desaparecia, o foco caía na primeira categoria das
+    // Definições e o painel ia atrás dela (saía das imagens a meio de entrar numa pasta).
+    var shown by remember { mutableStateOf<Pair<File?, List<File>>?>(null) }
+    LaunchedEffect(requested) { shown = requested to (if (requested == null) ImageImport.roots() else ImageImport.list(requested)) }
+    LaunchedEffect(shown) { if (shown != null) first.focusSoon() }
+    val dir = shown?.first
+    val entries = shown?.second
 
     Column {
         Text(
