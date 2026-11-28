@@ -209,7 +209,7 @@ private fun PreviewTopBar(account: AccountSettings, weather: WeatherNow?, showAp
 @Composable
 private fun PreviewTile(vm: LauncherViewModel, app: LauncherApp, iconSpec: String?, focused: Boolean, showLabel: Boolean, width: Dp) {
     // O ícone escolhido carrega como no ecrã inicial (até lá, só a cor da app).
-    val custom by produceState(iconSpec?.let { vm.icons.cached(it) }, iconSpec) { value = iconSpec?.let { vm.icons.load(it) } }
+    val custom by produceState(iconSpec?.let { vm.icons.cached(it) }, iconSpec, app) { value = iconSpec?.let { vm.icons.load(it) } }
     Column(Modifier.width(width), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier

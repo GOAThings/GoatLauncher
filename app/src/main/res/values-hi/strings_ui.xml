@@ -50,6 +50,8 @@
     <string name="restore_name">मूल नाम वापस लाएँ</string>
     <string name="change_icon">आइकन बदलें</string>
     <string name="restore_icon">मूल आइकन वापस लाएँ</string>
+    <string name="use_app_icon">ऐप का आइकन इस्तेमाल करें</string>
+    <string name="use_app_icon_hint">उसके बैनर की जगह</string>
     <string name="icon_pack">आइकन पैक</string>
     <string name="open_icon_pack">आइकन पैक में खोलें</string>
     <string name="suggested">इस ऐप के लिए बने</string>

@@ -50,6 +50,8 @@
     <string name="restore_name">Adı geri yükle</string>
     <string name="change_icon">Simgeyi değiştir</string>
     <string name="restore_icon">Orijinali geri yükle</string>
+    <string name="use_app_icon">Uygulama simgesini kullan</string>
+    <string name="use_app_icon_hint">Banner yerine</string>
     <string name="icon_pack">Simge paketi</string>
     <string name="open_icon_pack">Simge paketinde aç</string>
     <string name="suggested">Bu uygulama için yapılmış</string>

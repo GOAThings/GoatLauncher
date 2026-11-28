@@ -57,6 +57,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.staticCompositionLocalOf
 import cc.slokker.goatlauncher.data.AccountSettings
 import androidx.compose.ui.graphics.asAndroidBitmap
+import kotlin.math.abs
 import androidx.compose.ui.graphics.Brush
 import androidx.tv.material3.Icon
 
@@ -251,7 +252,10 @@ private const val JIGGLE_MS = 130
 @Composable
 fun CustomIconImage(image: ImageBitmap, background: Color) {
     val transparent = remember(image) { image.hasTransparentEdges() }
-    val backdrop = if (transparent) iconBackdrop(LocalIconBackground.current) else Modifier.background(background)
+    // Um ícone quadrado opaco (ex.: o da própria app, com o fundo dele) continua pelo cartão fora com a cor da borda,
+    // em vez de ficar uma caixa de outra cor no meio do cartão.
+    val edge = remember(image) { if (transparent) null else image.edgeColor() }
+    val backdrop = if (transparent) iconBackdrop(LocalIconBackground.current) else Modifier.background(edge ?: background)
     if (image.width >= image.height * 1.4f) {
         Image(image, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().then(if (transparent) backdrop else Modifier))
     } else {
@@ -281,6 +285,22 @@ fun isSeeThrough(image: ImageBitmap?): Boolean {
 }
 
 /** Se as bordas do ícone são (quase todas) transparentes: vê-se uma amostra de pontos à volta. */
+/**
+ * A cor da borda, se a borda for toda de uma cor (o fundo de um ícone quadrado); null se variar (uma imagem até à
+ * borda) ou se não der para ler os píxeis.
+ */
+private fun ImageBitmap.edgeColor(): Color? = runCatching {
+    val bitmap = asAndroidBitmap()
+    val w = bitmap.width - 1
+    val h = bitmap.height - 1
+    val pixels = (0..8).flatMap { i -> listOf(bitmap.getPixel(w * i / 8, 0), bitmap.getPixel(w * i / 8, h), bitmap.getPixel(0, h * i / 8), bitmap.getPixel(w, h * i / 8)) }
+    val first = pixels.first()
+    fun near(a: Int, b: Int) = abs(android.graphics.Color.red(a) - android.graphics.Color.red(b)) < 12 &&
+        abs(android.graphics.Color.green(a) - android.graphics.Color.green(b)) < 12 &&
+        abs(android.graphics.Color.blue(a) - android.graphics.Color.blue(b)) < 12
+    if (pixels.all { near(it, first) }) Color(first or 0xFF000000.toInt()) else null
+}.getOrNull()
+
 private fun ImageBitmap.hasTransparentEdges(): Boolean {
     val bitmap = asAndroidBitmap()
     if (!bitmap.hasAlpha()) return false

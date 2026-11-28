@@ -50,6 +50,8 @@
     <string name="restore_name">استعادة الاسم</string>
     <string name="change_icon">تغيير الأيقونة</string>
     <string name="restore_icon">استعادة الأصلية</string>
+    <string name="use_app_icon">استخدام أيقونة التطبيق</string>
+    <string name="use_app_icon_hint">بدلاً من الشعار العريض</string>
     <string name="icon_pack">حزمة الأيقونات</string>
     <string name="open_icon_pack">فتح في حزمة الأيقونات</string>
     <string name="suggested">مصمّمة لهذا التطبيق</string>

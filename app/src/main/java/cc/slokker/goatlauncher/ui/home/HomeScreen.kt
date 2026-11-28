@@ -288,7 +288,8 @@ fun HomeScreen(vm: LauncherViewModel) {
         val spec = device.icons[app.packageName]
         // (ícone, já se sabe?): com um ícone escolhido, até ele carregar fica só a cor da app, para não piscar
         // o banner original antes. Se não carregar (ex.: icon pack desinstalado), aparece o original.
-        val custom by produceState(spec?.let { vm.icons.cached(it) } to (spec == null), spec) {
+        // [app] também: depois de uma atualização da app, o "ícone da app" (CustomIcons.APP) volta a ler-se.
+        val custom by produceState(spec?.let { vm.icons.cached(it) } to (spec == null), spec, app) {
             value = spec?.let { vm.icons.load(it) } to true
         }
         AppTile(

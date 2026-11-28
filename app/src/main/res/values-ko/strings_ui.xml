@@ -50,6 +50,8 @@
     <string name="restore_name">이름 복원</string>
     <string name="change_icon">아이콘 변경</string>
     <string name="restore_icon">원래대로 복원</string>
+    <string name="use_app_icon">앱 아이콘 사용</string>
+    <string name="use_app_icon_hint">배너 대신</string>
     <string name="icon_pack">아이콘 팩</string>
     <string name="open_icon_pack">아이콘 팩에서 열기</string>
     <string name="suggested">이 앱 전용</string>

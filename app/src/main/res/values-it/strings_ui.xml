@@ -50,6 +50,8 @@
     <string name="restore_name">Ripristina nome</string>
     <string name="change_icon">Cambia icona</string>
     <string name="restore_icon">Ripristina originale</string>
+    <string name="use_app_icon">Usa l\'icona dell\'app</string>
+    <string name="use_app_icon_hint">Al posto del banner</string>
     <string name="icon_pack">Pacchetto di icone</string>
     <string name="open_icon_pack">Apri nel pacchetto di icone</string>
     <string name="suggested">Fatte per questa app</string>

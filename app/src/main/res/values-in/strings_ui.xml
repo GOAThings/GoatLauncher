@@ -50,6 +50,8 @@
     <string name="restore_name">Pulihkan nama</string>
     <string name="change_icon">Ganti ikon</string>
     <string name="restore_icon">Pulihkan ikon asli</string>
+    <string name="use_app_icon">Gunakan ikon aplikasi</string>
+    <string name="use_app_icon_hint">Sebagai ganti bannernya</string>
     <string name="icon_pack">Paket ikon</string>
     <string name="open_icon_pack">Buka di paket ikon</string>
     <string name="suggested">Dibuat untuk aplikasi ini</string>

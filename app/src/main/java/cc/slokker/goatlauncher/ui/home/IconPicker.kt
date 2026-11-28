@@ -153,6 +153,26 @@ fun IconPicker(app: LauncherApp, current: String?, vm: LauncherViewModel, onDone
                 )
                 when (val p = page) {
                     PickerPage.Sources -> LazyColumn(contentPadding = PaddingValues(vertical = 4.dp)) {
+                        // O ícone da própria app em vez do banner (ex.: o banner ficou com o logo antigo).
+                        val ownIcon = CustomIcons.appIcon(pkg)
+                        if (current != ownIcon) {
+                            item {
+                                GlassRow(
+                                    title = s.useAppIcon,
+                                    subtitle = s.useAppIconHint,
+                                    leading = {
+                                        val small = app.smallIcon
+                                        if (small != null) Image(small, null, Modifier.size(20.dp)) else Icon(GoatIcons.Image, null, Modifier.size(20.dp))
+                                    },
+                                    onClick = {
+                                        vm.setCustomIcon(pkg, ownIcon)
+                                        onDone()
+                                    },
+                                    modifier = Modifier.focusRequester(first),
+                                )
+                            }
+                            item { Spacer(Modifier.height(8.dp)) }
+                        }
                         if (packs.isNotEmpty()) item { SectionLabel(s.iconPack) }
                         items(packs, key = { it.packageName }) { pack ->
                             GlassRow(
@@ -160,7 +180,7 @@ fun IconPicker(app: LauncherApp, current: String?, vm: LauncherViewModel, onDone
                                 leading = { Icon(GoatIcons.Palette, null, Modifier.size(20.dp)) },
                                 trailing = { Icon(GoatIcons.ChevronRight, null, Modifier.size(20.dp)) },
                                 onClick = { page = PickerPage.Pack(pack) },
-                                modifier = if (pack == packs.first()) Modifier.focusRequester(first) else Modifier,
+                                modifier = if (current == ownIcon && pack == packs.first()) Modifier.focusRequester(first) else Modifier,
                             )
                         }
                         item { Spacer(Modifier.height(8.dp)) }
@@ -171,7 +191,7 @@ fun IconPicker(app: LauncherApp, current: String?, vm: LauncherViewModel, onDone
                                 leading = { Icon(GoatIcons.Folder, null, Modifier.size(20.dp)) },
                                 trailing = { Icon(GoatIcons.ChevronRight, null, Modifier.size(20.dp)) },
                                 onClick = { page = PickerPage.Files(null) },
-                                modifier = if (packs.isEmpty()) Modifier.focusRequester(first) else Modifier,
+                                modifier = if (current == ownIcon && packs.isEmpty()) Modifier.focusRequester(first) else Modifier,
                             )
                         }
                         if (canBrowseSystem) {

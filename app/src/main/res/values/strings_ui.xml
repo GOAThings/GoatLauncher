@@ -50,6 +50,8 @@
     <string name="restore_name">Restore name</string>
     <string name="change_icon">Change icon</string>
     <string name="restore_icon">Restore original</string>
+    <string name="use_app_icon">Use the app\'s icon</string>
+    <string name="use_app_icon_hint">Instead of its banner</string>
     <string name="icon_pack">Icon pack</string>
     <string name="open_icon_pack">Open in the icon pack</string>
     <string name="suggested">Made for this app</string>

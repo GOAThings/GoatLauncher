@@ -70,6 +70,8 @@ class Strings(context: Context) {
     val restoreName get() = s(R.string.restore_name)
     val changeIcon get() = s(R.string.change_icon)
     val restoreIcon get() = s(R.string.restore_icon)
+    val useAppIcon get() = s(R.string.use_app_icon)
+    val useAppIconHint get() = s(R.string.use_app_icon_hint)
     val iconPack get() = s(R.string.icon_pack)
     val openIconPack get() = s(R.string.open_icon_pack)
     val suggested get() = s(R.string.suggested)

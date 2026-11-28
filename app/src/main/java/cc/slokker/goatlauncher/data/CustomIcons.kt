@@ -29,7 +29,9 @@ data class PackIcons(val suggested: List<String>, val all: List<String>)
 /**
  * Ícones escolhidos pela pessoa. Cada um é guardado nas definições desta TV como um texto:
  *  - `pack:<pacote do pack>/<drawable>`: um ícone de um icon pack (lido do pack sempre que é preciso);
- *  - `file:<nome>`: uma imagem da box, copiada para a app (sobrevive a tirar o disco ou a reiniciar).
+ *  - `file:<nome>`: uma imagem da box, copiada para a app (sobrevive a tirar o disco ou a reiniciar);
+ *  - `app:<pacote>`: o ícone da própria app em vez do banner (ex.: o RealJF mudou o ícone e deixou o banner antigo).
+ *    Lido da app, por isso acompanha as atualizações dela.
  */
 class CustomIcons(private val context: Context) {
     private val pm = context.packageManager
@@ -81,14 +83,32 @@ class CustomIcons(private val context: Context) {
     }
 
     /** O desenho de [spec] se já estiver em memória (para o banner aparecer logo com ele, sem esperar). */
-    fun cached(spec: String): ImageBitmap? = cache.get(spec)
+    fun cached(spec: String): ImageBitmap? = cache.get(cacheKey(spec))
 
-    /** O desenho de um spec (`pack:` ou `file:`), ou null se já não existir (pack desinstalado, ficheiro apagado). */
+    /**
+     * A chave na cache: o spec e, num `app:`, a hora da última atualização da app. Uma app atualizada com outro ícone
+     * volta a desenhar-se em vez de ficar com o da versão anterior.
+     */
+    private fun cacheKey(spec: String): String {
+        if (!spec.startsWith(APP)) return spec
+        val updated = runCatching { pm.getPackageInfo(spec.removePrefix(APP), 0).lastUpdateTime }.getOrDefault(0L)
+        return "$spec@$updated"
+    }
+
+    /** O desenho de um spec (`pack:`, `file:` ou `app:`), ou null se já não existir (pack ou app desinstalados, ficheiro apagado). */
     suspend fun load(spec: String): ImageBitmap? {
-        cache.get(spec)?.let { return it }
+        val key = cacheKey(spec)
+        cache.get(key)?.let { return it }
         return withContext(Dispatchers.IO) {
             runCatching {
                 when {
+                    spec.startsWith(APP) -> {
+                        val pkg = spec.removePrefix(APP)
+                        // O ícone da entrada da TV (o mesmo que o sistema mostra), ou o da app.
+                        val d = pm.getLeanbackLaunchIntentForPackage(pkg)?.let { runCatching { pm.getActivityIcon(it) }.getOrNull() }
+                            ?: pm.getApplicationIcon(pkg)
+                        d.toBitmap(MAX_H, MAX_H)
+                    }
                     spec.startsWith(PACK) -> {
                         val (pack, name) = spec.removePrefix(PACK).split('/', limit = 2)
                         val res = pm.getResourcesForApplication(pack)
@@ -102,7 +122,7 @@ class CustomIcons(private val context: Context) {
                     spec.startsWith(FILE) -> BitmapFactory.decodeFile(File(dir, spec.removePrefix(FILE)).path)
                     else -> null
                 }?.asImageBitmap()
-            }.onFailure { Log.w(TAG, "Ícone $spec", it) }.getOrNull()?.also { cache.put(spec, it) }
+            }.onFailure { Log.w(TAG, "Ícone $spec", it) }.getOrNull()?.also { cache.put(key, it) }
         }
     }
 
@@ -118,7 +138,7 @@ class CustomIcons(private val context: Context) {
     /** Apaga a cópia de um ícone `file:` que deixou de ser usado. */
     fun discard(spec: String?) {
         if (spec == null || !spec.startsWith(FILE)) return
-        cache.remove(spec)
+        cache.remove(cacheKey(spec))
         runCatching { File(dir, spec.removePrefix(FILE)).delete() }
     }
 
@@ -137,6 +157,10 @@ class CustomIcons(private val context: Context) {
         private const val TAG = "CustomIcons"
         const val PACK = "pack:"
         const val FILE = "file:"
+        const val APP = "app:"
+
+        /** O spec do ícone da própria app [pkg]. */
+        fun appIcon(pkg: String): String = APP + pkg
 
         /** A pasta em `files` das imagens "file:" (o nome fica nas definições desta TV: nunca muda). */
         const val ICONS_DIR = "icons"

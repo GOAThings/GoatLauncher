@@ -50,6 +50,8 @@
     <string name="restore_name">恢复名称</string>
     <string name="change_icon">更换图标</string>
     <string name="restore_icon">恢复原图标</string>
+    <string name="use_app_icon">使用应用图标</string>
+    <string name="use_app_icon_hint">代替横幅</string>
     <string name="icon_pack">图标包</string>
     <string name="open_icon_pack">在图标包中打开</string>
     <string name="suggested">为此应用设计</string>

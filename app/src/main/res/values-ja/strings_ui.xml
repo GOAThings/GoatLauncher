@@ -50,6 +50,8 @@
     <string name="restore_name">名前を元に戻す</string>
     <string name="change_icon">アイコンを変更</string>
     <string name="restore_icon">元に戻す</string>
+    <string name="use_app_icon">アプリのアイコンを使う</string>
+    <string name="use_app_icon_hint">バナーの代わりに</string>
     <string name="icon_pack">アイコンパック</string>
     <string name="open_icon_pack">アイコンパックで開く</string>
     <string name="suggested">このアプリ用</string>

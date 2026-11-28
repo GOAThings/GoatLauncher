@@ -50,6 +50,8 @@
     <string name="restore_name">Namen zurücksetzen</string>
     <string name="change_icon">Symbol ändern</string>
     <string name="restore_icon">Original wiederherstellen</string>
+    <string name="use_app_icon">App-Symbol verwenden</string>
+    <string name="use_app_icon_hint">Statt des Banners</string>
     <string name="icon_pack">Symbolpaket</string>
     <string name="open_icon_pack">Im Symbolpaket öffnen</string>
     <string name="suggested">Für diese App gemacht</string>

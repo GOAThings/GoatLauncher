@@ -50,6 +50,8 @@
     <string name="restore_name">Вернуть название</string>
     <string name="change_icon">Сменить значок</string>
     <string name="restore_icon">Вернуть исходный</string>
+    <string name="use_app_icon">Значок приложения</string>
+    <string name="use_app_icon_hint">Вместо баннера</string>
     <string name="icon_pack">Набор значков</string>
     <string name="open_icon_pack">Открыть в наборе значков</string>
     <string name="suggested">Для этого приложения</string>
