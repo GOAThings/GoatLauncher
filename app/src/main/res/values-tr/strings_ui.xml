@@ -231,6 +231,7 @@
     <string name="link_contact">Sorular: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Android ayarları</string>
+    <string name="launcher_settings">Başlatıcı ayarları</string>
     <string name="version">GoatLauncher %1$s</string>
     <string name="updates">Güncellemeler</string>
     <string name="check_updates">Güncellemeleri denetle</string>

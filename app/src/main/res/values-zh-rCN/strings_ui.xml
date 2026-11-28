@@ -231,6 +231,7 @@
     <string name="link_contact">如有疑问：%1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Android 设置</string>
+    <string name="launcher_settings">启动器设置</string>
     <string name="version">GoatLauncher %1$s</string>
     <string name="updates">更新</string>
     <string name="check_updates">检查更新</string>

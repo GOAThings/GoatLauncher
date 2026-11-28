@@ -259,6 +259,7 @@ class Strings(context: Context) {
     fun linkContact(email: String) = s(R.string.link_contact, email)
     val android get() = s(R.string.android)
     val androidSettings get() = s(R.string.android_settings)
+    val launcherSettings get() = s(R.string.launcher_settings)
     fun version(v: String) = s(R.string.version, v)
     val updates get() = s(R.string.updates)
     val checkUpdates get() = s(R.string.check_updates)

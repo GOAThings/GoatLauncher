@@ -231,6 +231,7 @@
     <string name="link_contact">للاستفسارات: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">إعدادات Android</string>
+    <string name="launcher_settings">إعدادات المشغّل</string>
     <string name="version">GoatLauncher %1$s</string>
     <string name="updates">التحديثات</string>
     <string name="check_updates">التحقق من وجود تحديثات</string>

@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             if (BuildConfig.DEBUG && intent.getBooleanExtra("demo_watch_next", false)) vm.enableDemoWatchNext()
             unlockRequest(intent)
+            settingsRequest(intent)
         }
         setContent {
             GoatTheme { LauncherRoot(vm) }
@@ -91,6 +92,13 @@ class MainActivity : AppCompatActivity() {
         // singleTask: o botão Home com o launcher já aberto chega aqui.
         if (intent.hasCategory(Intent.CATEGORY_HOME)) vm.onHomePressed()
         unlockRequest(intent)
+        settingsRequest(intent)
+    }
+
+    /** Um botão do comando pediu as Definições (ver HomeGuardService). Um pedido antigo não conta (como no código). */
+    private fun settingsRequest(intent: Intent) {
+        if (!intent.getBooleanExtra(AutoStart.EXTRA_SETTINGS, false)) return
+        if (AutoStart.isFresh(intent, SystemClock.elapsedRealtime())) vm.openSettings()
     }
 
     /**

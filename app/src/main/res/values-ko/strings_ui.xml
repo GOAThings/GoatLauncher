@@ -231,6 +231,7 @@
     <string name="link_contact">문의: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Android 설정</string>
+    <string name="launcher_settings">런처 설정</string>
     <string name="version">GoatLauncher %1$s</string>
     <string name="updates">업데이트</string>
     <string name="check_updates">업데이트 확인</string>

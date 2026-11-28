@@ -231,6 +231,7 @@
     <string name="link_contact">Dudas: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Ajustes de Android</string>
+    <string name="launcher_settings">Ajustes del launcher</string>
     <string name="version">GoatLauncher %1$s</string>
     <string name="updates">Actualizaciones</string>
     <string name="check_updates">Buscar actualizaciones</string>

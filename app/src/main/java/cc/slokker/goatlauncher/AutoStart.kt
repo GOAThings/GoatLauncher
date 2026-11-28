@@ -128,8 +128,18 @@ object AutoStart {
             .putExtra(EXTRA_UNLOCK_AT, SystemClock.elapsedRealtime())
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
 
+    /** Abre o launcher nas Definições (o botão do comando com a ação "Definições do launcher"). */
+    fun settingsIntent(context: Context): Intent =
+        Intent(context, MainActivity::class.java)
+            .putExtra(EXTRA_SETTINGS, true)
+            .putExtra(EXTRA_UNLOCK_AT, SystemClock.elapsedRealtime())
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+
+    /** Extra do MainActivity: abre as Definições. */
+    const val EXTRA_SETTINGS = "cc.slokker.goatlauncher.SETTINGS"
+
     /**
-     * O pedido do [unlockIntent] é de agora? O sistema guarda o intent que abriu o ecrã e volta a dá-lo quando o recria
+     * O pedido do [unlockIntent] (ou do [settingsIntent]) é de agora? O sistema guarda o intent que abriu o ecrã e volta a dá-lo quando o recria
      * depois de fechar o processo: esse já foi tratado. Sem a hora (um `am start` à mão) conta como novo.
      */
     fun isFresh(intent: Intent, now: Long): Boolean = isFresh(intent.getLongExtra(EXTRA_UNLOCK_AT, -1L), now)

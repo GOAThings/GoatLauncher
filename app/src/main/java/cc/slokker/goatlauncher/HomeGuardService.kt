@@ -138,6 +138,7 @@ class HomeGuardService : AccessibilityService() {
             ButtonAction.PREVIOUS_APP -> previousApp()?.let { AutoStart.open(this, it) }
             ButtonAction.SEARCH -> SystemIntents.start(this, SystemIntents.search(this))
             ButtonAction.ANDROID_SETTINGS -> SystemIntents.start(this, SystemIntents.androidSettings())
+            ButtonAction.LAUNCHER_SETTINGS -> AutoStart.start(this, AutoStart.settingsIntent(this))
             // Só no Android 9 ou mais novo (nos outros a ação não aparece nas Definições).
             ButtonAction.SLEEP -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
         }

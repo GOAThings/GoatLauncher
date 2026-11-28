@@ -81,6 +81,8 @@ enum class ButtonAction(val id: String) {
     /** A pesquisa do sistema (Google TV, Assistente). */
     SEARCH("search"),
     ANDROID_SETTINGS("android_settings"),
+    /** As Definições do launcher (as da roda), de qualquer app. */
+    LAUNCHER_SETTINGS("launcher_settings"),
     /** Desligar o ecrã (standby), como o botão de energia. */
     SLEEP("sleep"),
     ;

@@ -110,6 +110,7 @@ internal fun buttonActionName(action: ButtonAction, s: Strings): String = when (
     ButtonAction.PREVIOUS_APP -> s.previousApp
     ButtonAction.SEARCH -> s.search
     ButtonAction.ANDROID_SETTINGS -> s.androidSettings
+    ButtonAction.LAUNCHER_SETTINGS -> s.launcherSettings
     ButtonAction.SLEEP -> s.sleep
 }
 

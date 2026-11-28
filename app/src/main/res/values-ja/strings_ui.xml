@@ -231,6 +231,7 @@
     <string name="link_contact">お問い合わせ: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Android の設定</string>
+    <string name="launcher_settings">ランチャーの設定</string>
     <string name="version">GoatLauncher %1$s</string>
     <string name="updates">アップデート</string>
     <string name="check_updates">アップデートを確認</string>

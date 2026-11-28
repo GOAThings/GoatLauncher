@@ -231,6 +231,7 @@
     <string name="link_contact">Pertanyaan: %1$s</string>
     <string name="android">Android</string>
     <string name="android_settings">Pengaturan Android</string>
+    <string name="launcher_settings">Pengaturan launcher</string>
     <string name="version">GoatLauncher %1$s</string>
     <string name="updates">Pembaruan</string>
     <string name="check_updates">Periksa pembaruan</string>

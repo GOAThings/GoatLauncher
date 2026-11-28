@@ -12,7 +12,7 @@ class ButtonActionTest {
     @Test
     fun osIdsGravadosNuncaMudam() {
         assertEquals(
-            listOf("home", "previous_app", "search", "android_settings", "sleep"),
+            listOf("home", "previous_app", "search", "android_settings", "launcher_settings", "sleep"),
             ButtonAction.entries.map { it.id },
         )
     }
