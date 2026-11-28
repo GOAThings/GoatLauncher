@@ -6,16 +6,18 @@ A home screen for Android TV and Google TV.
 
 | | |
 |---|---|
-| ![Home, Android TV style, Spotlight](docs/screenshots/home-android-tv.jpg) | ![Home, Android TV style, carousel](docs/screenshots/home-android-tv-carousel.jpg) |
-| ![Home, tvOS style](docs/screenshots/home-tvos-day.jpg) | ![Home at night](docs/screenshots/home-tvos-night.jpg) |
+| ![Continue watching: Spotlight](docs/screenshots/home-android-tv.jpg) | ![Continue watching: Spotlight with what's next](docs/screenshots/home-android-tv-spotlight-next.jpg) |
+| ![Continue watching: row of cards](docs/screenshots/home-android-tv-cards.jpg) | ![Continue watching: apps on the side](docs/screenshots/home-android-tv-side.jpg) |
+| ![Continue watching: carousel](docs/screenshots/home-android-tv-carousel.jpg) | ![Home, tvOS style](docs/screenshots/home-tvos-day.jpg) |
+| ![Home, tvOS style at night](docs/screenshots/home-tvos-night.jpg) | ![Change icon: use the app's icon](docs/screenshots/change-icon.jpg) |
 | ![Settings](docs/screenshots/settings.jpg) | ![Settings, wallpaper](docs/screenshots/settings-wallpaper.jpg) |
 | ![Appearance, Android TV style](docs/screenshots/appearance-android-tv.jpg) | ![Appearance, tvOS style](docs/screenshots/appearance-tvos.jpg) |
 | ![Aurora focus effect](docs/screenshots/effect-aurora.jpg) | ![Floating ring focus effect](docs/screenshots/effect-floating-ring.jpg) |
 
-Continue watching from a Jellyfin client (RealJF) with Blender Foundation open movies (Big Buck Bunny, Sintel, Tears
-of Steel, Cosmos Laundromat; © Blender Foundation, CC BY 3.0/4.0, [blender.org](https://studio.blender.org/films/)),
-and from GoatTV with a demo playlist (made-up channels). Wallpapers (CC0, Wikimedia Commons): "Marmolada, Italy" by
-Marco Bonomo and "Lake Mountain Landscape" by Bonnie Moreland.
+Continue watching from a Jellyfin client (RealJF) with open movies: Big Buck Bunny, Sintel, Tears of Steel and Cosmos
+Laundromat (© Blender Foundation, CC BY 3.0/4.0, [blender.org](https://studio.blender.org/films/)) and Sita Sings the
+Blues (Nina Paley, CC0, [sitasingstheblues.com](https://www.sitasingstheblues.com/)); and from GoatTV with a demo
+playlist (made-up channels). Wallpaper: "Marmolada, Italy" by Marco Bonomo (CC0, Wikimedia Commons).
 
 ## Install
 
